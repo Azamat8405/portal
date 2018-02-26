@@ -1,0 +1,26 @@
+.content-panel
+{
+    margin: 0 0 10px 0;
+    background: #f7f2dc;
+    padding: 10px;
+    border: 1px solid #ccc;
+	border-radius:4px;
+}
+.content-panel:after{
+	content:'';
+	display:table;
+	clear:both;
+}
+
+.content-panel .ui-widget,
+.panel input.ui-widget{
+	font-size:0.8em;
+}
+
+.content-panel__info{
+font-size:80%;
+padding-bottom:5px;
+}
+.content-panel__info > div{
+margin:4px;
+}

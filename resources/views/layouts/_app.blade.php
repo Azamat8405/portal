@@ -1,4 +1,3 @@
-{{--
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}">
 <head>
@@ -69,68 +68,4 @@
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}"></script>
 </body>
-</html>
---}}
-
-<!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}">
-    <head>
-        <title>{{ config('app.name', 'Портал') }}</title>
-
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-
-        <!-- CSRF Token -->
-        <meta name="csrf-token" content="{{ csrf_token() }}">
-
-        <!-- Styles -->
-        <link href="{{ asset('css/style.css') }}" rel="stylesheet">
-        <link href="{{ asset('css/panel.css') }}" rel="stylesheet">
-        <link href="{{ asset('css/jquery-ui.min.css') }}" rel="stylesheet">
-
-    </head>
-    <body>
-        <div class="wrapper">
-            <section class="header">
-                <h1>ИНФОПОРТАЛ</h1>
-                <ul class="auth">
-                    @guest
-                        <li><a href="{{ route('login') }}">Войти</a></li>
-                        <li><a href="{{ route('register') }}">Регистрация</a></li>
-                    @else
-
-                        <li>
-                            <a href="">{{ Auth::user()->name }}<i></i></a>
-                            <ul>
-                                <li><a href="">Аккаунт</a></li>
-                                <li><a href="">Настройки</a></li>
-
-                                <li><a href="{{ route('logout') }}" onclick="event.preventDefault();
-                                    document.getElementById('logout-form').submit();">Выход</a>
-                                </li>
-                            </ul>
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                                @csrf
-                            </form>
-                        </li>
-                    @endguest
-                </ul>
-            </section>
-
-            @yield('content')
-
-        </div>
-
-        <script src="{{ asset('js/jquery-3.3.1.min.js') }}"></script>
-        <script src="{{ asset('js/jquery.mousewheel.min.js') }}"></script>
-        <script src="{{ asset('js/jquery-ui.min.js') }}"></script>
-
-        @guest
-        @else
-            <script src="{{ asset('js/handsontable.full.min.js') }}"></script>
-        @endguest
-
-        <script src="{{ asset('js/scripts.js') }}"></script>
-    </body>
 </html>

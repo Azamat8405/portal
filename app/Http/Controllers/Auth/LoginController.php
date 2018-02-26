@@ -26,7 +26,7 @@ class LoginController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/home';
+    protected $redirectTo = '/';
 
     /**
      * Create a new controller instance.
@@ -41,6 +41,12 @@ class LoginController extends Controller
 
     public function test()
     {
+
+
+        print_r(\DateTime::createFromFormat('Y-m-d H:i:s', '2018-02-26 15:49:31'));
+
+        print_r(\DateTime::createFromFormat('Y-m-d H:i:s', '2018-02-26 15:49:31'));
+
 
         // ============================
         // $transport = new \Swift_SmtpTransport('ssl://smtp.yandex.ru', 465, "ssl");

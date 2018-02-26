@@ -1,0 +1,288 @@
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, 
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+	box-sizing: border-box;
+}
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+
+body {
+	line-height: 1;
+	font-family: 'Open Sans', helvetica, arial, sans-serif;
+	font-size:90%;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content:'';
+	content:none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+a{
+	color:#000;
+	text-decoration: none;
+}
+
+@font-face {
+	font-family: 'FontAwesome';
+	src: url('../fonts/fontawesome-webfont.eot?v=4.1.0');
+	src: url('../fonts/fontawesome-webfont.eot?#iefix&v=4.1.0') format('embedded-opentype'), 
+  		url('../fonts/fontawesome-webfont.woff?v=4.1.0') format('woff'),
+  		url('../fonts/fontawesome-webfont.ttf?v=4.1.0') format('truetype'),
+  		url('../fonts/fontawesome-webfont.svg?v=4.1.0#fontawesomeregular') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+div.wrapper:after{
+	content:'';
+	display:table;
+	clear:both;
+}
+
+form .form-field-input div:nth-child(1)
+{
+    display: table-cell;
+	vertical-align:middle;
+}
+form .form-field-input div:nth-child(2)
+{
+    display: table-cell;
+}
+
+form .form-field-input{
+    display: table;
+    width: 100%;
+	margin: 15px 5px;
+	border: 1px solid transparent;
+}
+form .form-field-input:after{
+	content:'';
+	display:table;
+	clear:both;
+}
+form .form-field-input input{
+	padding:7px;
+	float:right;
+	border:1px solid #bfbfbf;
+}
+form .form-field-input .invalid{
+	border:1px solid red;
+}
+
+form .form-field-submit{
+	text-align:center;
+}
+
+form .form-field-submit:after{
+	content:'';
+	display:table;
+	clear:both;
+}
+
+form .form-field-submit input
+{
+	background:#64cdff;
+	background: linear-gradient(to bottom, #64cdff, #00a7f7);
+	border:none;
+	color:#fff;
+	padding:10px;
+	cursor:pointer;
+}
+form.auth_form, form.reg_form{
+	width:270px;
+	margin:200px auto 0;
+	text-align:center;
+}
+form.reg_form{
+	width:360px;
+}
+
+nav{
+	float:left;
+	width:15%;
+	background: #f7f2dc;
+	position: fixed;
+	top: 50px;
+    left: 0;
+}
+nav ul li
+{
+	margin:5px;
+}
+nav ul li a
+{
+	border-bottom:1px solid #dadada;
+	border-left: 4px solid #f7f2dc
+}
+nav > ul > li:hover > a
+{
+	border-left: 4px solid #00a7f7;
+	background:#ddf4ff;
+}
+nav ul li:last-child{
+	border-bottom:none;
+}
+nav ul li a{
+	display: block;
+	padding: 10px;
+}
+nav ul li ul{
+	display:none;
+}
+nav ul li ul li{
+	background-color: #f7f2dc;
+}
+nav ul li ul li:hover > a{
+	border-left: 4px solid #00a7f7;
+	background:#ddf4ff;
+}
+
+
+
+section.content
+{
+	width:85%;
+	box-sizing:border-box;
+	/*overflow-x: auto;*/
+	padding:10px;
+	margin: 50px 0 0 15%;
+}
+
+section.header{
+	height:50px;
+	width:100%;
+	background: #64cdff;
+	background: linear-gradient(to bottom, #64cdff, #00a7f7);
+	padding: 5px;
+    position: fixed;
+    top: 0;
+	z-index: 100;
+}
+section.header h1{
+	margin:10px;
+	color:#fff;
+	float:left;
+}
+
+section.header .auth{
+	float:right;
+	position: relative;
+	margin: 0 25px 0 0;
+}
+section.header ul.auth li a{
+	color:#fff;
+}
+section.header ul.auth > li{
+	margin: 10px 20px 10px 10px;
+	float:left;
+}
+section.header ul.auth > li:last-child
+{
+	margin-right:0;
+}
+section.header ul.auth > li i{
+	font-family: FontAwesome;
+	margin:0 0 0 10px;
+}
+section.header ul.auth > li i:before{
+	content: "\f0d7";
+	color:#fff;
+}
+section.header ul.auth li ul{
+	display:none;
+	position:absolute;
+	background: #fff;
+	z-index:1000;
+	right:5px;
+	top:45px;
+	border:1px solid #dedede;
+	box-shadow: 0px 2px 5px 0px #8c8a8a;
+}
+section.header ul.auth li ul li{
+	padding:10px 10px 10px 5px;
+	color:#000;
+	margin: 5px;
+	border-bottom:1px solid #dedede;
+	border-left: 4px solid #fff;
+}
+section.header ul.auth li ul li:last-child
+{
+	border-bottom:none;
+}
+section.header ul.auth li ul li a{
+	color:#000;
+}
+section.header ul.auth li ul li:hover
+{
+	border-left: 4px solid #00a7f7;
+	background:#ddf4ff;
+}
+
+
+table.tbl td, table.tbl th
+{
+	padding:3px;
+	border-collapse:collapse;
+	border:1px solid #dedede;
+}
+table.tbl td > .tbl__show-val
+{
+	margin:5px;
+	border:1px solid #fff;
+	padding:2px;
+}
+table.tbl td > .tbl__edit-val
+{
+	margin:5px;
+	font-size:14px;
+	display:none;
+	width:90%;
+	margin:0 auto;
+}
+.table_data{
+width:83%;
+overflow-x:auto;
+}
+.ui-tabs-panel .panel{
+margin:0 0 10px 0;
+}
+.error_message, .success_message{
+	padding:10px;
+	line-height: 16px;
+	width:100%;
+}
+.error_message{
+	background:#f7aeae;
+	border:1px solid #a54747;
+}
+.success_message{
+	background:#afe0af;
+	border:1px solid #5a755a;
+}
