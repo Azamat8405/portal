@@ -77,6 +77,16 @@ return [
             'charset' => 'utf8',
             'prefix' => '',
         ],
+        'sqlsrv_imported_data' => [
+            'driver' => 'sqlsrv',
+            'host' => env('DB_HOST', 'localhost'),
+            'port' => env('DB_PORT', '64741'),
+            'database' => 'Imported_Data',
+            'username' => 'portal_Imported_Data_reader',
+            'password' => 'fsdfFDds4fDs_dRfdg4d',
+            'charset' => 'utf8',
+            'prefix' => '',
+        ],
     ],
     /*
     |--------------------------------------------------------------------------

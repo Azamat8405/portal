@@ -1,78 +1,36 @@
-{{--
 <!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- CSRF Token -->
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+{{--
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+1) Разделы номенклатуры. Откуда берем? из таблицы [Assortment_Hierarchy]?
 
-    <!-- Styles -->
-    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
-</head>
-<body>
-    <div id="app">
-        <nav class="navbar navbar-expand-md navbar-light navbar-laravel">
-            <div class="container">
-                <a class="navbar-brand" href="{{ url('/') }}">
-                    {{ config('app.name', 'Laravel') }}
-                </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+    - что делаем с разделами указанными через слеш? это вложенные разделы? т.е. уровень вложенности может быть  более 4 уровней?
+    - есть разделы в которых на всех 4 уровнях указано одно и тоже 
+    (ПОДМЕННЫЙ ФОНД  ПОДМЕННЫЙ ФОНД  ПОДМЕННЫЙ ФОНД  ПОДМЕННЫЙ ФОНД)
 
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <!-- Left Side Of Navbar -->
-                    <ul class="navbar-nav mr-auto">
+    -IDArt - это уникальный ИД в 1с?
 
-                    </ul>
+2) Сами товары номенклатуры? Где берем? Таблица?
 
-                    <!-- Right Side Of Navbar -->
-                    <ul class="navbar-nav ml-auto">
-                        <!-- Authentication Links -->
-                        @guest
-                            <li><a class="nav-link" href="{{ route('login') }}">Login</a></li>
-                            <li><a class="nav-link" href="{{ route('register') }}">Register</a></li>
-                        @else
-                            <li class="nav-item dropdown">
-                                <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    {{ Auth::user()->name }} <span class="caret"></span>
-                                </a>
+3) Бренды из 1с? Какая таблица? Плоская таблица? Без иерархии?
 
-                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    <a class="dropdown-item" href="{{ route('logout') }}"
-                                       onclick="event.preventDefault();
-                                                     document.getElementById('logout-form').submit();">
-                                        Logout
-                                    </a>
+4) Дистрибьютеры? Где берем?
 
-                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                                        @csrf
-                                    </form>
-                                </div>
-                            </li>
-                        @endguest
-                    </ul>
-                </div>
-            </div>
-        </nav>
+5) 'код ДиС' - что это
 
-        <main class="py-4">
-            @yield('content')
-        </main>
-    </div>
+6) 'Артикул ШК' - Это артикал товра? ШК это что?
 
-    <!-- Scripts -->
-    <script src="{{ asset('js/app.js') }}"></script>
-</body>
-</html>
+7) Это всегда число? В процентах?
+
+    on_invoice
+    off_invoice
+    skidka_itogo
+
+    old_zakup_price - всегда рубли?
+    new_zakup_price - всегда рубли?
+
 --}}
 
-<!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}">
     <head>
         <title>{{ config('app.name', 'Портал') }}</title>
@@ -85,10 +43,13 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <!-- Styles -->
-        <link href="{{ asset('css/style.css') }}" rel="stylesheet">
-        <link href="{{ asset('css/panel.css') }}" rel="stylesheet">
         <link href="{{ asset('css/jquery-ui.min.css') }}" rel="stylesheet">
-
+        @guest
+        @else
+            <link rel="stylesheet" type="text/css" href="./css/handsontable.full.min.css">
+        @endguest
+        <link href="{{ asset('css/panel.css') }}" rel="stylesheet">
+        <link href="{{ asset('css/style.css') }}" rel="stylesheet">
     </head>
     <body>
         <div class="wrapper">
@@ -118,8 +79,22 @@
                 </ul>
             </section>
 
-            @yield('content')
-
+            <nav>
+                <ul>
+                    <li><a href="">Задачи</a></li>
+                    <li><a href="">Участники</a>
+                        <ul>
+                            <li><a href="">Иванов И.И</a></li>
+                            <li><a href="">Петров П.П.</a></li>
+                            <li><a href="">Сидоров С.С</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="{{ route('actions') }}">Акции</a></li>
+                </ul>
+            </nav>
+            <section class="content">
+                @yield('content')
+            </section>
         </div>
 
         <script src="{{ asset('js/jquery-3.3.1.min.js') }}"></script>

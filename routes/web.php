@@ -11,15 +11,24 @@
 |
 */
 
-
 Route::group(['middleware' => 'auth'], function () {
 
-	Route::get('/', 'HomeController@index')->name('home');
+	Route::get('/', 'HomeController@index');
 
+
+	/*Для админов*/
+	Route::group(['middleware' => 'admin'], function () {
+
+		Route::get('/actions', 'ActionController@list')->name('actions');
+		Route::get('/actions/add', 'ActionController@showAddFrom')->name('actions.add');
+		Route::post('/actions/add', 'ActionController@add');
+
+        // $this->get('login', 'Auth\LoginController@showLoginForm')->name('login');
+        // $this->post('login', 'Auth\LoginController@login');
+
+
+		Route::get('/test', 'TestController@index');
+	});
 });
 
 Auth::routes();
-
-Route::get('/test', 'Auth\LoginController@test')->name('test');
-
-

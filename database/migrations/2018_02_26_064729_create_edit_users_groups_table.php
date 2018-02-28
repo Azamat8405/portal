@@ -13,11 +13,9 @@ class CreateEditUsersGroupsTable extends Migration
      */
     public function up()
     {
-        Schema::table('users_groups', function (Blueprint $table) {
+        // Schema::table('users_groups', function (Blueprint $table) {
 
-
-
-        });
+        // });
     }
 
     /**

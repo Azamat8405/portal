@@ -13,18 +13,20 @@ class CreateValuesDetailTable extends Migration
      */
     public function up()
     {
-        Schema::create('values_detail', function (Blueprint $table) {
-            $table->increments('id')->unsigned();//->primary('id')
+        // ОТМЕНЯЕТСЯ ПОКА
 
-            $table->integer('field_value_id')->unsigned();
-            $table->integer('shop_id')->unsigned();
-            $table->string('value');
+        // Schema::create('values_detail', function (Blueprint $table) {
+        //     $table->increments('id')->unsigned();//->primary('id')
 
-            //TODO внешний ключ ?????
+        //     $table->integer('field_value_id')->unsigned();
+        //     $table->integer('shop_id')->unsigned();
+        //     $table->string('value');
 
-            $table->timestamps();
-            $table->softDeletes();
-        });
+        //     //TODO внешний ключ ?????
+
+        //     $table->timestamps();
+        //     $table->softDeletes();
+        // });
     }
 
     /**
@@ -34,6 +36,6 @@ class CreateValuesDetailTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('values_detail');
+        // Schema::dropIfExists('values_detail');
     }
 }

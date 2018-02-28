@@ -20,6 +20,7 @@ class CreateUsersTable extends Migration
             $table->string('name')->comment('ФИО пользователя');
             $table->string('email')->unique();
             $table->string('password');
+            $table->string('role');
 
             $table->integer('user_group_id')->unsigned();
 

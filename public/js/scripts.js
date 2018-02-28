@@ -47,8 +47,6 @@ $(function(){
 	    	cells: function (row, col, prop) {
 				var cellProperties = {};
 
-
-	      		// if (hot.getSourceData()[row][prop] === 'Nissan')
 	      		if(row == 2 && col == 2)
 	      		{
 	        		cellProperties.readOnly = true;
@@ -61,8 +59,7 @@ $(function(){
 	left_menu_height();
 	$(window).resize(left_menu_height);
 
-	$(".content-panel input").button();
-	$("#tabs input").button();
+	$("input").button();
 	$('#tabs').tabs();
 
 	$('nav ul li').each(function(){

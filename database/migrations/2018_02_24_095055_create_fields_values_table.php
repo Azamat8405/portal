@@ -13,16 +13,37 @@ class CreateFieldsValuesTable extends Migration
      */
     public function up()
     {
-        Schema::create('fields_values', function (Blueprint $table){
-            $table->increments('id')->unsigned();//->primary('id')
-            $table->integer('field_id')->unsigned();
-            $table->string('value');
+        // step_{id}_values - где {id} - id из таблицы  steps
+        // Schema::create('step_1_values', function (Blueprint $table){
+        //     $table->increments('id')->unsigned();
 
-            //TODO внешний ключ ?????
+        //     $table->integer('shop_id')->unsigned();
+        //     $table->integer('action_id')->unsigned();
 
-            $table->timestamps();
-            $table->softDeletes();
-        });
+        //     $table->string('kod_dis')->comment('код ДиС Ном. Номер');
+        //     $table->string('articule_sk')->comment('Артикул ШК это артикул по базе поставщика');
+
+        //     $table->string('on_invoice');
+        //     $table->string('on_invoice_start')->comment('Дата начала предоставления скидки он инвойс');
+        //     $table->string('on_invoice_end')->comment('Дата окончания предоставления скидки он инвойс');
+
+        //     $table->string('off_invoice');
+        //     $table->string('skidka_itogo');
+
+        //     $table->string('old_zakup_price');
+        //     $table->string('new_zakup_price');
+
+        //     $table->string('old_roznica_price');
+        //     $table->string('new_roznica_price');
+
+        //     $table->text('description')->comment('подписи, слоганы, расшифровки и пояснения, которые Вы хотели бы видеть к своим товарам.');
+
+        //     $table->text('metka')->comment('Хит, Новинка, Суперцена, Выгода 0000  рублей...');
+        //     //TODO внешний ключ ?????
+
+        //     $table->timestamps();
+        //     $table->softDeletes();
+        // });
     }
 
     /**

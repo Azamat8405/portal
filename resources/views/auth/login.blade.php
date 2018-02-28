@@ -36,13 +36,18 @@
         </div>
     </div>
     <div class="form-field-input">
-        <label for="remember">Запоминть меня</label>
-        <input id="remember" type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }}>
+        <div>
+            <label for="remember">Запомнить меня</label>
+        </div>
+        <div>
+            <input id="remember" type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }}>
+        </div>
     </div>
     <div class="form-field-submit">
         <input type="submit" value="Войти">
+        <br>
+        <br>
+        <a class="btn btn-link" href="{{ route('password.request') }}">Забыли пароль?</a>
     </div>
-    <br>
-    <a class="btn btn-link" href="{{ route('password.request') }}">Забыли пароль?</a>
 </form>
 @endsection

@@ -60,68 +60,57 @@ a{
 	font-style: normal;
 }
 
+h1, h2, h3{
+font-weight:bold;
+margin: 10px 5px;
+font-size: 1.1em;
+}
+
 div.wrapper:after{
 	content:'';
 	display:table;
 	clear:both;
 }
 
-form .form-field-input div:nth-child(1)
-{
-    display: table-cell;
-	vertical-align:middle;
-}
-form .form-field-input div:nth-child(2)
-{
-    display: table-cell;
-}
 
-form .form-field-input{
-    display: table;
-    width: 100%;
-	margin: 15px 5px;
-	border: 1px solid transparent;
-}
-form .form-field-input:after{
-	content:'';
-	display:table;
-	clear:both;
-}
-form .form-field-input input{
-	padding:7px;
-	float:right;
-	border:1px solid #bfbfbf;
-}
-form .form-field-input .invalid{
+form input .invalid{
 	border:1px solid red;
 }
 
-form .form-field-submit{
-	text-align:center;
-}
 
-form .form-field-submit:after{
-	content:'';
-	display:table;
-	clear:both;
-}
-
-form .form-field-submit input
+form.auth_form,
+form.reg_form
 {
-	background:#64cdff;
-	background: linear-gradient(to bottom, #64cdff, #00a7f7);
-	border:none;
-	color:#fff;
-	padding:10px;
-	cursor:pointer;
-}
-form.auth_form, form.reg_form{
-	width:270px;
+	width:370px;
 	margin:200px auto 0;
-	text-align:center;
 }
-form.reg_form{
-	width:360px;
+.form-field-input{
+    width: 100%;
+	margin: 15px 5px;
+}
+form.auth_form .form-field-input,
+form.reg_form .form-field-input
+{
+    display: table;
+	border: 1px solid transparent;
+}
+form.auth_form .form-field-input div:nth-child(1),
+form.reg_form .form-field-input div:nth-child(1)
+{
+    display: table-cell;
+	vertical-align:middle;
+    width:40%;
+}
+form.auth_form .form-field-input div:nth-child(2),
+form.reg_form .form-field-input div:nth-child(2)
+{
+    display: table-cell;
+    width:60%;
+}
+
+form.auth_form .form-field-submit,
+form.reg_form .form-field-submit{
+	text-align: center;
 }
 
 nav{
@@ -186,7 +175,7 @@ section.header{
 	z-index: 100;
 }
 section.header h1{
-	margin:10px;
+	margin:13px;
 	color:#fff;
 	float:left;
 }
