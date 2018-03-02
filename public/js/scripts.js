@@ -1,10 +1,13 @@
 $(function(){
 
+
+
 	if($.fn.handsontable && $('#table_data').length > 0)
 	{
+
 		var data = [
 			["", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda"],
-			["2017", 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13],
+			["2017", "<div>sfsdf</div>", 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13],
 			["2018", 20, 11, 14, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13],
 			["2018", 20, 11, 14, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13],
 			["2018", 20, 11, 14, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13],
@@ -20,10 +23,21 @@ $(function(){
 			rowHeaders:true,
 			colHeaders:true,
 
+			sortIndicator: true,
+			columnSorting: {
+			    column: 2
+			  },
+
 			allowRemoveColumn:false,
 			allowRemoveRow:false,
 			allowInsertColumn:false,
 			allowInsertRow:false,
+
+			columns: [{
+				type: 'autocomplete',
+				allowHtml: true,
+				source: ['<b>foo</b>', '<b>bar</b>']
+			}],
 
 			minSpareRows:20,
 			manualRowMove: true,
@@ -54,6 +68,42 @@ $(function(){
 				return cellProperties;
 			}
 		});
+
+
+$('.htCore td').click(function(){
+
+	console.log('55555');
+
+});
+
+$('.htCore tr').each(function(i){
+
+	if(i == 0)
+		return;
+
+	$exist = false;
+	$(this).find('td').each(function() {
+
+		if($(this).html() == 123456789)
+		{
+			$exist = true;
+		}
+	});
+
+	if(!$exist)
+	{
+		$(this).hide();
+	}
+});
+
+
+$('.htCore td').change(function()
+{
+
+	console.log('777');
+
+});
+
 	}
 
 	left_menu_height();
@@ -94,6 +144,32 @@ $(function(){
 			$(this).find('ul').toggle();
 		}
 	});
+
+	if($.fn.datepicker)
+	{
+	 	jQuery(function ($) {
+	        $.datepicker.regional['ru'] = {
+	            closeText: 'Закрыть',
+	            prevText: '&#x3c;Пред',
+	            nextText: 'След&#x3e;',
+	            currentText: 'Сегодня',
+	            monthNames: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+	            'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
+	            monthNamesShort: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+	            'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
+	            dayNames: ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'],
+	            dayNamesShort: ['вск', 'пнд', 'втр', 'срд', 'чтв', 'птн', 'сбт'],
+	            dayNamesMin: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+	            weekHeader: 'Нед',
+	            dateFormat: 'dd.mm.yy',
+	            firstDay: 1,
+	            isRTL: false,
+	            showMonthAfterYear: false,
+	            yearSuffix: ''
+	        };
+	        $.datepicker.setDefaults($.datepicker.regional['ru']);
+	    });
+	}
 });
 
 function left_menu_height()

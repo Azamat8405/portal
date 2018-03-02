@@ -72,11 +72,9 @@ div.wrapper:after{
 	clear:both;
 }
 
-
 form input .invalid{
 	border:1px solid red;
 }
-
 
 form.auth_form,
 form.reg_form

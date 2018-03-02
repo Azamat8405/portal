@@ -46,7 +46,7 @@
         <link href="{{ asset('css/jquery-ui.min.css') }}" rel="stylesheet">
         @guest
         @else
-            <link rel="stylesheet" type="text/css" href="./css/handsontable.full.min.css">
+            <link rel="stylesheet" type="text/css" href="{{ asset('css/handsontable.full.min.css') }}">
         @endguest
         <link href="{{ asset('css/panel.css') }}" rel="stylesheet">
         <link href="{{ asset('css/style.css') }}" rel="stylesheet">
@@ -105,6 +105,8 @@
         @else
             <script src="{{ asset('js/handsontable.full.min.js') }}"></script>
         @endguest
+
+        @yield('addition_js')
 
         <script src="{{ asset('js/scripts.js') }}"></script>
     </body>

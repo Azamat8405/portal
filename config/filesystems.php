@@ -45,7 +45,7 @@ return [
 
         'local' => [
             'driver' => 'local',
-            'root' => storage_path('app'),
+            'root' => 'C:\WebDev\xampp\htdocs\portal.ru\portal'//storage_path('app'),
         ],
 
         'public' => [
