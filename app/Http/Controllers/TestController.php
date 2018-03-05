@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use DB;
+
 use Excel;
 use Illuminate\Http\Request;
 
@@ -9,8 +11,6 @@ class TestController extends Controller
 {
     public function index()
     {
-
-exit('777');
 
         // print_r(\DateTime::createFromFormat('Y-m-d H:i:s', '2018-02-26 15:49:31'));
         // print_r(\DateTime::createFromFormat('Y-m-d H:i:s', '2018-02-26 15:49:31'));

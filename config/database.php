@@ -87,6 +87,20 @@ return [
             'charset' => 'utf8',
             'prefix' => '',
         ],
+
+        'sqlsrv_Imp_1C_temporary' => [
+            'driver' => 'sqlsrv',
+            'host' => env('DB_HOST', 'localhost'),
+            'port' => env('DB_PORT', '64741'),
+            'database' => 'Imp_1C_temporary',
+            'username' => 'portal_Imp_1C_temporary_reader',
+            'password' => 'fsdfFDds4fDs_dRfdg4d1',
+            'charset' => 'utf8',
+            'prefix' => '',
+        ],
+
+
+
     ],
     /*
     |--------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 .content-panel
 {
+	font-size:80%;
     margin: 0 0 10px 0;
     background: #f7f2dc;
     padding: 10px;
@@ -12,15 +13,54 @@
 	clear:both;
 }
 
-.content-panel .ui-widget,
-.panel input.ui-widget{
-	font-size:0.8em;
-}
-
 .content-panel__info{
-font-size:80%;
 padding-bottom:5px;
 }
 .content-panel__info > div{
 margin:4px;
+}
+
+.form-fields-row{
+width:100%;
+display:table;
+}
+
+.form-fields-row:after{
+display:table;
+content:'';
+clear:both;
+}
+.form-field-cell{
+display:table-cell;
+width: 17%;
+}
+
+.form-field-cell .form-field-input{
+margin:5px;
+}
+
+.form-field-input div:nth-child(1)
+{
+margin:4px 0;
+}
+.form-field-input div:nth-child(2)
+{}
+
+.field_input_file{
+position:relative;
+float: left;
+text-align:left;
+}
+.field_input_file > .file{
+position: absolute;
+top: 0;
+right:1px;
+display: block;
+width: 22px;
+height: 24px;
+text-align: center;
+padding: 7px 0 0 0;
+cursor: pointer;
+border: 1px solid #888888;
+border-radius: 5px;
 }

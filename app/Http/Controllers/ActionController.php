@@ -162,7 +162,6 @@ class ActionController extends Controller
 		// Проверяем список магазинов,
 		if(empty($this->shops))
 		{
-			// Assortment
 			$tmp = DB::connection('sqlsrv_imported_data')->select('SELECT sm.StoreCode
       				,sr.StoreCity
       				,sr.StoreRegion

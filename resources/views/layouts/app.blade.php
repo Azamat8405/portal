@@ -44,6 +44,8 @@
 
         <!-- Styles -->
         <link href="{{ asset('css/jquery-ui.min.css') }}" rel="stylesheet">
+        <link href="{{ asset('css/jquery-ui.min.change.css') }}" rel="stylesheet">
+
         @guest
         @else
             <link rel="stylesheet" type="text/css" href="{{ asset('css/handsontable.full.min.css') }}">

@@ -1,108 +1,100 @@
 $(function(){
 
-
-
 	if($.fn.handsontable && $('#table_data').length > 0)
 	{
+		// var data = [
+		// 	["", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda"],
+		// 	["2017", "<div>sfsdf</div>", 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13],
+		// 	["2018", 20, 11, 14, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13],
+		// 	["2018", 20, 11, 14, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13],
+		// 	["2018", 20, 11, 14, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13],
+		// 	["2018", 20, 11, 14, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13],
+		// 	["2018", 20, 11, 14, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13],
+		// 	["2019", 30, 15, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13]
+		// ];
 
-		var data = [
-			["", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda", "Ford", "Tesla", "Toyota", "Honda"],
-			["2017", "<div>sfsdf</div>", 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13],
-			["2018", 20, 11, 14, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13],
-			["2018", 20, 11, 14, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13],
-			["2018", 20, 11, 14, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13],
-			["2018", 20, 11, 14, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13],
-			["2018", 20, 11, 14, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13],
-			["2019", 30, 15, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13, 10, 11, 12, 13]
-		];
+		// var container = document.getElementById('table_data');
+		// var hot = new Handsontable(container, {
+		// 	data:data,
+		// 	colWidths: [50,50,50],
+		// 	rowHeaders:true,
+		// 	colHeaders:true,
 
-		var container = document.getElementById('table_data');
-		var hot = new Handsontable(container, {
-			data:data,
-			colWidths: [50,50,50],
-			rowHeaders:true,
-			colHeaders:true,
+		// 	sortIndicator: true,
+		// 	columnSorting: {
+		// 		column: 2
+		// 	},
 
-			sortIndicator: true,
-			columnSorting: {
-			    column: 2
-			  },
+		// 	allowRemoveColumn:false,
+		// 	allowRemoveRow:false,
+		// 	allowInsertColumn:false,
+		// 	allowInsertRow:false,
 
-			allowRemoveColumn:false,
-			allowRemoveRow:false,
-			allowInsertColumn:false,
-			allowInsertRow:false,
+		// 	columns: [{
+		// 		type: 'autocomplete',
+		// 		allowHtml: true,
+		// 		source: ['<b>foo</b>', '<b>bar</b>']
+		// 	}],
 
-			columns: [{
-				type: 'autocomplete',
-				allowHtml: true,
-				source: ['<b>foo</b>', '<b>bar</b>']
-			}],
+		// 	minSpareRows:20,
+		// 	manualRowMove: true,
+		// 	manualColumnMove: true,
+		// 	manualRowResize: true,
+		// 	manualColumnResize: true,
+		// 	filters:true,
+		// 	stretchH: 'all',
+		//     contextMenu: true,
+		// 	height:500,
+		// 	width:function(){
+		// 		return $('#tabs-1').width() - 20;
+		// 	},
+		// 	afterChange:function (change, source)
+		// 	{
+		// 		if (source === 'loadData')
+		// 			return;
+		// 	}
+		// });
+		// hot.updateSettings({
+	 //    	cells: function (row, col, prop) {
+		// 		var cellProperties = {};
 
-			minSpareRows:20,
-			manualRowMove: true,
-			manualColumnMove: true,
-			manualRowResize: true,
-			manualColumnResize: true,
-			filters:true,
-			stretchH: 'all',
-		    contextMenu: true,
-			height:500,
-			width:function(){
-				return $('#tabs-1').width() - 20;
-			},
-			afterChange:function (change, source)
-			{
-				if (source === 'loadData')
-					return;
-			}
-		});
-		hot.updateSettings({
-	    	cells: function (row, col, prop) {
-				var cellProperties = {};
-
-	      		if(row == 2 && col == 2)
-	      		{
-	        		cellProperties.readOnly = true;
-				}
-				return cellProperties;
-			}
-		});
-
-
-$('.htCore td').click(function(){
-
-	console.log('55555');
-
-});
-
-$('.htCore tr').each(function(i){
-
-	if(i == 0)
-		return;
-
-	$exist = false;
-	$(this).find('td').each(function() {
-
-		if($(this).html() == 123456789)
-		{
-			$exist = true;
-		}
-	});
-
-	if(!$exist)
-	{
-		$(this).hide();
-	}
-});
+	 //      		if(row == 2 && col == 2)
+	 //      		{
+	 //        		cellProperties.readOnly = true;
+		// 		}
+		// 		return cellProperties;
+		// 	}
+		// });
 
 
-$('.htCore td').change(function()
-{
+		// $('.htCore td').click(function(){
+		// 	console.log('55555');
+		// });
 
-	console.log('777');
+		// $('.htCore tr').each(function(i){
 
-});
+		// 	if(i == 0)
+		// 		return;
+
+		// 	$exist = false;
+		// 	$(this).find('td').each(function() {
+
+		// 		if($(this).html() == 123456789)
+		// 		{
+		// 			$exist = true;
+		// 		}
+		// 	});
+
+		// 	if(!$exist)
+		// 	{
+		// 		$(this).hide();
+		// 	}
+		// });
+
+		// $('.htCore td').change(function()
+		// {
+		// 	console.log('777');
+		// });
 
 	}
 

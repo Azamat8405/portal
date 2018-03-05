@@ -15,7 +15,6 @@ Route::group(['middleware' => 'auth'], function () {
 
 	Route::get('/', 'HomeController@index');
 
-
 	/*Для админов*/
 	Route::group(['middleware' => 'admin'], function () {
 
@@ -23,12 +22,10 @@ Route::group(['middleware' => 'auth'], function () {
 		Route::get('/actions/add', 'ActionController@showAddFrom')->name('actions.add');
 		Route::post('/actions/add', 'ActionController@add');
 
-        // $this->get('login', 'Auth\LoginController@showLoginForm')->name('login');
-        // $this->post('login', 'Auth\LoginController@login');
-
+		Route::get('/sys/getContragents', 'SystemController@ajaxGetContragents');
+		Route::get('/sys/getTovars', 'SystemController@ajaxGetTovars');
 
 		Route::get('/test', 'TestController@index');
 	});
 });
-
 Auth::routes();

@@ -7,5 +7,6 @@
 			<li>{{$action->id}} - {{$action->actionType->title}}</li>
 
 		@endforeach
+
 	</ul>
 @endsection
