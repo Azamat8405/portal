@@ -269,3 +269,8 @@ border:1px solid #a54747;
 background:#afe0af;
 border:1px solid #5a755a;
 }
+.load_img{
+margin: 0 auto;
+display: block;
+width: 25px;
+}

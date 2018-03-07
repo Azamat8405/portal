@@ -18,12 +18,20 @@ Route::group(['middleware' => 'auth'], function () {
 	/*Для админов*/
 	Route::group(['middleware' => 'admin'], function () {
 
-		Route::get('/actions', 'ActionController@list')->name('actions');
-		Route::get('/actions/add', 'ActionController@showAddFrom')->name('actions.add');
-		Route::post('/actions/add', 'ActionController@add');
+		Route::get('/actions', 			'ActionController@list')->name('actions');
+		Route::get('/actions/add', 		'ActionController@showAddFrom')->name('actions.add');
+		Route::post('/actions/add', 	'ActionController@add');
 
-		Route::get('/sys/getContragents', 'SystemController@ajaxGetContragents');
-		Route::get('/sys/getTovars', 'SystemController@ajaxGetTovars');
+		Route::get('/sys/getContragents', 				'SystemController@ajaxGetContragents');
+		Route::get('/sys/getContragentsErarhi',			'SystemController@ajaxGetContragentsErarhi');
+
+		Route::get('/sys/getTovarForAvtoComplete', 		'SystemController@ajaxGetTovarForAvtoComplete');
+		Route::get('/sys/getTovsCategsErarhi', 			'SystemController@ajaxGetTovsCategsErarhi');
+		Route::get('/sys/getTovsForCateg/{categId}', 	'SystemController@ajaxGetTovsForCateg');
+
+		Route::get('/sys/getShops', 			'SystemController@ajaxGetShops');
+		Route::get('/sys/getShopsErarhi', 		'SystemController@ajaxGetShopsErarhi');
+		Route::get('/sys/fillTovCategs', 		'SystemController@fillTovCategsTable');
 
 		Route::get('/test', 'TestController@index');
 	});
