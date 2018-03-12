@@ -97,7 +97,9 @@
 				</div>
 
 				<div class="form-field-cell">
-				    <div class="form-field-input">
+
+<!--
+ 				    <div class="form-field-input">
 				        <div>
 				            <label>Контрагент</label>
 				        </div>
@@ -105,11 +107,12 @@
 							<div class="field_input_file">
 								<input id="contragent" type="hidden" name="contragent" value="{{ old('contragent') }}">
 				            	<input id="contragent_title" type="input" name="contragent_title" value="{{ old('contragent_title') }}">
-								<div id="contragent_dialog">TODO</div>
 				            	<div class="file" data-type='getContagentsErarhi'>...</div>
 				            </div>
 				        </div>
 					</div>
+-->
+
 				</div>
 				<div class="form-field-cell"></div>
 			</div>
@@ -130,6 +133,7 @@
 		<div class="table_data">
 			<div id="shops_dialog"></div>
 			<div id="tovs_dialog"></div>
+			<div id="contragent_dialog"></div>
 
 			<table>
 				<tr>
@@ -160,13 +164,6 @@
 						<input type="hidden" class="row_number" value="0">
 					</td>
 					<td>
-
-				<!--
- 						<div class="field_input_file label">Магазин </div>
-						<div class="field_input_file label">Магазин </div>
-						<div class="field_input_file label">Магазин с длинным назывнием</div>
- 				-->
-
    						<div class="field_input_file">
 							<input type="input" class="shops"/>
 							<input type="hidden" name="shops[]"/>
@@ -174,7 +171,12 @@
 						</div>
 					</td>
 					<td>
-						<input class="" name="distr[]">
+   						<div class="field_input_file">
+							<input type="input" class="distr"/>
+							<input type="hidden" name="distr[]"/>
+							<div class="file" data-type="getContagentsErarhi">...</div>
+						</div>
+
 					</td>
 					<td>
 						<select name="types[]" class="select">
