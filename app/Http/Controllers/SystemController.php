@@ -84,7 +84,7 @@ class SystemController extends Controller
 		$str2 = '('.mb_substr($str2, 0, -4).')';
 		$str3 = '('.mb_substr($str3, 0, -4).')';
 
-		$tovs = DB::connection('sqlsrv_imported_data')->select('SELECT TOP 100 [ArtName], [ArtCode]
+		$tovs = DB::connection('sqlsrv_imported_data')->select('SELECT TOP 70 [ArtName], [ArtCode]
 			FROM [Imported_Data].[dbo].[Assortment]
 			WHERE
 				'.$str1.' OR '.$str2.' OR '.$str3);
@@ -114,9 +114,10 @@ class SystemController extends Controller
 		$str1 = '('.mb_substr($str1, 0, -4).')';
 
 		$shops = DB::connection('sqlsrv_imported_data')->select('SELECT StoreCode, StoreName
-			FROM [Imported_Data].[dbo].[Store_Main]
-			WHERE '.$str1);
-
+			FROM [Imported_Data].[dbo].[Store_All_Stores]
+			WHERE 
+				Store_Is_Active = 1 AND
+				'.$str1);
 		if($shops)
 		{
 			$result = [];
@@ -130,20 +131,34 @@ class SystemController extends Controller
 
 	public function ajaxGetShopsErarhi(Request $request)
 	{
-		$shops = DB::connection('sqlsrv_imported_data')->select('SELECT sm.StoreCode
+		$shops = DB::connection('sqlsrv_imported_data')->select('SELECT
+				 sm.StoreCode
   				,sr.StoreCity
   				,sr.StoreRegion
   				,sr.StoreMacroRegion
   				,sm.StoreName
 			FROM [Imported_Data].[dbo].[Store_Region] as sr 
-					RIGHT JOIN
-				[Imported_Data].[dbo].[Store_Main] as sm ON 
-					sr.IDStore = sm.IDStore');
+					INNER JOIN
+				[Imported_Data].[dbo].[Store_All_Stores] as sm ON 
+					sr.IDStore = sm.IDStore AND
+					sm.Store_Is_Active = 1
+			ORDER BY  sr.StoreCity DESC
+  				,sr.StoreRegion DESC 
+  				,sr.StoreMacroRegion DESC');
+
 		if($shops)
 		{
 			$result = [];
 			foreach ($shops as $value)
 			{
+				if(trim($value->{'StoreMacroRegion'}.$value->{'StoreRegion'}.$value->{'StoreCity'}) == '')
+				{
+					continue;
+				}
+				if(trim($value->{'StoreMacroRegion'}) == '')
+					continue;	
+
+				//id-шников у нас нету делаем хеши
 				$hashMacroRegion = $hashRegion = $hashCity = '';
 				if(trim($value->{'StoreMacroRegion'}) != '')
 				{
@@ -472,12 +487,13 @@ class SystemController extends Controller
 							[
 								$categId
 							]);
-		$ctgs = [];
+		$ctgs = $ctgs_ids = [];
 		if($parCategs)
 		{
 			foreach ($parCategs as $value)
 			{
 				$ctgs[$value->level] = $value->title;
+				$ctgs_ids[$value->title] = $value->id;
 			}
 		}
 		else
@@ -485,7 +501,7 @@ class SystemController extends Controller
 			return;
 		}
 
-
+		$result = [];
 		$tovs = DB::connection('sqlsrv_imported_data')->select('
 			SELECT ArtCode as c, ArtName as n, ArtArticle as art
 						FROM [Imported_Data].[dbo].[AstHrhy]
@@ -495,7 +511,90 @@ class SystemController extends Controller
 							[LVL3] = ? AND
 							[LVL4] = ?', [$ctgs[1], $ctgs[2], $ctgs[3], $ctgs[4]]);
 		if($tovs)
-			echo json_encode($tovs);
+		{
+			foreach ($tovs as $key => $value)
+			{
+				$result[$value->c] = [
+					'catId' => $ctgs_ids[$ctgs[4]],
+					'n' => $value->n,
+					'art' => $value->art,
+				];
+			}
+		}
+		echo json_encode($result);
+	}
+
+	public function ajaxGetTovIdsForCategs(Request $request)
+	{
+		$cat_ids = json_decode($request->get('data'));
+		if(empty($cat_ids))
+			return;
+
+		$tmp = [];
+		foreach ($cat_ids as $key => $value) {
+			$tmp[] = "'".$value."'";
+		}
+
+		// достаем все родительские разделы выбранного раздела.
+		// чтобы по их названиям достать id-шники товаров из таблицы [Imported_Data].[dbo].[AstHrhy]
+		$parCategs = DB::select('SELECT c2.id, c2.title, c2.level from [dbo].[tov2_categs] c, [dbo].[tov2_categs] c2
+			 	WHERE c.[id] IN ('.implode(',', $tmp).') AND
+						c.[left] >= c2.[left] AND
+						c.[right] <= c2.[right] AND 
+						c2.[level] != 0');
+
+
+		// $parCategs = DB::table('tov2_categs as c')
+		// 	->select('c2.id', 'c2.title', 'c2.level')
+		// 	->join('tov2_categs as c2', function ($join) use ($cat_ids)
+		// 		{
+		//         	$join->on('c.left', '>=', 'c2.left')
+		//                ->on('c.right', '<=', 'c2.right')
+		//                ->where('c2.level', '>', 0)
+		//                ->where('c.id', $cat_ids);
+
+		//         })
+		// 	->orderBy('c.level')
+		// 	->get();
+
+		$ctgs = [];
+		$ctgs_str = [];
+
+		if($parCategs)
+		{
+			$i = 0;
+			foreach ($parCategs as $value)
+			{
+				$i++;
+
+				// $ctgs[$value->level] = $value->title;
+				$ctgs[] = '[LVL'.$value->level.'] = \''.$value->title.'\'';
+
+				if($i%4 == 0)
+				{
+					$ctgs_str[] = '('.implode(' AND ', $ctgs).')';
+					$ctgs = [];
+				}
+			}
+		}
+		else
+		{
+			return;
+		}
+
+		$result = [];
+		$tovs = DB::connection('sqlsrv_imported_data')->
+				select('SELECT ArtCode as c, ArtName as n
+						FROM [Imported_Data].[dbo].[AstHrhy]
+			            WHERE '.implode(' OR ', $ctgs_str));
+		if($tovs)
+		{
+			foreach ($tovs as $key => $value)
+			{
+				$result[$value->c] = $value->n;
+			}
+		}
+		echo json_encode($result);
 	}
 
 	public function ajaxGetTovsCategsErarhi(Request $request)

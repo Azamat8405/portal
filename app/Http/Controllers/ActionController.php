@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Redirect;
 use App\Action;
 use App\Shop;
+use App\ActionType;
 use Validator;
 use File;
 use Excel;
@@ -29,7 +30,11 @@ class ActionController extends Controller
 
 	public function showAddFrom(Request $request)
 	{
-		return view('actions/add');
+		$action_types = ActionType::all();
+
+		return view('actions/add', [
+			'action_types' => $action_types
+		]);
 	}
 
 	public function add(Request $request)

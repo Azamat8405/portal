@@ -40,9 +40,14 @@
 	    width: 145px;
 	    text-align: center;
 	}
+
+	input.maskProcent, input.maskPrice, input.maskDate{
+		text-align: center;
+	}
+
 </style>
 
-	<form class="" action="{{ route('actions.add') }}" method="post" enctype="multipart/form-data">
+	<form class="addActionForm" action="{{ route('actions.add') }}" method="post" enctype="multipart/form-data">
 		@csrf
 	    <div class="content-panel">
 			<h2>Добавление акции</h2>
@@ -158,7 +163,9 @@
 					<td>
 						<div class="field_input_file">
 							<input type="input" class="tovs"/>
-							<input type="hidden" name="tovs[]"/>
+
+							<input type="hidden" name="catsTovs[]" value=""/>
+							<input type="hidden" name="tovs[]" value=""/>
 							<div class="file" data-type="getTovsErarhi">...</div>
 						</div>
 						<input type="hidden" class="row_number" value="0">
@@ -181,30 +188,31 @@
 					<td>
 						<select name="types[]" class="select">
 							<option value="0"> --- </option>
-							<option value="1">2+2</option>
-							<option value="2">3+2</option>
+							@foreach ($action_types as $type)
+								<option data-descr="{{$type->description}}" value="{{$type->id}}">{{$type->title}}</option>
+							@endforeach
 						</select>
 					</td>
 					<td>
-						<input type="number" class="" name="skidka_on_invoice[]">
+						<input type="text" class="maskProcent" name="skidka_on_invoice[]">
 					</td>
 					<td>
-						<input type="number" class="" name="kompensaciya_on_invoice[]">
+						<input type="text" class="maskProcent" name="kompensaciya_on_invoice[]">
 					</td>
 					<td>
-						<input type="number" class="" name="skidka_itogo[]">
+						<input type="text" class="maskProcent" name="skidka_itogo[]">
 					</td>
 					<td>
-						<input type="number" class="" name="zakup_old[]">
+						<input type="text" class="maskPrice" name="zakup_old[]">
 					</td>
 					<td>
-						<input type="number" class="" name="zakup_new[]">
+						<input type="text" class="maskPrice" name="zakup_new[]">
 					</td>
 					<td>
-						<input class="start_on_invoice_date" name="start_date_on_invoice[]">
+						<input class="start_on_invoice_date maskDate" name="start_date_on_invoice[]">
 					</td>
 					<td>
-						<input class="end_on_invoice_date" id="rrr" name="end_date_on_invoice[]">
+						<input class="end_on_invoice_date maskDate" id="rrr" name="end_date_on_invoice[]">
 					</td>
 					<td>
 						<input type="number" class="" name="roznica_old[]">
@@ -312,6 +320,7 @@
 @section('addition_js')
 	@
 
+	<script src="{{ asset('js/jquery.mask.min.js') }}"></script>
 	<script src="{{ asset('js/add_action_form.js') }}"></script>
 @endsection
 

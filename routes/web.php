@@ -29,7 +29,7 @@ Route::group(['middleware' => 'auth'], function () {
 		Route::get('/sys/getTovarForAvtoComplete', 		'SystemController@ajaxGetTovarForAvtoComplete');
 		Route::get('/sys/getTovsCategsErarhi', 			'SystemController@ajaxGetTovsCategsErarhi');
 		Route::get('/sys/getTovsForCateg/{categId}', 	'SystemController@ajaxGetTovsForCateg');
-
+		Route::get('/sys/getTovIdsForCategs', 			'SystemController@ajaxGetTovIdsForCategs');
 
 
 		Route::get('/sys/getShops', 			'SystemController@ajaxGetShops');

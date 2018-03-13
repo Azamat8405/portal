@@ -7,6 +7,101 @@ var cache_tovs_dialog = {};
 
 $(function(){
 
+
+// 	$.widget( "custom.typesSelect", $.ui.selectmenu, {
+// 		_renderItem: function( ul, item ) {
+//         	var li = $( "<li>" ),
+// 			wrapper = $("<div>", { text: item.label });
+ 
+//  	        $( "<span>", {
+//           		style: item.element.attr("data-style"),
+//           		"class": "hint",
+//           		text: item.element.attr("data-descr")
+// 	        })
+// 			.appendTo(wrapper);
+// 			return li.append(wrapper).appendTo( ul );
+// 		}
+// 	});
+
+// 	$(".types_select")
+// 		.typesSelect()
+// 		.typesSelect( "menuWidget" )
+// 		.addClass( "ui-menu-icons" );
+
+// 	$('.ui-menu-item-wrapper, .ui-menu-item').hover(function(){
+// console.log('1111');
+// console.log($(this).offset().top);
+// 		// $(this).find('.hint')
+// 	});
+
+
+	if($.fn.mask)
+	{
+		$('.maskProcent').mask('ZZZZZ', {
+		    placeholder: "0 %",
+			onKeyPress: function(cep, event, currentField, options){
+
+				var reg2 = new RegExp("[^\.\,0-9]+");
+				var reg = new RegExp("[0-9]{1,3}[(\.|\,)]*[0-9]{0,2}");
+
+				if(parseFloat(cep) > 100 || parseFloat(cep) < 0 || !reg.test(cep) || reg2.test(cep))
+				{
+					$(currentField).val('');
+				}
+			},
+			translation:{
+      			'Z': {
+        			pattern: /[\.\,0-9]*/
+      			}
+    		}
+		});
+
+		$('.maskPrice').mask('ZZZZZZZZZZ', {
+		    placeholder: "0 руб",
+			onKeyPress: function(cep, event, currentField, options){
+
+				var reg2 = new RegExp("[^\.\,0-9]+");
+				var reg = new RegExp("[0-9]{1,6}[(\.|\,)]*[0-9]{0,2}");
+
+				if(parseFloat(cep) < 0 || !reg.test(cep) || reg2.test(cep))
+				{
+					$(currentField).val('');
+				}
+			},
+			translation:{
+      			'Z': {
+        			pattern: /[\.\,0-9]*/
+      			}
+    		}
+		})
+
+		$('.maskDate').mask('ZZ-ZZ-ZZZZ', {
+		    placeholder: "01-01-2001",
+			onKeyPress: function(cep, event, currentField, options){
+
+				var tmp = cep.split('-');
+				if(parseInt(tmp[0]) > 31 || parseInt(tmp[1]) > 12)
+				{
+				 	$(currentField).val('');
+				}
+
+				// var reg2 = new RegExp("[^\.\,0-9]+");
+				// var reg = new RegExp("[0-9]{1,6}[(\.|\,)]*[0-9]{0,2}");
+
+				// if(parseFloat(cep) < 0 || !reg.test(cep) || reg2.test(cep))
+				// {
+				// 	$(currentField).val('');
+				// }
+			},
+			translation:{
+      			'Z': {
+        			pattern: /[0-9]/
+      			}
+    		}
+		})
+
+	}
+
 	if($.fn.datepicker)
 	{
 		$('#start_date').datepicker({
@@ -24,7 +119,8 @@ $(function(){
 		$('.start_on_invoice_date').datepicker({
 			minDate: new Date(),
 			dateFormat: "dd-mm-yy"
-		}).change(function() {
+		})
+		.change(function() {
 
 			var d = $.datepicker.parseDate( "dd-mm-yy", this.value);
 
@@ -32,10 +128,10 @@ $(function(){
 			var end_date = $('input[name^=end_date_on_invoice]:eq('+row_n+')');
 			end_date.datepicker( "option", "minDate",  new Date(d.getTime() + 86400000));
 
-			var tmpDate = new Date(d.getTime() + 604800000);
-			var m = tmpDate.getMonth()+1;
+			// var tmpDate = new Date(d.getTime() + 604800000);
+			// var m = tmpDate.getMonth()+1;
 
-			end_date.val(tmpDate.getDate()+'-'+(m < 10 ? '0'+m : m)+'-'+tmpDate.getYear());
+			// end_date.val(tmpDate.getDate()+'-'+(m < 10 ? '0'+m : m)+'-'+tmpDate.getYear());
         });
 
 		$('.end_on_invoice_date').datepicker({
@@ -44,18 +140,28 @@ $(function(){
 		});
 	}
 
-	// выбор чекбоксов во всплывающем окне выбра
+	// выбор чекбоксов во всплывающем окне выбора
 	$('#shops_dialog, #tovs_dialog').on('click', 'input[type=checkbox]', function(e){
 		if($(this).is(':checked'))
 			var chck = false;
 		else
 			var chck = true;
 
+		//отмечаем/снимаем все дочерние чекбоксы
 		$(this).next().next().find('input[type=checkbox]').each(function(){
 			if(chck)
 				$(this).prop('checked',false);
 			else
 				$(this).prop('checked',true);
+		});
+
+		//отмечаем/снимаем все родительские чекбоксы
+		$(this).parents('li').each(function(){
+
+			var ch = $(this).find(' > input[type=checkbox]');
+
+			if(chck)
+				$(ch).prop('checked',false);
 		});
 	});
 
@@ -157,9 +263,12 @@ $(function(){
 				open:function( event, ui )
 				{
 					let selIds = $(el).prev().val().split(',');
+					let selCategsIds = $(el).prev().prev('input[name^="catsTovs"]').val().split(',');
 
 					$("#tovs_dialog").dialog( "option", 'selTovs', selIds);
-					get_tovs_categs_list(selIds);
+					$("#tovs_dialog").dialog( "option", 'selCategs', selCategsIds);
+
+					get_tovs_categs_list();
 				},
 				width:750,
 				position: {
@@ -173,11 +282,27 @@ $(function(){
 				    "Выбрать товар": function(e){
 						var ids=[], titles=[];
 
-						$('#tovs_dialog input[value]:checked').each(function(){
+						$('#tovs_dialog input[id^=tov]:checked').each(function(){
 							ids.push($(this).val());
 							titles.push($(this).data('title'));
 						});
+
+						//берем все выбранные разделы
+						var checked_categs = [];
+						$('#tovs_dialog input.tov_categs:checked').each(function(){
+
+							var ul = $(this).next().next();
+
+							//запоминаем раздел только если в нет нет товаров или есть НЕ выбранные товары
+							if($(ul).find('input[id^=tov]').length == 0 || $(ul).find('input[id^=tov]').not(':checked').length > 0)
+							{
+								checked_categs.push($(this).data('value'));
+								titles.push($(this).data('title'));
+							}
+						});
+
 						var row_n = getRowNumber(el);
+						$('input[name^=catsTovs]:eq('+row_n+')').val(checked_categs.join());
 
 						$('input[name^=tovs]:eq('+row_n+')').val(ids.join());
 						$('input.tovs:eq('+row_n+')').val(titles.join());
@@ -189,7 +314,6 @@ $(function(){
 		}
 		else if($(this).data('type') == 'getContagentsErarhi')
 		{
-
 			$("#contragent_dialog").dialog({
 				title: "Выбор контрагента",
 				closeOnEscape:true,
@@ -224,11 +348,7 @@ $(function(){
 						$('input[name^=distr]:eq('+row_n+')').val(ids.join());
 						$('input.distr:eq('+row_n+')').val(titles.join());
 
-						// $('#contragent').val(ids.join());
-						// $('#contragent_title').val(titles.join());
-
 						$("#contragent_dialog").dialog("close");
-
 					}
 				}
 			});
@@ -237,7 +357,7 @@ $(function(){
 
 	$('.select').selectmenu();
 
-	$("#contragent_title").autocomplete({
+	$("input.distr").autocomplete({
 		source: function( request, response ){
 			var term = request.term;
 			if ( term in cache_avtocomplete_contr )
@@ -245,6 +365,7 @@ $(function(){
 				response(cache_avtocomplete_contr[term]);
 				return;
 			}
+
 			$.getJSON( "/sys/getContragentsForAvtocomplete", request, function( data, status, xhr ) {
 				cache_avtocomplete_contr[term] = data;
 				response(data);
@@ -272,7 +393,7 @@ $(function(){
 		minLength: 2,
 		select: function( event, ui )
 		{
-			$(this).next().val(ui.item.val);
+			$(this).next().next().val(ui.item.val);
 		}
 	});
 
@@ -292,10 +413,10 @@ $(function(){
 		minLength: 2,
 		select: function( event, ui )
 		{
-			let arr = $(this).next().val().split(',');
-			arr.push(ui.item.val);
+			// let arr = $(this).next().val().split(',');
+			// arr.push(ui.item.val);
 
-			$(this).next().val(arr.join());
+			$(this).next().val(ui.item.val);
 		}
 	});
 });
@@ -364,84 +485,136 @@ function build_list(cache_shops_dialog, ids)
 	$('#shops_dialog > ul').append(li);
 }
 
-function build_tov_list(cache_tovs_dialog, ul_el)
+function build_tov_list(cache_tovs, ul_el)
 {
 	ul_el.html('');
 
 	var parent_checked = ul_el.prev().prev().is(':checked');
-	for(ind in cache_tovs_dialog)
+	for(ind in cache_tovs)
 	{
 		let ch1 = '';
-		if($.inArray(cache_tovs_dialog[ind]['c'], $("#tovs_dialog").dialog( "option", 'selTovs')) >= 0 ||
+		if($.inArray(ind, $("#tovs_dialog").dialog( "option", 'selTovs')) >= 0 ||
 			parent_checked
 		)
 		{
 			ch1 = 'checked="checked"';
 			display = ' style="display:block;" ';
 		}
-		ul_el.append('<li><input type="checkbox" id="tov'+ cache_tovs_dialog[ind]['c'] + '" '+
-			' value="' + cache_tovs_dialog[ind]['c'] + '" data-title="'+escape(cache_tovs_dialog[ind]['n'])+'" '+ch1+'>'+
-			'<label for="tov'+ cache_tovs_dialog[ind]['c'] + '">'+cache_tovs_dialog[ind]['n']+' '+(cache_tovs_dialog[ind]['art'] ? '('+cache_tovs_dialog[ind]['art']+')' : '')+'</label></li>');
+
+		ul_el.append('<li><input type="checkbox" id="tov'+ ind + '" '+
+			' value="' + ind + '" data-title="'+escape(cache_tovs[ind]['n'])+'" '+ch1+'>'+
+			'<label for="tov'+ ind + '">'+cache_tovs[ind]['n']+' '+(cache_tovs[ind]['art'] ? '('+cache_tovs[ind]['art']+')' : '')+'</label></li>');
 	}
 }
 
-function build_tov_categs_list(cache_tovs_categs_dialog, ids)
+function build_tov_categs_list(cache_tovs_categs_dialog)
 {
 	$('#tovs_dialog').html('');
 	$('#tovs_dialog').append('<ul>');
+
+	var showTovs = [];
+	var selTovs = $("#tovs_dialog").dialog( "option", 'selTovs');
+	var selCategs = $("#tovs_dialog").dialog( "option", 'selCategs');
 
 	var li = '';
 	for(ind in cache_tovs_categs_dialog)
 	{
 		var display = '';
-		var macreg = '';//checked="checked"
+		var macreg = '';
 		var lii = '';
 		for(inde in cache_tovs_categs_dialog[ind])
 		{
 			if(!cache_tovs_categs_dialog[ind][inde]['t'])
 				continue;
 
-			var reg_ch = '';//checked="checked"
+			var reg_ch = 0;
 			var liii = '';
 			for(index in cache_tovs_categs_dialog[ind][inde])
 			{
 				if(!cache_tovs_categs_dialog[ind][inde][index]['t'])
 					continue;
 
-				var city_ch = '';//checked="checked"
+				var city_ch = 0;
 				var li4 = '';
 				for(indexx in cache_tovs_categs_dialog[ind][inde][index])
 				{
 					if(indexx == 't')
 						continue;
 
-					var ch = '';//checked="checked"
-					var li5 = '';
+					var ch = 0;
+					if($.inArray(indexx, selCategs) >= 0)
+					{
+						ch = 1;
+					}
+					for(tovId in cache_tovs_dialog[indexx])
+					{
+						if($.inArray(tovId, selTovs) >= 0)
+						{
+							display = ' style="display:block;" ';
+							showTovs[indexx] = 1;
+							if(ch != 2)
+								ch = 1;
+						}
+						else
+						{
+							ch = 2;
+							break;
+						}
+					}
 
-					if(ch == '')
-						city_ch = '';
+					if(ch == 1)
+					{
+						if(city_ch != 2)
+							city_ch = 1;
+					}
+					else
+						city_ch = 2;
 
-					li4 += '<li><input type="checkbox" data-value="'+cache_tovs_categs_dialog[ind][inde][index][indexx]['id']+'" '+ch+'>'+
-						'<label>'+cache_tovs_categs_dialog[ind][inde][index][indexx]['t']+'</label><ul '+display+'>'+li5+'</ul></li>';
+					var title = cache_tovs_categs_dialog[ind][inde][index][indexx]['t']
+
+					li4 += '<li><input data-title="'+escape(title)+'" class="tov_categs" type="checkbox" data-level="4" data-value="' + indexx + '" '+(ch == 1 ? ' checked="checked" ' : '')+'>'+
+						'<label>'+title+'</label><ul '+display+'></ul></li>';
 				}
-				if(city_ch == '')
-					reg_ch = '';
+				if(city_ch == 1)
+				{
+					if(reg_ch != 2)
+						reg_ch = 1;
+				}
+				else
+					reg_ch = 2;
 
-				liii += '<li><input type="checkbox" '+city_ch+'>'+
-					'<label>'+cache_tovs_categs_dialog[ind][inde][index]['t']+'</label><ul '+display+'>'+li4+'</ul></li>';
+				var title = cache_tovs_categs_dialog[ind][inde][index]['t'];
+
+				liii += '<li><input data-title="'+escape(title)+'" class="tov_categs" type="checkbox" data-value="'+index+'" '+( city_ch == 1 ? ' checked=""checked' : '')+'>'+
+					'<label>'+title+'</label><ul '+display+'>'+li4+'</ul></li>';
 			}
 
-			if(reg_ch == '')
-				macreg = '';
+			if(reg_ch == 1)
+			{
+				if(macreg != 2)
+					macreg = 1;
+			}
+			else
+				macreg = 2;
 
-			lii += '<li><input type="checkbox" '+reg_ch+'>'+
-				'<label>'+cache_tovs_categs_dialog[ind][inde]['t']+'</label><ul '+display+'>'+liii+'</ul></li>';
+			var title = cache_tovs_categs_dialog[ind][inde]['t'];
+
+			lii += '<li><input data-title="'+escape(title)+'" class="tov_categs" type="checkbox" data-value="'+inde+'" '+( reg_ch == 1 ? ' checked=""checked' : '') + '>' +
+				'<label>'+title+'</label><ul '+display+'>'+liii+'</ul></li>';
 		}
 
-		li += '<li><input type="checkbox" '+macreg+'>'+
-			'<label>'+cache_tovs_categs_dialog[ind]['t']+'</label><ul '+display+'>'+lii+'</ul></li>';
+		var title = cache_tovs_categs_dialog[ind]['t'];
+
+		li += '<li><input data-title="'+escape(title)+'" class="tov_categs" type="checkbox" data-value="'+ind+'" '+ ( macreg == 1 ? ' checked=""checked' : '') +'>'+
+			'<label>'+title+'</label><ul '+display+'>'+lii+'</ul></li>';
 	}
 	$('#tovs_dialog > ul').append(li);
+
+	for (ind in showTovs)
+	{
+		var ul_el = $('input[data-value='+ind+']').next().next();
+		build_tov_list(cache_tovs_dialog[ind], ul_el);
+	}
 }
 
 function build_contragents_list(cache_contragents)
@@ -485,7 +658,7 @@ function get_shop_list(ids)
 		build_list(cache_shops_dialog, ids);
 	}
 }
-function get_tovs_categs_list(ids)
+function get_tovs_categs_list()
 {
 	if($.isEmptyObject(cache_tovs_categs_dialog))
 	{
@@ -494,13 +667,13 @@ function get_tovs_categs_list(ids)
 			dataType:'json',
 			success: function(data){
 				cache_tovs_categs_dialog = data;
-				build_tov_categs_list(data, ids);
+				build_tov_categs_list(data);
 			}
 		});
 	}
 	else
 	{
-		build_tov_categs_list(cache_tovs_categs_dialog, ids);
+		build_tov_categs_list(cache_tovs_categs_dialog);
 	}
 }
 function get_contragents_list()
