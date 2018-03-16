@@ -11,6 +11,9 @@ class TestController extends Controller
 {
     public function index()
     {
+
+exit();
+
         $result = [];
         $tovs = DB::table('tov_categs')->get();
         if($tovs)

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 
 {{--
-
 1) Разделы номенклатуры. Откуда берем? из таблицы [Assortment_Hierarchy]?
 
     - что делаем с разделами указанными через слеш? это вложенные разделы? т.е. уровень вложенности может быть  более 4 уровней?
@@ -56,7 +55,7 @@
     <body>
         <div class="wrapper">
             <section class="header">
-                <h1>ИНФОПОРТАЛ</h1>
+                <a href="/"><h1>ИНФОПОРТАЛ</h1></a>
                 <ul class="auth">
                     @guest
                         <li><a href="{{ route('login') }}">Войти</a></li>
@@ -80,20 +79,31 @@
                     @endguest
                 </ul>
             </section>
+            @guest
+                <style>
+                    section.content
+                    {
+                        width: 100%;
+                        margin: 50px 0 0 0%;
+                    }
+                </style>
+            @else
+                <nav>
+                    <div class="handrail"><div></div></div>
+                    <ul>
+                        <li><a href="">Задачи</a></li>
+                        <li><a href="">Участники</a>
+                            <ul>
+                                <li><a href="">Иванов И.И</a></li>
+                                <li><a href="">Петров П.П.</a></li>
+                                <li><a href="">Сидоров С.С</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="{{ route('processes') }}">Акции</a></li>
+                    </ul>
+                </nav>
+            @endguest
 
-            <nav>
-                <ul>
-                    <li><a href="">Задачи</a></li>
-                    <li><a href="">Участники</a>
-                        <ul>
-                            <li><a href="">Иванов И.И</a></li>
-                            <li><a href="">Петров П.П.</a></li>
-                            <li><a href="">Сидоров С.С</a></li>
-                        </ul>
-                    </li>
-                    <li><a href="{{ route('actions') }}">Акции</a></li>
-                </ul>
-            </nav>
             <section class="content">
                 @yield('content')
             </section>

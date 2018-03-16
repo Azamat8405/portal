@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use DB;
 use App\TovCategs;
-use App\Tov2Categs;
- 
+use App\BrendsCategsLinks;
+use App\ShopRegion;
+use App\Shop;
+use App\Brend;
+
 class SystemController extends Controller
 {
-
 	public function ajaxGetContragentsErarhi()
 	{
 		$agents = DB::connection('sqlsrv_Imp_1C_temporary')->select('SELECT [Наименование], [Код], [ИНН_Строка]
@@ -129,10 +131,100 @@ class SystemController extends Controller
 		}
 	}
 
+	public function ajaxGetShopsForRegion(Request $request, $cityId)
+	{
+		if(intval($cityId) == 0)
+			return;
+
+		$shops = Shop::where('region_id', $cityId)->get();
+		if($shops)
+		{
+			echo json_encode($shops);
+		}
+	}
+
+	public function ajaxGetBrendsForCategs(Request $request, $categId)
+	{
+		if(intval($categId) == 0)
+			return;
+
+		$brends = DB::table('brends as br')
+			->join('brends_categs_links as l', 'br.id', '=', 'l.brend_id')
+			->where('l.categ_id', $categId)
+            ->select('br.name as title', 'br.id')
+            ->get();
+        if($brends)
+        {
+			echo json_encode($brends);
+        }
+	}
+
 	public function ajaxGetShopsErarhi(Request $request)
 	{
+		// $shops = DB::connection('sqlsrv_imported_data')->select('SELECT
+		// 		sm.StoreCode
+  // 				,sr.StoreCity
+  // 				,sr.StoreRegion
+  // 				,sr.StoreMacroRegion
+  // 				,sm.StoreName
+		// 	FROM [Imported_Data].[dbo].[Store_Region] as sr 
+		// 			INNER JOIN
+		// 		[Imported_Data].[dbo].[Store_All_Stores] as sm ON 
+		// 			sr.IDStore = sm.IDStore AND
+		// 			sm.Store_Is_Active = 1 AND
+		// 			sm.StoreName NOT LIKE \'%(закрыт)%\'
+		// 	ORDER BY sr.StoreCity DESC
+		// 		,sr.StoreRegion DESC 
+		// 		,sr.StoreMacroRegion DESC');
+		// if($shops)
+		// {
+		// 	$result = [];
+		// 	foreach ($shops as $value)
+		// 	{
+		// 		if(trim($value->{'StoreMacroRegion'}.$value->{'StoreRegion'}.$value->{'StoreCity'}) == '')
+		// 		{
+		// 			continue;
+		// 		}
+		// 		if(trim($value->{'StoreMacroRegion'}) == '')
+		// 			continue;	
+
+		// 		//id-шников у нас нету делаем хеши
+		// 		$hashMacroRegion = $hashRegion = $hashCity = '';
+		// 		if(trim($value->{'StoreMacroRegion'}) != '')
+		// 		{
+		// 			$hashMacroRegion = md5($value->{'StoreMacroRegion'});
+		// 		}
+		// 		if(trim($value->{'StoreRegion'}) != '')
+		// 		{
+		// 			$hashRegion = md5($value->{'StoreRegion'});
+		// 		}
+		// 		if(trim($value->{'StoreRegion'}) != '')
+		// 		{
+		// 			$hashCity = md5($value->{'StoreCity'});
+		// 		}
+
+		// 		if($hashMacroRegion != '' && !isset($result[$hashMacroRegion]))
+		// 		{
+		// 			$result[$hashMacroRegion] = ['title' => $value->{'StoreMacroRegion'}];
+		// 		}
+		// 		if(isset($result[$hashMacroRegion]) AND $hashRegion != '' && !isset($result[$hashMacroRegion][$hashRegion]))
+		// 		{
+		// 			$result[$hashMacroRegion][$hashRegion] = ['title' => $value->{'StoreRegion'}];
+		// 		}
+		// 		if(isset($result[$hashMacroRegion][$hashRegion]) AND $hashCity != '' && !isset($result[$hashMacroRegion][$hashRegion][$hashCity]))
+		// 		{
+		// 			$result[$hashMacroRegion][$hashRegion][$hashCity] = ['title' => $value->{'StoreCity'}];
+		// 		}
+		// 		$result[$hashMacroRegion][$hashRegion][$hashCity][$value->{'StoreCode'}] = $value->{'StoreName'};
+		// 	}
+		// 	echo json_encode($result);
+		// }
+	}
+
+	public function fillRegionsTable(Request $request)
+	{
 		$shops = DB::connection('sqlsrv_imported_data')->select('SELECT
-				 sm.StoreCode
+				sm.StoreCode
   				,sr.StoreCity
   				,sr.StoreRegion
   				,sr.StoreMacroRegion
@@ -141,89 +233,34 @@ class SystemController extends Controller
 					INNER JOIN
 				[Imported_Data].[dbo].[Store_All_Stores] as sm ON 
 					sr.IDStore = sm.IDStore AND
-					sm.Store_Is_Active = 1
-			ORDER BY  sr.StoreCity DESC
-  				,sr.StoreRegion DESC 
-  				,sr.StoreMacroRegion DESC');
-
+					sm.Store_Is_Active = 1 AND
+					sm.StoreName NOT LIKE \'%(закрыт)%\'
+			ORDER BY sr.StoreCity DESC
+				,sr.StoreRegion DESC 
+				,sr.StoreMacroRegion DESC');
 		if($shops)
 		{
-			$result = [];
-			foreach ($shops as $value)
+			foreach ($shops as $key => $value)
 			{
-				if(trim($value->{'StoreMacroRegion'}.$value->{'StoreRegion'}.$value->{'StoreCity'}) == '')
+				if($value->StoreMacroRegion == '')
 				{
 					continue;
 				}
-				if(trim($value->{'StoreMacroRegion'}) == '')
-					continue;	
 
-				//id-шников у нас нету делаем хеши
-				$hashMacroRegion = $hashRegion = $hashCity = '';
-				if(trim($value->{'StoreMacroRegion'}) != '')
-				{
-					$hashMacroRegion = md5($value->{'StoreMacroRegion'});
-				}
-				if(trim($value->{'StoreRegion'}) != '')
-				{
-					$hashRegion = md5($value->{'StoreRegion'});
-				}
-				if(trim($value->{'StoreRegion'}) != '')
-				{
-					$hashCity = md5($value->{'StoreCity'});
-				}
-
-
-				if($hashMacroRegion != '' && !isset($result[$hashMacroRegion]))
-				{
-					$result[$hashMacroRegion] = ['title' => $value->{'StoreMacroRegion'}];
-				}
-				if(isset($result[$hashMacroRegion]) AND $hashRegion != '' && !isset($result[$hashMacroRegion][$hashRegion]))
-				{
-					$result[$hashMacroRegion][$hashRegion] = ['title' => $value->{'StoreRegion'}];
-				}
-				if(isset($result[$hashMacroRegion][$hashRegion]) AND $hashCity != '' && !isset($result[$hashMacroRegion][$hashRegion][$hashCity]))
-				{
-					$result[$hashMacroRegion][$hashRegion][$hashCity] = ['title' => $value->{'StoreCity'}];
-				}
-				$result[$hashMacroRegion][$hashRegion][$hashCity][$value->{'StoreCode'}] = $value->{'StoreName'};
-
-			}
-			echo json_encode($result);
-		}
-	}
-
-	/**
-	* Заполняем таблицу разделов в древовидной форме
-	*/
-	public function fillTov2CategsTable(Request $request)
-	{
-		$cats = DB::table('tov_categs')
-				->select('lvl1', 'lvl2', 'lvl3', 'lvl4')
-				->orderBy('lvl1', 'desc')
-				->orderBy('lvl2', 'desc')
-				->orderBy('lvl3', 'desc')
-				->orderBy('lvl4', 'desc')
-				->get();
-		if($cats)
-		{
-			foreach ($cats as $key => $value)
-			{
 				$lvl1_right = 0;
-				if($value->lvl1 != '')
+				if($value->StoreMacroRegion != '')
 				{
- 					$lvl1 = trim($value->lvl1);
-
-					$exist_lvl1 = DB::table('tov2_categs')
+ 					$lvl1 = trim($value->StoreMacroRegion);
+					$exist_lvl1 = DB::table('shop_regions')
 							->where('title', $lvl1)
 							->where('level', 1)
 							->get()->first();
 					if(!$exist_lvl1)
 					{
-						$root = DB::table('tov2_categs')->get()->first();
+						$root = DB::table('shop_regions')->get()->first();
 						if(!$root)
 						{
-							$root = new Tov2Categs();
+							$root = new ShopRegion();
 							$root->title = 'root';
 
 							$root->left = 1;
@@ -233,14 +270,14 @@ class SystemController extends Controller
 							$root->save();
 						}
 
-						DB::update('UPDATE [dbo].[tov2_categs]
+						DB::update('UPDATE [dbo].[shop_regions]
 						   		SET [right] = [right]+2
 						 		WHERE [right] >= ?',
 							[
 								$root->right
 							]);
 
-						$exist_lvl1 = new Tov2Categs();
+						$exist_lvl1 = new ShopRegion();
 						$exist_lvl1->title = $lvl1;
 
 						$exist_lvl1->left = $root->right;
@@ -257,11 +294,11 @@ class SystemController extends Controller
 					}
 				}
 
-				if($value->lvl2 != '')
+				if($value->StoreRegion != '')
 				{
- 					$lvl2 = trim($value->lvl2);
+ 					$lvl2 = trim($value->StoreRegion);
 					$exist_lvl2 = DB::select('SELECT c.[right] as self_right
-							from [dbo].[tov2_categs] c, [dbo].[tov2_categs] c2
+							from [dbo].[shop_regions] c, [dbo].[shop_regions] c2
 
 						 	WHERE c.[title] = ? AND
 								c.[level] = 2 AND
@@ -276,20 +313,20 @@ class SystemController extends Controller
 							]);
 					if(!$exist_lvl2)
 					{
-						DB::update('UPDATE [dbo].[tov2_categs]
+						DB::update('UPDATE [dbo].[shop_regions]
 						   		SET [right] = [right]+2
 						 		WHERE [right] >= ?',
 							[
 								$lvl1_right
 							]);
-						DB::update('UPDATE [dbo].[tov2_categs]
+						DB::update('UPDATE [dbo].[shop_regions]
 						   		SET [left] = [left]+2
 						 		WHERE [left] > ?',
 							[
 								$lvl1_right
 							]);
 
-						$exist_lvl2 = new Tov2Categs();
+						$exist_lvl2 = new ShopRegion();
 						$exist_lvl2->title = $lvl2;
 
 						$exist_lvl2->left = $lvl1_right;
@@ -305,10 +342,10 @@ class SystemController extends Controller
 					}
 				}
 
-				if($value->lvl3 != '')
+				if($value->StoreCity != '')
 				{
-					$lvl3 = trim($value->lvl3);
-					$exist_lvl3 = DB::select('SELECT c.[right] as self_right from [dbo].[tov2_categs] c, [dbo].[tov2_categs] c2
+					$lvl3 = trim($value->StoreCity);
+					$exist_lvl3 = DB::select('SELECT c.[right] as self_right, c.[id] from [dbo].[shop_regions] c, [dbo].[shop_regions] c2
 
 						 	WHERE c.[title] = ? AND
 								c.[level] = 3 AND
@@ -320,7 +357,7 @@ class SystemController extends Controller
 								c2.[title] = ? AND
 
 								(
-									SELECT COUNT(*) from [dbo].[tov2_categs] c3 WHERE 
+									SELECT COUNT(*) from [dbo].[shop_regions] c3 WHERE 
 										c3.[level] = 1 AND
 										c3.[title] = ? AND
 										c3.[left] < c2.[left] AND
@@ -332,20 +369,468 @@ class SystemController extends Controller
 
 					if(!$exist_lvl3)
 					{
-						DB::update('UPDATE [dbo].[tov2_categs]
+						DB::update('UPDATE [dbo].[shop_regions]
 						   		SET [right] = [right]+2
 						 		WHERE [right] >= ?',
 							[
 								$lvl2_right
 							]);
-						DB::update('UPDATE [dbo].[tov2_categs]
+						DB::update('UPDATE [dbo].[shop_regions]
 						   		SET [left] = [left]+2
 						 		WHERE [left] > ?',
 							[
 								$lvl2_right
 							]);
 
-						$exist_lvl3 = new Tov2Categs();
+						$exist_lvl3 = new ShopRegion();
+						$exist_lvl3->title = $lvl3;
+
+						$exist_lvl3->left = $lvl2_right;
+						$exist_lvl3->right = $lvl2_right+1;
+						$exist_lvl3->level = 3;
+
+						$exist_lvl3->save();
+						$lvl3_right = $exist_lvl3->right;
+						$lvl3_id = $exist_lvl3->id;
+					}
+					else
+					{
+						$lvl3_right = $exist_lvl3[0]->self_right;
+						$lvl3_id = $exist_lvl3[0]->id;
+					}
+				}
+
+				if($value->StoreName != '' && $lvl3_id > 0)
+				{
+					$sh = new Shop();
+					$sh->title = $value->StoreName;
+					$sh->code = $value->StoreCode;
+					$sh->region_id = $lvl3_id;
+					$sh->save();
+				}
+			}
+		}
+	}
+
+	/**
+	* Заполняем таблицу разделов в древовидной форме
+	*/
+	// public function fillTov2CategsTable(Request $request)
+	// {
+	// 	$import_categs = [];
+	// 	$import_categs[] = 'ИГРУШКИ';
+	// 	$import_categs[] = 'КАНЦТОВАРЫ, КНИГИ, ДИСКИ';
+	// 	$import_categs[] = 'СОПУТСТВУЮЩИЕ ТОВАРЫ';
+	// 	$import_categs[] = 'КРУПНОГАБАРИТНЫЙ ТОВАР';
+	// 	$import_categs[] = 'ОБУВЬ';
+	// 	$import_categs[] = 'ДЕТСКОЕ ПИТАНИЕ';
+	// 	$import_categs[] = 'КОСМЕТИКА/ГИГИЕНА';
+	// 	$import_categs[] = 'ПОДГУЗНИКИ';
+	// 	$import_categs[] = 'ТОВАРЫ ДЛЯ КОРМЛЕНИЯ';
+	// 	$import_categs[] = 'ТЕКСТИЛЬ, ТРИКОТАЖ';
+
+	// 	$cats = DB::table('tov_categs')
+	// 			->select('lvl1', 'lvl2', 'lvl3', 'lvl4')
+	// 			->orderBy('lvl1', 'asc')
+	// 			->orderBy('lvl2', 'asc')
+	// 			->orderBy('lvl3', 'asc')
+	// 			->orderBy('lvl4', 'asc')
+	// 			->get();
+	// 	if($cats)
+	// 	{
+	// 		foreach ($cats as $key => $value)
+	// 		{
+	// 			$lvl1_right = 0;
+	// 			if($value->lvl1 != '')
+	// 			{
+ // 					$lvl1 = trim($value->lvl1);
+	// 				if(!in_array($lvl1, $import_categs))
+	// 				{
+	// 					continue;
+	// 				}
+
+	// 				$exist_lvl1 = DB::table('tov2_categs')
+	// 						->where('title', $lvl1)
+	// 						->where('level', 1)
+	// 						->get()->first();
+	// 				if(!$exist_lvl1)
+	// 				{
+	// 					$root = DB::table('tov2_categs')->get()->first();
+	// 					if(!$root)
+	// 					{
+	// 						$root = new Tov2Categs();
+	// 						$root->title = 'root';
+
+	// 						$root->left = 1;
+	// 						$root->right = 2;
+	// 						$root->level = 0;
+
+	// 						$root->save();
+	// 					}
+
+	// 					DB::update('UPDATE [dbo].[tov2_categs]
+	// 					   		SET [right] = [right]+2
+	// 					 		WHERE [right] >= ?',
+	// 						[
+	// 							$root->right
+	// 						]);
+
+	// 					$exist_lvl1 = new Tov2Categs();
+	// 					$exist_lvl1->title = $lvl1;
+
+	// 					$exist_lvl1->left = $root->right;
+	// 					$exist_lvl1->right = $root->right+1;
+	// 					$exist_lvl1->level = 1;
+
+	// 					$exist_lvl1->save();
+
+	// 					$lvl1_right = $exist_lvl1->right;
+	// 				}
+	// 				else
+	// 				{
+	// 					$lvl1_right = $exist_lvl1->right;
+	// 				}
+	// 			}
+
+	// 			if($value->lvl2 != '')
+	// 			{
+ // 					$lvl2 = trim($value->lvl2);
+	// 				$exist_lvl2 = DB::select('SELECT c.[right] as self_right
+	// 						from [dbo].[tov2_categs] c, [dbo].[tov2_categs] c2
+
+	// 					 	WHERE c.[title] = ? AND
+	// 							c.[level] = 2 AND
+
+	// 							c.[left] > c2.[left] AND
+	// 							c.[right] < c2.[right] AND
+
+	// 							c2.[title] = ? AND
+	// 							c2.[level] = 1',
+	// 						[
+	// 							$lvl2, $lvl1
+	// 						]);
+	// 				if(!$exist_lvl2)
+	// 				{
+	// 					DB::update('UPDATE [dbo].[tov2_categs]
+	// 					   		SET [right] = [right]+2
+	// 					 		WHERE [right] >= ?',
+	// 						[
+	// 							$lvl1_right
+	// 						]);
+	// 					DB::update('UPDATE [dbo].[tov2_categs]
+	// 					   		SET [left] = [left]+2
+	// 					 		WHERE [left] > ?',
+	// 						[
+	// 							$lvl1_right
+	// 						]);
+
+	// 					$exist_lvl2 = new Tov2Categs();
+	// 					$exist_lvl2->title = $lvl2;
+
+	// 					$exist_lvl2->left = $lvl1_right;
+	// 					$exist_lvl2->right = $lvl1_right+1;
+	// 					$exist_lvl2->level = 2;
+
+	// 					$exist_lvl2->save();
+	// 					$lvl2_right = $exist_lvl2->right;
+	// 				}
+	// 				else
+	// 				{
+	// 					$lvl2_right = $exist_lvl2[0]->self_right;
+	// 				}
+	// 			}
+
+	// 			if($value->lvl3 != '')
+	// 			{
+	// 				$lvl3 = trim($value->lvl3);
+	// 				$exist_lvl3 = DB::select('SELECT c.[right] as self_right from [dbo].[tov2_categs] c, [dbo].[tov2_categs] c2
+
+	// 					 	WHERE c.[title] = ? AND
+	// 							c.[level] = 3 AND
+
+	// 							c.[left] > c2.[left] AND
+	// 							c.[right] < c2.[right] AND
+
+	// 							c2.[level] = 2 AND
+	// 							c2.[title] = ? AND
+
+	// 							(
+	// 								SELECT COUNT(*) from [dbo].[tov2_categs] c3 WHERE 
+	// 									c3.[level] = 1 AND
+	// 									c3.[title] = ? AND
+	// 									c3.[left] < c2.[left] AND
+	// 									c3.[right] > c2.[right]
+	// 							) > 0 ',
+	// 						[
+	// 							$lvl3, $lvl2, $lvl1
+	// 						]);
+
+	// 				if(!$exist_lvl3)
+	// 				{
+	// 					DB::update('UPDATE [dbo].[tov2_categs]
+	// 					   		SET [right] = [right]+2
+	// 					 		WHERE [right] >= ?',
+	// 						[
+	// 							$lvl2_right
+	// 						]);
+	// 					DB::update('UPDATE [dbo].[tov2_categs]
+	// 					   		SET [left] = [left]+2
+	// 					 		WHERE [left] > ?',
+	// 						[
+	// 							$lvl2_right
+	// 						]);
+
+	// 					$exist_lvl3 = new Tov2Categs();
+	// 					$exist_lvl3->title = $lvl3;
+
+	// 					$exist_lvl3->left = $lvl2_right;
+	// 					$exist_lvl3->right = $lvl2_right+1;
+	// 					$exist_lvl3->level = 3;
+
+	// 					$exist_lvl3->save();
+	// 					$lvl3_right = $exist_lvl3->right;
+	// 				}
+	// 				else
+	// 				{
+	// 					$lvl3_right = $exist_lvl3[0]->self_right;
+	// 				}
+	// 			}
+
+
+	// 			if($value->lvl4 != '')
+	// 			{
+ // 					$lvl4 = trim($value->lvl4);
+
+	// 				$exist_lvl4 = DB::select('SELECT c.[right] as self_right from [dbo].[tov2_categs] c, [dbo].[tov2_categs] c2
+
+	// 				 	WHERE c.[title] = ? AND
+	// 							c.[level] = 4 AND
+
+	// 							c.[left] > c2.[left] AND
+	// 							c.[right] < c2.[right] AND
+
+	// 							c2.[level] = 3 AND
+	// 							c2.[title] = ? AND
+
+	// 							(
+	// 								SELECT COUNT(*) from [dbo].[tov2_categs] c3 WHERE 
+	// 									c3.[level] = 2 AND
+	// 									c3.[title] = ? AND
+	// 									c3.[left] < c2.[left] AND
+	// 									c3.[right] > c2.[right]
+	// 							) > 0  AND
+
+	// 							(
+	// 								SELECT COUNT(*) from [dbo].[tov2_categs] c3 WHERE 
+	// 									c3.[level] = 1 AND
+	// 									c3.[title] = ? AND
+	// 									c3.[left] < c2.[left] AND
+	// 									c3.[right] > c2.[right]
+	// 							) > 0 ',
+	// 						[
+	// 							$lvl4, $lvl3, $lvl2, $lvl1
+	// 						]);
+
+	// 				if(!$exist_lvl4)
+	// 				{
+	// 					DB::update('UPDATE [dbo].[tov2_categs]
+	// 					   		SET [right] = [right]+2
+	// 					 		WHERE [right] >= ?',
+	// 						[
+	// 							$lvl3_right
+	// 						]);
+	// 					DB::update('UPDATE [dbo].[tov2_categs]
+	// 					   		SET [left] = [left]+2
+	// 					 		WHERE [left] > ?',
+	// 						[
+	// 							$lvl3_right
+	// 						]);
+
+	// 					$exist_lvl4 = new Tov2Categs();
+	// 					$exist_lvl4->title = $lvl4;
+
+	// 					$exist_lvl4->left = $lvl3_right;
+	// 					$exist_lvl4->right = $lvl3_right+1;
+	// 					$exist_lvl4->level = 4;
+
+	// 					$exist_lvl4->save();
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
+
+	public function fillTovCategsTable(Request $request)
+	{
+		$tovs = DB::connection('sqlsrv_imported_data')->select('
+			SELECT [LVL1], [LVL2], [LVL3], [LVL4], [BrandCode], [BrandName]
+			FROM [Imported_Data].[dbo].[AstHrhy]
+            WHERE
+				[LVL1] = \'ИГРУШКИ\'
+					OR
+				[LVL1] = \'КАНЦТОВАРЫ, КНИГИ, ДИСКИ\'
+					OR
+				[LVL1] = \'СОПУТСТВУЮЩИЕ ТОВАРЫ\'
+					OR
+				[LVL1] = \'КРУПНОГАБАРИТНЫЙ ТОВАР\'
+					OR
+				[LVL1] = \'ОБУВЬ\'
+					OR
+				[LVL1] = \'ДЕТСКОЕ ПИТАНИЕ\'
+					OR
+				[LVL1] = \'КОСМЕТИКА/ГИГИЕНА\'
+					OR
+				[LVL1] = \'ПОДГУЗНИКИ\'
+					OR
+				[LVL1] = \'ТОВАРЫ ДЛЯ КОРМЛЕНИЯ\'
+					OR
+				[LVL1] = \'ТЕКСТИЛЬ, ТРИКОТАЖ\'
+			ORDER BY 
+				LVL1, LVL2, LVL3, LVL4');
+
+			foreach($tovs as $value)
+			{
+				$lvl1_right = 0;
+				if($value->LVL1 != '')
+				{
+ 					$lvl1 = trim($value->LVL1);
+
+					// if(trim($value->LVL2) == '' || trim($value->LVL3) == '' || trim($value->LVL4) == '')
+					// {
+					// 	continue;
+					// }
+
+					$exist_lvl1 = DB::table('tov_categs')
+							->where('title', $lvl1)
+							->where('level', 1)
+							->get()->first();
+					if(!$exist_lvl1)
+					{
+						$root = DB::table('tov_categs')->get()->first();
+						if(!$root)
+						{
+							$root = new TovCategs();
+							$root->title = 'root';
+
+							$root->left = 1;
+							$root->right = 2;
+							$root->level = 0;
+
+							$root->save();
+						}
+
+						DB::update('UPDATE [dbo].[tov_categs]
+						   		SET [right] = [right]+2
+						 		WHERE [right] >= ?',
+							[
+								$root->right
+							]);
+
+						$exist_lvl1 = new TovCategs();
+						$exist_lvl1->title = $lvl1;
+
+						$exist_lvl1->left = $root->right;
+						$exist_lvl1->right = $root->right+1;
+						$exist_lvl1->level = 1;
+
+						$exist_lvl1->save();
+						$lvl1_right = $exist_lvl1->right;
+					}
+					else
+					{
+						$lvl1_right = $exist_lvl1->right;
+					}
+				}
+
+				if($value->LVL2 != '')
+				{
+ 					$lvl2 = trim($value->LVL2);
+					$exist_lvl2 = DB::select('SELECT c.[right] as self_right
+							from [dbo].[tov_categs] c, [dbo].[tov_categs] c2
+
+						 	WHERE c.[title] = ? AND
+								c.[level] = 2 AND
+
+								c.[left] > c2.[left] AND
+								c.[right] < c2.[right] AND
+
+								c2.[title] = ? AND
+								c2.[level] = 1',
+							[
+								$lvl2, $lvl1
+							]);
+					if(!$exist_lvl2)
+					{
+						DB::update('UPDATE [dbo].[tov_categs]
+						   		SET [right] = [right]+2
+						 		WHERE [right] >= ?',
+							[
+								$lvl1_right
+							]);
+						DB::update('UPDATE [dbo].[tov_categs]
+						   		SET [left] = [left]+2
+						 		WHERE [left] > ?',
+							[
+								$lvl1_right
+							]);
+
+						$exist_lvl2 = new TovCategs();
+						$exist_lvl2->title = $lvl2;
+
+						$exist_lvl2->left = $lvl1_right;
+						$exist_lvl2->right = $lvl1_right+1;
+						$exist_lvl2->level = 2;
+
+						$exist_lvl2->save();
+						$lvl2_right = $exist_lvl2->right;
+					}
+					else
+					{
+						$lvl2_right = $exist_lvl2[0]->self_right;
+					}
+				}
+
+				if($value->LVL3 != '')
+				{
+					$lvl3 = trim($value->LVL3);
+					$exist_lvl3 = DB::select('SELECT c.[right] as self_right from [dbo].[tov_categs] c, [dbo].[tov_categs] c2
+
+						 	WHERE c.[title] = ? AND
+								c.[level] = 3 AND
+
+								c.[left] > c2.[left] AND
+								c.[right] < c2.[right] AND
+
+								c2.[level] = 2 AND
+								c2.[title] = ? AND
+
+								(
+									SELECT COUNT(*) from [dbo].[tov_categs] c3 WHERE 
+										c3.[level] = 1 AND
+										c3.[title] = ? AND
+										c3.[left] < c2.[left] AND
+										c3.[right] > c2.[right]
+								) > 0 ',
+							[
+								$lvl3, $lvl2, $lvl1
+							]);
+
+					if(!$exist_lvl3)
+					{
+						DB::update('UPDATE [dbo].[tov_categs]
+						   		SET [right] = [right]+2
+						 		WHERE [right] >= ?',
+							[
+								$lvl2_right
+							]);
+						DB::update('UPDATE [dbo].[tov_categs]
+						   		SET [left] = [left]+2
+						 		WHERE [left] > ?',
+							[
+								$lvl2_right
+							]);
+
+						$exist_lvl3 = new TovCategs();
 						$exist_lvl3->title = $lvl3;
 
 						$exist_lvl3->left = $lvl2_right;
@@ -361,13 +846,11 @@ class SystemController extends Controller
 					}
 				}
 
-
-				if($value->lvl4 != '')
+				if($value->LVL4 != '')
 				{
- 					$lvl4 = trim($value->lvl4);
+					$lvl4 = trim($value->LVL4);
 
-					$exist_lvl4 = DB::select('SELECT c.[right] as self_right from [dbo].[tov2_categs] c, [dbo].[tov2_categs] c2
-
+					$exist_lvl4 = DB::select('SELECT c.[id], c.[right] as self_right FROM [dbo].[tov_categs] c, [dbo].[tov_categs] c2
 					 	WHERE c.[title] = ? AND
 								c.[level] = 4 AND
 
@@ -378,7 +861,7 @@ class SystemController extends Controller
 								c2.[title] = ? AND
 
 								(
-									SELECT COUNT(*) from [dbo].[tov2_categs] c3 WHERE 
+									SELECT COUNT(*) from [dbo].[tov_categs] c3 WHERE 
 										c3.[level] = 2 AND
 										c3.[title] = ? AND
 										c3.[left] < c2.[left] AND
@@ -386,7 +869,7 @@ class SystemController extends Controller
 								) > 0  AND
 
 								(
-									SELECT COUNT(*) from [dbo].[tov2_categs] c3 WHERE 
+									SELECT COUNT(*) from [dbo].[tov_categs] c3 WHERE 
 										c3.[level] = 1 AND
 										c3.[title] = ? AND
 										c3.[left] < c2.[left] AND
@@ -398,20 +881,20 @@ class SystemController extends Controller
 
 					if(!$exist_lvl4)
 					{
-						DB::update('UPDATE [dbo].[tov2_categs]
+						DB::update('UPDATE [dbo].[tov_categs]
 						   		SET [right] = [right]+2
 						 		WHERE [right] >= ?',
 							[
 								$lvl3_right
 							]);
-						DB::update('UPDATE [dbo].[tov2_categs]
+						DB::update('UPDATE [dbo].[tov_categs]
 						   		SET [left] = [left]+2
 						 		WHERE [left] > ?',
 							[
 								$lvl3_right
 							]);
 
-						$exist_lvl4 = new Tov2Categs();
+						$exist_lvl4 = new TovCategs();
 						$exist_lvl4->title = $lvl4;
 
 						$exist_lvl4->left = $lvl3_right;
@@ -419,58 +902,61 @@ class SystemController extends Controller
 						$exist_lvl4->level = 4;
 
 						$exist_lvl4->save();
+
+						$exist_lvl4_id = $exist_lvl4->id;
+					}
+					else
+					{
+						$exist_lvl4_id = $exist_lvl4[0]->id;
+					}
+				}
+
+				if($value->BrandCode != '')
+				{
+					$brend = DB::table('brends')
+						->where('name', $value->BrandName)
+						->get()->first();
+					if(!$brend)
+					{
+						DB::transaction(function() use ($value, $exist_lvl4_id) {
+
+							$br = new Brend();
+							$br->code = (!is_null($value->BrandCode) ? $value->BrandCode : 0);
+							$br->name = $value->BrandName;
+							$br->save();
+
+							$bcl = new BrendsCategsLinks();
+							$bcl->brend_id = $br->id;
+							$bcl->categ_id = $exist_lvl4_id;
+							$bcl->save();
+						});
 					}
 				}
 			}
-			echo $t;
-		}
-	}
 
-	public function fillTovCategsTable(Request $request)
-	{
-		// Используем отдельное подключение через ODBC.
-		// Потому как родная(PHP) библиотке медленно работает и вылетает при выборке большого количества записей
-		$conf = \Config::get('database.connections');
-        $dbh = new \PDO('odbc:portal', $conf['sqlsrv']['username'], $conf['sqlsrv']['password']);
+		// foreach($tovs as $value)
+		// {
+		// 	if($value->LVL1 != '' AND
+		// 		$value->LVL2 != '' AND
+		// 		$value->LVL3 != '' AND 
+		// 		$value->LVL4)
+		// 	{
+		// 		$exist = TovCategs::whereRaw(
+		// 			'lvl1 = ? AND lvl2 = ? AND lvl3 = ? AND lvl4 = ?',
+		// 			[$value->LVL1, $value->LVL2, $value->LVL3, $value->LVL4])->first();
+		// 		if(!$exist)
+		// 		{
+		// 			$categs = new TovCategs();
 
-		$stmt = $dbh->prepare("SELECT [LVL1], [LVL2], [LVL3], [LVL4]
-			FROM [Imported_Data].[dbo].[AstHrhy]
-            ORDER BY 
-            	[LVL1] desc
-                ,[LVL2] desc
-                ,[LVL3] desc
-                ,[LVL4] desc");
+		// 			$categs->lvl1 = $value->LVL1;
+		// 			$categs->lvl2 = $value->LVL2;
+		// 			$categs->lvl3 = $value->LVL3;
+		// 			$categs->lvl4 = $value->LVL4;
 
-		$stmt->execute();
-        while ($value = $stmt->fetch())
-        {
-			$value['LVL1'] = trim(iconv('cp1251', 'utf-8', $value['LVL1']));
-			$value['LVL2'] = trim(iconv('cp1251', 'utf-8', $value['LVL2']));
-			$value['LVL3'] = trim(iconv('cp1251', 'utf-8', $value['LVL3']));
-			$value['LVL4'] = trim(iconv('cp1251', 'utf-8', $value['LVL4']));
-
-			if($value['LVL1'] != '' AND
-				$value['LVL2'] != '' AND
-				$value['LVL3'] != '' AND 
-				$value['LVL4'])
-			{
-				$exist = TovCategs::whereRaw(
-					'lvl1 = ? AND lvl2 = ? AND lvl3 = ? AND lvl4 = ?',
-					[$value['LVL1'], $value['LVL2'], $value['LVL3'], $value['LVL4']])->first();
-
-				if(!$exist)
-				{
-					$categs = new TovCategs();
-
-					$categs->lvl1 = $value['LVL1'];
-					$categs->lvl2 = $value['LVL2'];
-					$categs->lvl3 = $value['LVL3'];
-					$categs->lvl4 = $value['LVL4'];
-
-					$categs->save();
-				}
-			}
-        }
+		// 			$categs->save();
+		// 		}
+		// 	}
+  		//}
 	}
 
 	public function ajaxGetTovsForCateg(Request $request, $categId)
@@ -479,7 +965,7 @@ class SystemController extends Controller
 			return;
 		// достаем все выбранные родительские разделы выбранного раздела.
 		// чтобы по их названиям достать товары из таблицы [Imported_Data].[dbo].[AstHrhy]
-		$parCategs = DB::select('SELECT c2.id, c2.title, c2.level from [dbo].[tov2_categs] c, [dbo].[tov2_categs] c2
+		$parCategs = DB::select('SELECT c2.id, c2.title, c2.level from [dbo].[tov_categs] c, [dbo].[tov_categs] c2
 						 	WHERE c.[id] = ? AND
 									c.[left] >= c2.[left] AND
 									c.[right] <= c2.[right] AND 
@@ -500,6 +986,10 @@ class SystemController extends Controller
 		{
 			return;
 		}
+
+// truncate table [Portal].[dbo].[brends]
+// truncate table [Portal].[dbo].[brends_categs_links]
+// truncate table [Portal].[dbo].[tov_categs]
 
 		$result = [];
 		$tovs = DB::connection('sqlsrv_imported_data')->select('
@@ -524,6 +1014,37 @@ class SystemController extends Controller
 		echo json_encode($result);
 	}
 
+	public function ajaxGetSubRegions(Request $request, $regionId)
+	{
+		if(intval($regionId) == 0)
+			return;
+
+		$sub_regions = DB::select('SELECT c2.id, c2.title, c2.level 
+			FROM [dbo].[shop_regions] c, [dbo].[shop_regions] c2
+
+		 	WHERE c.[id] = ? AND
+					c.[left] < c2.[left] AND
+					c.[right] > c2.[right] AND 
+					c2.[level] = c.[level]+1', [ $regionId ]);
+		if($sub_regions)
+			echo json_encode($sub_regions);
+	}
+
+	public function ajaxGetSubCategs(Request $request, $categId)
+	{
+		if(intval($categId) == 0)
+			return;
+
+		$sub_categs = DB::select('SELECT c2.id, c2.title, c2.level 
+			FROM [dbo].[tov_categs] c, [dbo].[tov_categs] c2
+		 	WHERE c.[id] = ? AND
+					c.[left] < c2.[left] AND
+					c.[right] > c2.[right] AND 
+					c2.[level] = c.[level]+1', [ $categId ]);
+		if($sub_categs)
+			echo json_encode($sub_categs);
+	}
+
 	public function ajaxGetTovIdsForCategs(Request $request)
 	{
 		$cat_ids = json_decode($request->get('data'));
@@ -537,26 +1058,11 @@ class SystemController extends Controller
 
 		// достаем все родительские разделы выбранного раздела.
 		// чтобы по их названиям достать id-шники товаров из таблицы [Imported_Data].[dbo].[AstHrhy]
-		$parCategs = DB::select('SELECT c2.id, c2.title, c2.level from [dbo].[tov2_categs] c, [dbo].[tov2_categs] c2
+		$parCategs = DB::select('SELECT c2.id, c2.title, c2.level from [dbo].[tov_categs] c, [dbo].[tov_categs] c2
 			 	WHERE c.[id] IN ('.implode(',', $tmp).') AND
 						c.[left] >= c2.[left] AND
 						c.[right] <= c2.[right] AND 
 						c2.[level] != 0');
-
-
-		// $parCategs = DB::table('tov2_categs as c')
-		// 	->select('c2.id', 'c2.title', 'c2.level')
-		// 	->join('tov2_categs as c2', function ($join) use ($cat_ids)
-		// 		{
-		//         	$join->on('c.left', '>=', 'c2.left')
-		//                ->on('c.right', '<=', 'c2.right')
-		//                ->where('c2.level', '>', 0)
-		//                ->where('c.id', $cat_ids);
-
-		//         })
-		// 	->orderBy('c.level')
-		// 	->get();
-
 		$ctgs = [];
 		$ctgs_str = [];
 
@@ -600,7 +1106,7 @@ class SystemController extends Controller
 	public function ajaxGetTovsCategsErarhi(Request $request)
 	{
 		$result = [];
-		$tovs = DB::table('tov2_categs')
+		$tovs = DB::table('tov_categs')
 				->where('level', '>', 0)
 				->orderBy('left')
 				->get();

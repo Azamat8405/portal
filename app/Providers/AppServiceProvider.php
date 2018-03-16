@@ -14,26 +14,25 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        Validator::extend('start_action_date', function($attribute, $value, $parameters) {
+        // Validator::extend('start_action_date', function($attribute, $value, $parameters) {
+        //     $valid = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $value);
+        //     if($valid)
+        //     {
+        //         $valid = ($parameters[0] <= strtotime($value));
+        //     }
+        //     return $valid;
+        // });
 
-            $valid = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $value);
-            if($valid)
-            {
-                $valid = ($parameters[0] <= strtotime($value));
-            }
-            return $valid;
-        });
+        // Validator::extend('end_action_date', function($attribute, $value, $parameters) {
+        //     $valid = (bool) preg_match( "/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $value);
+        //     if($valid)
+        //     {
+        //         $valid = ($parameters[0] >= strtotime($value));
+        //     }
+        //     return $valid;
+        // });
 
-        Validator::extend('end_action_date', function($attribute, $value, $parameters) {
-            $valid = (bool) preg_match( "/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $value);
-            if($valid)
-            {
-                $valid = ($parameters[0] >= strtotime($value));
-            }
-            return $valid;
-        });
-        Validator::extend('procent', function($attribute, $value, $parameters) {
-
+        Validator::extend('procent', function($attribute, $value, $parameters){
             if(trim($value) != '')
             {
                 if(floatval($value) < 100 && floatval($value) > 0)

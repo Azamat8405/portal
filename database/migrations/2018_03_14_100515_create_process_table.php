@@ -4,21 +4,23 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateUsersActionsTable extends Migration
+class CreateProcessTable extends Migration
 {
     /**
      * Run the migrations.
-     *
+     * Таблица Процессов.
      * @return void
      */
     public function up()
     {
-        Schema::create('users_actions', function (Blueprint $table) {
+        Schema::create('processes', function (Blueprint $table) {
             $table->increments('id')->unsigned();
-            $table->integer('user_id')->unsigned();
-            $table->integer('action_id')->unsigned();
 
-            //TODO внешний ключ ?????
+            $table->string('title');
+            $table->string('process_type_id');
+
+            $table->integer('start_date')->unsigned();
+            $table->integer('end_date')->unsigned()->nullable();
 
             $table->timestamps();
             $table->softDeletes();
@@ -32,6 +34,6 @@ class CreateUsersActionsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('users_actions');
+        Schema::dropIfExists('process');
     }
 }

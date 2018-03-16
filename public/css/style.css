@@ -118,6 +118,7 @@ nav{
 	position: fixed;
 	top: 50px;
     left: 0;
+	z-index: 100;
 }
 nav ul li
 {
@@ -150,9 +151,17 @@ nav ul li ul li:hover > a{
 	border-left: 4px solid #00a7f7;
 	background:#ddf4ff;
 }
-
-
-
+nav .handrail{
+	position:relative;
+}
+nav .handrail > div{
+position: absolute;
+right: -9px;
+width: 9px;
+height: 500px;
+top: 0;
+background: #fff;
+}
 section.content
 {
 	width:85%;
@@ -161,23 +170,21 @@ section.content
 	padding:10px;
 	margin: 50px 0 0 15%;
 }
-
 section.header{
 	height:50px;
 	width:100%;
-	background: #64cdff;
-	background: linear-gradient(to bottom, #64cdff, #00a7f7);
-	padding: 5px;
-    position: fixed;
-    top: 0;
-	z-index: 100;
+	background:#64cdff;
+	background:linear-gradient(to bottom, #64cdff, #00a7f7);
+	padding:5px;
+    position:fixed;
+    top:0;
+	z-index:101;
 }
 section.header h1{
 	margin:13px;
 	color:#fff;
 	float:left;
 }
-
 section.header .auth{
 	float:right;
 	position: relative;

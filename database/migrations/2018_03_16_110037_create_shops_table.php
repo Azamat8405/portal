@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateEditUsersGroupsTable extends Migration
+class CreateShopsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,13 @@ class CreateEditUsersGroupsTable extends Migration
      */
     public function up()
     {
-        // Schema::table('users_groups', function (Blueprint $table) {
+        Schema::create('shops', function (Blueprint $table) {
+            $table->increments('id');
 
-        // });
+            $table->string('title');
+            $table->string('code');
+            $table->integer('region_id');
+        });
     }
 
     /**
@@ -25,6 +29,6 @@ class CreateEditUsersGroupsTable extends Migration
      */
     public function down()
     {
-
+        Schema::dropIfExists('shops');
     }
 }

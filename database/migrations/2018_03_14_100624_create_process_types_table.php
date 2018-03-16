@@ -4,20 +4,21 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateActionsTypesTable extends Migration
+class CreateProcessTypesTable extends Migration
 {
     /**
      * Run the migrations.
-     * Таблица типов маркетинговых акции
+     *
      * @return void
      */
     public function up()
     {
-        Schema::create('action_types', function (Blueprint $table) {
+        Schema::create('process_types', function (Blueprint $table) {
             $table->increments('id');
 
             $table->string('title')->comment('Название акции');
-            $table->string('description')->comment('Тип Акции (скидка, механика, подарок)');
+            $table->integer('dedlain')->comment('Дедлайн процесса');
+            $table->string('description')->comment('Тип поцесса (Газета, ...)');
 
             $table->timestamps();
             $table->softDeletes();
@@ -31,6 +32,6 @@ class CreateActionsTypesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('action_types');
+        Schema::dropIfExists('process_types');
     }
 }

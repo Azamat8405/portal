@@ -1,14 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-	<ul>
-		@foreach ($actions as $action)
-
-			<li>{{$action->id}} - {{$action->actionType->title}}</li>
-
-		@endforeach
-	</ul>
-
     <form>
         <div class="content-panel">
             <div class="content-panel__info">
@@ -29,11 +21,23 @@
                     <input type="submit" name="" value="Сохранить">
                     <input type="submit" name="" value="Изменить">
                     <input type="submit" name="" value="удалить">
-                    <input type="button" onclick="window.location.href='/actions/add'" name="" value="Создать">
+                    <input type="button" onclick="window.location.href='/processes/add'" name="" value="Создать">
                 </div>
-				<div id="table_data" class="table_data"></div>
+                <div id="table_data" class="table_data"></div>
 
-                <!-- <table class="tbl">
+                <ul>
+                    @foreach ($processes as $process)
+                        <li>
+                            [{{$process->id}}] ({{$process->processType->title}}) - {{$process->title}} - 
+                            {{$process->start_date}} - {{$process->end_date}}
+                        </li>
+
+                    @endforeach
+                </ul>
+
+<!--
+
+                <table class="tbl">
                     <tr>
                         <th>
                             Название поля

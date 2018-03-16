@@ -18,24 +18,31 @@ Route::group(['middleware' => 'auth'], function () {
 	/*Для админов*/
 	Route::group(['middleware' => 'admin'], function () {
 
-		Route::get('/actions', 			'ActionController@list')->name('actions');
-		Route::get('/actions/add', 		'ActionController@showAddFrom')->name('actions.add');
-		Route::post('/actions/add', 	'ActionController@add');
+		Route::get('/processes', 		'ProcessController@list')->name('processes');
+		Route::get('/processes/add', 	'ProcessController@showAddFrom')->name('processes.add');
+		Route::post('/processes/add',	'ProcessController@add');
 
 		Route::get('/sys/getContragentsForAvtocomplete', 	'SystemController@ajaxGetContragentsAvtocomplete');
 		Route::get('/sys/getContragentsErarhi',				'SystemController@ajaxGetContragentsErarhi');
 		Route::get('/sys/getContragents',				 	'SystemController@ajaxGetContragents');
 
-		Route::get('/sys/getTovarForAvtoComplete', 		'SystemController@ajaxGetTovarForAvtoComplete');
-		Route::get('/sys/getTovsCategsErarhi', 			'SystemController@ajaxGetTovsCategsErarhi');
-		Route::get('/sys/getTovsForCateg/{categId}', 	'SystemController@ajaxGetTovsForCateg');
-		Route::get('/sys/getTovIdsForCategs', 			'SystemController@ajaxGetTovIdsForCategs');
-
+		Route::get('/sys/getTovarForAvtoComplete', 			'SystemController@ajaxGetTovarForAvtoComplete');
+		Route::get('/sys/getTovsCategsErarhi', 				'SystemController@ajaxGetTovsCategsErarhi');
+		Route::get('/sys/getTovsForCateg/{categId}', 		'SystemController@ajaxGetTovsForCateg');
+		Route::get('/sys/getTovIdsForCategs', 				'SystemController@ajaxGetTovIdsForCategs');
+		Route::get('/sys/getSubCategs/{categId}',			'SystemController@ajaxGetSubCategs');
+		Route::get('/sys/getSubRegions/{regionId}',			'SystemController@ajaxGetSubRegions');
+		Route::get('/sys/getShopsForRegion/{regionId}',		'SystemController@ajaxGetShopsForRegion');
+		Route::get('/sys/getBrendsForCategs/{categId}',		'SystemController@ajaxGetBrendsForCategs');
 
 		Route::get('/sys/getShops', 			'SystemController@ajaxGetShops');
 		Route::get('/sys/getShopsErarhi', 		'SystemController@ajaxGetShopsErarhi');
 		Route::get('/sys/fillTovCategs', 		'SystemController@fillTovCategsTable');
-		Route::get('/sys/fillTov2Categs', 		'SystemController@fillTov2CategsTable');
+		// Route::get('/sys/fillTov2Categs', 		'SystemController@fillTov2CategsTable');
+		Route::get('/sys/fillRegionsTable', 	'SystemController@fillRegionsTable');
+
+
+		
 
 		Route::get('/test', 'TestController@index');
 	});

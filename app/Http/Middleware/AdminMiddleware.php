@@ -16,7 +16,7 @@ class AdminMiddleware
      */
     public function handle($request, Closure $next)
     {
-        if (!in_array('admin', explode(',', Auth::user()->roles)))
+        if (!in_array('admin', explode(',', Auth::user()->role)))
         {
             return redirect('');
         }

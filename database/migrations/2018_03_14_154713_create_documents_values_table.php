@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateFieldsValuesTable extends Migration
+class CreateDocumentsValuesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,11 @@ class CreateFieldsValuesTable extends Migration
      */
     public function up()
     {
-        Schema::create('step_values', function (Blueprint $table){
-            $table->increments('id')->unsigned();
+        Schema::create('documents_values', function (Blueprint $table) {
+            $table->increments('id');
 
             $table->integer('shop_id')->unsigned();
-            $table->integer('action_id')->unsigned();
+            $table->integer('process_id')->unsigned();
 
             $table->string('kod_dis')->comment('код ДиС Ном. Номер');
             $table->string('articule_sk')->comment('Артикул ШК это артикул по базе поставщика');
@@ -52,6 +52,6 @@ class CreateFieldsValuesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('fields_values');
+        Schema::dropIfExists('documents_values');
     }
 }

@@ -6,34 +6,38 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Redirect;
-use App\Action;
+use App\Process;
+use App\ProcessType;
+use App\Step;
 use App\Shop;
 use App\ActionType;
+use App\ActionMark;
+use App\TovCategs;
+use App\ShopRegion;
 use Validator;
 use File;
 use Excel;
 use DB;
 
-class ActionController extends Controller
+class ProcessController extends Controller
 {
-	private $dedlain = 3024000;
-
 	// хешируем сюда список магазинов
 	private $shops = [];
 	private $validate_errors = [];
 
 	public function list()
 	{
-		$actions = Action::all();
- 		return view('actions/list', ['actions' => $actions]);
+ 		return view('processes/list', ['processes' => Process::all()]);
 	}
 
 	public function showAddFrom(Request $request)
 	{
-		$action_types = ActionType::all();
-
-		return view('actions/add', [
-			'action_types' => $action_types
+		return view('processes/add', [
+			'tov_categs_lvl1' => TovCategs::where('level', 1)->get(),
+			'shop_regions_lvl1' => ShopRegion::where('level', 1)->get(),
+			'process_types' => ProcessType::all(),
+			'action_types' => ActionType::all(),
+			'action_marks' => ActionMark::all()
 		]);
 	}
 
@@ -41,9 +45,9 @@ class ActionController extends Controller
 	{
 		// Валидация даты
 		$start_date = strtotime(Request::input('start_date'));
-		if($start_date < strtotime(date('d.m.Y 0:0:0.000', time() + $this->dedlain)))
+		if($start_date < strtotime(date('d.m.Y 0:0:0.000', Process::getMinStartDate())))
 		{
-			$this->validate_errors[0]['start_date'] = 'Дата начала акции должна быть больше '.strftime('%d-%m-%Y', (time() + $this->dedlain));
+			$this->validate_errors[0]['start_date'] = 'Дата начала акции должна быть больше '.strftime('%d-%m-%Y', Process::getMinStartDate());
 		}
 
 		$end_date = strtotime(Request::input('end_date'));
@@ -52,13 +56,73 @@ class ActionController extends Controller
 			$this->validate_errors[1]['end_date'] = 'Дата окончания акции должна быть больше даты начала.';
 		}
 
+		DB::transaction(function () use ($start_date, $end_date) {
+
+			$pr = new Process();
+			$pr->title = Request::input('process_title');
+			$pr->process_type_id = Request::input('process_type');
+			$pr->start_date = $start_date;
+			$pr->end_date = $end_date;
+			$pr->save();
+
+			$step = new Step();
+			$step->process_id = $pr->id;
+			$step->title = 'Данные';
+			$step->conditions = '';
+			$step->from_ids = 0;
+			$step->to_ids = 0;
+			$step->save();
+
+			// if(!Schema::hasTable('step_'.$step->id.'_values'))
+			// {
+			// 	Schema::create('step_'.$step->id.'_values', function ($table) {
+			// 		$table->increments('id');
+			// 		$table->string('idddd');
+			// 	});
+			// }
+
+
+
+		});
+
+//	Array (
+// 	[_token] => DhOqtNlotk8Th0fWvjedXr7tRlwYZEHQKSh7PrED 
+
+// 	[start_date] => 19-04-2018 
+// 	[end_date] => 21-04-2018 
+
+// 	[name_action] => впавп 
+// 	[process_type] => 1 
+
+// 	[catsTovs] => Array ( [0] => [1] => ) [tovs] => Array ( [0] => [1] => ) 
+// 	[shops] => Array ( [0] => [1] => GL0012806,GL0012799,000077027,GL0012863,GL0012346,GL0012664,GL0012858,GL0012665,GL0012653,GL0012816,GL0012815,GL0012401,000077018,GL0012814 ) 
+// 	[distr] => Array ( [0] => [1] => 000019683,001000292,GL0277110,GL0238838 ) 
+
+// 	[types] => Array ( 
+// 		[0] => 3 
+// 		[1] => 1 ) 
+// 	[skidka_on_invoice] => Array ( [0] => 20 [1] => 5 )
+// 	[kompensaciya_off_invoice] => Array ( [0] => 5 [1] => 5 ) 
+// 	[zakup_old] => Array ( [0] => 50 [1] => 5 ) 
+// 	[zakup_new] => Array ( [0] => 45 [1] => 5 ) 
+// 	[start_date_on_invoice] => Array ( [0] => 14-03-2018 [1] => 24-03-2018 ) 
+// 	[end_date_on_invoice] => Array ( [0] => 21-03-2018 [1] => 31-03-2018 ) 
+// 	[roznica_old] => Array ( [0] => 100 [1] => 50 ) 
+// 	[roznica_new] => Array ( [0] => 99 [1] => 45 ) 
+// 	[descr] => Array ( [0] => Описание акции [1] => 22222222222 ) 
+// 	[marks] => Array ( [0] => 2 [1] => 3 ) )
+
+
+print_r(Request::all());
+exit();
+
 		// Проверяем загружен ли файл Exel
 		if (Request::hasFile('file'))
 		{
 			$validator = Validator::make(Request::all(), ['file' => 'mimes:xlsx,xls']);
 			if(!$validator->fails())
 			{
-				$new_path = public_path().'/upload/actions/'.Auth::id();
+				$new_path = public_path().'/upload/processes/'.Auth::id();
 
 				// создаем имя файла. На всякий случай ограничиваем до 10 раз
 				$r = 0;
@@ -162,6 +226,7 @@ class ActionController extends Controller
 		array_walk($data, 'trim');
 
 		$v_err_count = count($this->validate_errors);
+
 		$this->validate_errors[$v_err_count] = [];
 
 		// Проверяем список магазинов,
@@ -328,11 +393,11 @@ class ActionController extends Controller
 			}
 		}
 
-		if(!$this->validateDataStartActionDate($data[0], [$start_date]))
+		if(!$this->validateDataStartProcessDate($data[0], [$start_date]))
 		{
 			$this->validate_errors[$v_err_count][0] = 'Дата начала акции должна быть в формате dd-mm-yyyy. Дата должна быть больше даты начала процесса.';
 		}
-		if(!$this->validateDataEndActionDate($data[1], [$end_date]))
+		if(!$this->validateDataEndProcessDate($data[1], [$end_date]))
 		{
 			$this->validate_errors[$v_err_count][1] = 'Дата окончания акции должна быть в формате dd-mm-yyyy. Дата должна быть меньше даты окончания процесса.';
 		}
@@ -342,7 +407,7 @@ class ActionController extends Controller
 			return false;
 		}
 
-// TODO
+		//TODO
 		// if($data[17] <= 1 && $data[17] > 0)
 		// 	$data[17] = $data[17]*100;
 
@@ -352,7 +417,7 @@ class ActionController extends Controller
 		return true;
 	}
 
-	private function validateDataStartActionDate($value, $parameters = [])
+	private function validateDataStartProcessDate($value, $parameters = [])
 	{
         $valid = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $value);
         if($valid)
@@ -362,32 +427,28 @@ class ActionController extends Controller
         return $valid;
 	}
 
-	private function validateDataEndActionDate($value, $parameters = [])
+	private function validateDataEndProcessDate($value, $parameters = [])
 	{
         $valid = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $value);
         if($valid)
         {
-
 			// $start_date = strtotime(Request::input('start_date'));
-			// if($start_date < strtotime(date('d.m.Y 0:0:0.000', time() + $this->dedlain)))
+			// if($start_date < strtotime(date('d.m.Y 0:0:0.000', time() + $this->processType->dedlain)))
 			// {
 
 			// }
 
-
 // echo date('d.m.Y H:i:s', strtotime($value));
 // echo strtotime($value);
 
-
 // echo date('d.m.Y H:i:s', $parameters[0]);
 // echo $parameters[0];
-
 
 // 17-04-2018
 // 17.04.2018 00:00:00
 
 // var_dump(($parameters[0] <= strtotime($value)));
-// 			exit();
+// exit();
 
 			$valid = ($parameters[0] >= strtotime($value));
         }
