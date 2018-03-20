@@ -1,6 +1,7 @@
 var cache_avtocomplete_contr = {};
 var cache_avtocomplete_tovs = {};
 var cache_avtocomplete_shops = {};
+var cache_avtocomplete_brends = {};
 var cache_shops_dialog = {};
 var cache_shops_regions = {};
 var cache_tovs_categs_dialog = {};
@@ -11,10 +12,10 @@ $(function(){
 
 	events();
 
-	for(var i = 0; i <= 2; i++)
-	{
-		addRow();
-	}
+
+	$('.addProcessForm').submit(function(){
+		$('.skidka_itogo').prop('disabled', false);
+	});
 
 	var $header = null;
 	setTimeout(function(){
@@ -48,10 +49,104 @@ $(function(){
 		});
 	}, 100);
 
-	var selects = ['#tovCategory','#tovGroup','#tovTipIsdeliya','#tovVidIsdeliya', '#tovBrend'];
+	var selects = ['#tovCategory','#tovGroup','#tovTipIsdeliya','#tovVidIsdeliya', '#tovBrendSelect'];
 	$.each(selects, function(index, value){
+
+
 		$(value).selectmenu({
+			open: function( event, ui )
+			{
+				if(selects[index] == '#tovBrendSelect')
+				{
+					if($('#tovBrendSelect-button').find('li.ui-menu-item').length <= 1)
+					{
+						if($('#tovBrendSelect option ').length <= 1)
+						{
+							$('#tovBrendSelect').selectmenu('destroy');
+							$('#tovBrendSelect').hide();
+
+							let inpt =  $('<input />');
+							inpt.attr('id', 'tovBrendAvtoComplete');
+							$('#tovBrendSelect').after(inpt);
+							inpt.button();
+							inpt.focus();
+						
+							$('#tovBrendAvtoComplete').autocomplete(
+							{
+								source: function( request, response ){
+									var term = request.term;
+									if ( term in cache_avtocomplete_brends )
+									{
+										response(cache_avtocomplete_brends[term]);
+										return;
+									}
+									$.getJSON( "/sys/getBrendsForAvtocomplete", request, function( data, status, xhr ) {
+										cache_avtocomplete_brends[term] = data;
+										response(data);
+									});
+								},
+								minLength: 2,
+								select: function( event, ui ) {
+									$('#tovBrend').val(ui.item.val);
+								}
+							});
+						}
+					}
+				}
+			},
 			change:function(e, ui){
+				if(selects[index] == '#tovVidIsdeliya')
+				{
+					if($('#tovBrendAvtoComplete').length > 0)
+					{
+						$('#tovBrendAvtoComplete').remove();
+						$('#tovBrendSelect').selectmenu({
+							open: function( event, ui )
+							{
+								if($('#tovBrendSelect-button').find('li.ui-menu-item').length <= 1)
+								{
+									if($('#tovBrendSelect option ').length <= 1)
+									{
+										$('#tovBrendSelect').selectmenu('destroy');
+										$('#tovBrendSelect').hide();
+
+										let inpt =  $('<input />');
+										inpt.attr('id', 'tovBrendAvtoComplete');
+										$('#tovBrendSelect').after(inpt);
+										inpt.button();
+										inpt.focus();
+									
+										$('#tovBrendAvtoComplete').autocomplete(
+										{
+											source: function( request, response ){
+												var term = request.term;
+												if ( term in cache_avtocomplete_brends )
+												{
+													response(cache_avtocomplete_brends[term]);
+													return;
+												}
+												$.getJSON( "/sys/getBrendsForAvtocomplete", request, function( data, status, xhr ) {
+													cache_avtocomplete_brends[term] = data;
+													response(data);
+												});
+											},
+											minLength: 2,
+											select: function( event, ui ) {
+												$('#tovBrend').val(ui.item.val);
+											}
+										});
+									}
+								}
+							},
+							change:function(e, ui){
+
+								$('#tovBrend').val(ui.item.value);
+								$(selects[index]).find('[value='+ui.item.value+']').prop('selected', true);
+							}
+						});
+					}
+				}
+
 				if(!cache_tovs_categs[ui.item.value] || $.isEmptyObject(cache_tovs_categs[ui.item.value]))
 				{
 					if(selects[index] == '#tovVidIsdeliya')
@@ -66,13 +161,12 @@ $(function(){
 							}
 						});
 					}
-					else
+					else if(selects[index] != '#tovBrendSelect')
 					{
 						$.ajax({
 							url: "/sys/getSubCategs/"+ui.item.value,
 							dataType:'json',
 							success: function(data){
-
 								cache_tovs_categs[ui.item.value] = data;
 								fillCategsFilter(selects[index+1], data);
 							}
@@ -83,6 +177,12 @@ $(function(){
 				{
 					fillCategsFilter(selects[index+1], cache_tovs_categs[ui.item.value]);
 				}
+
+				if(selects[index] == '#tovBrendSelect')
+				{
+					$('#tovBrend').val(ui.item.value);
+				}
+				$(selects[index]).find('[value='+ui.item.value+']').prop('selected', true);
 			}
 		});
 	});
@@ -121,6 +221,7 @@ $(function(){
 				{
 					fillRegionsFilter(selectsBrens[index+1], cache_shops_regions[ui.item.value]);
 				}
+				$(selectsBrens[index]).find('[value='+ui.item.value+']').prop('selected', true);
 			}
 		});
 	});
@@ -134,12 +235,12 @@ $(function(){
 			left: $('#tableTovs').offset().left
 		});
 	});
+
 	$(window).resize(function(){
 		$header.css({
 			left: $('#tableTovs').offset().left
 		});
-	})
-
+	});
 	$('#start_date').mask('ZZ-ZZ-ZZZZ', {
 	    placeholder: "00-00-0000",
 		translation:{
@@ -148,7 +249,6 @@ $(function(){
   			}
 		}
 	});
-
 	$('#end_date').mask('ZZ-ZZ-ZZZZ', {
 		placeholder: "00-00-0000",
 		translation:{
@@ -157,15 +257,14 @@ $(function(){
   			}
 		}
 	});
-
 	$('#process_type').selectmenu({
 		change:function(e, ui){
+
 			var d = new Date();
 			d.setTime(d.getTime() + ui.item.element.data('dedlain') * 1000 );
 			from.datepicker( "option", "minDate", d);
 		}
 	});
-
 	if($.fn.datepicker)
 	{
 		var from = $('#start_date').datepicker({
@@ -177,7 +276,6 @@ $(function(){
 			dateObj.setTime(dateObj.getTime() + 86400000);
 
 			to.datepicker( "option", "minDate",  dateObj);
-
 			$('.start_on_invoice_date').datepicker( "option", "maxDate", this.value);
 		});
 		var to = $('#end_date').datepicker({
@@ -233,7 +331,6 @@ $(function(){
 
 	//подгрузка товаров в раздел. в окне выбора товаров.
 	$('#tovs_dialog').on('click', ' ul li  ul li  ul li  ul li', function(e){
-
 		if($(this).find('[value]').length > 0)
 		{
 			return;
@@ -353,13 +450,14 @@ $(function(){
 			// 			var row_n = getRowNumber(el);
 			// 			$('input[name^=catsTovs]:eq('+row_n+')').val(checked_categs.join());
 
-			// 			$('input[name^=tovs]:eq('+row_n+')').val(ids.join());
-			// 			$('input.tovs:eq('+row_n+')').val(titles.join());
+			// 			$('input.tovs:eq('+row_n+')').val(ids.join());
+			// 			$('input.tovsTitles:eq('+row_n+')').val(titles.join());
 
 			// 			$("#tovs_dialog").dialog("close");
 			// 	    }
 			// 	}
 			// });
+
 		}
 		else if($(this).data('type') == 'getContagentsErarhi')
 		{
@@ -368,9 +466,11 @@ $(function(){
 				closeOnEscape:true,
 				width:400,
 				position:{
-					my:"top",
-					at:"top",
-					of:window
+ 					using:function(t,y){
+						var el = $(y.element.element).find('> div').get(0);
+						$(el).parents().css('top', 60);
+						$(el).parents().css('left', '35%');
+					}
 				},
 				maxHeight:$(window).height()-50,
 				close:function(){
@@ -403,12 +503,91 @@ $(function(){
 			});
 		}
 	});
+
+	$('#fillTable').click(function(){
+		var err = false;
+		var arr = {};
+		if($('#tovCategory').val() == 0)
+		{
+			$('#tovCategory-button').css('border','1px solid red');
+			err = true;
+		}
+		else
+		{
+			$('#tovCategory-button').css('border','1px solid #ccc');
+			arr.tovCategory = $('#tovCategory').val();
+		}
+
+		if($('#tovGroup').val() == 0)
+		{
+			$('#tovGroup-button').css('border','1px solid red');
+			err = true;
+		}
+		else
+		{
+			$('#tovGroup-button').css('border','1px solid #ccc');
+			arr.tovGroup = $('#tovGroup').val();
+		}
+
+		if($('#tovTipIsdeliya').val() == 0)
+		{
+			$('#tovTipIsdeliya-button').css('border','1px solid red');
+			err = true;
+		}
+		else
+		{
+			$('#tovTipIsdeliya-button').css('border','1px solid #ccc');
+			arr.tovTipIsdeliya = $('#tovTipIsdeliya').val();
+		}
+
+		arr.tovVidIsdeliya = $('#tovVidIsdeliya').val();
+		arr.tovBrend = $('#tovBrend').val();
+
+		arr.division = $('#division').val();
+		arr.oblast = $('#oblast').val();
+		arr.city = $('#city').val();
+		arr.shop = $('#shop').val();
+
+		if(!err)
+			getTovsToFillTable(arr, 0);
+	});
 });
+
+function getTovsToFillTable(arr, page)
+{
+	arr.page = page;
+	$.ajax({
+		timeout:0,
+		url:"/sys/getTovsToFillTable",
+		data:arr,
+		dataType:'json',
+		success: function(data){
+
+			if(data == 0)
+			{
+				alert('По указанным критериям товары не найдены');
+				return;
+			}
+
+			if(data.need > 0)
+			{
+				getTovsToFillTable(arr, data.need);
+			}
+
+			for(ind in data.items)
+			{
+				addRow(data.items[ind], data.shop);
+			}
+			delRows(true);
+		}
+	});
+}
 
 function build_list(cache_shops_dialog, ids)
 {
 	// $('#shops_dialog').html('');
 	// var ul = $('<ul>');
+
 	// ul.addClass("tree");
 	// $('#shops_dialog').append(ul);
 
@@ -657,6 +836,7 @@ function get_tovs_categs_list()
 	// 	build_tov_categs_list(cache_tovs_categs_dialog);
 	// }
 }
+
 function get_contragents_list()
 {
 	$('#contragent_dialog').append('<img class="load_img" src="/img/load75x75.gif">');
@@ -668,7 +848,6 @@ function get_contragents_list()
 		}
 	});
 }
-
 function getRowNumber(el)
 {
 	return $(el).parents('tr').find('.row_number').val();
@@ -688,8 +867,8 @@ function escape(string) {
     });
 };
 
-function addRow(){
-
+function addRow(itemsToFill, shopsToFill)
+{
 	$('.select').selectmenu("destroy");
 	$('.start_on_invoice_date, .end_on_invoice_date').datepicker( "destroy" );
 
@@ -700,22 +879,49 @@ function addRow(){
 	tr.append(t);
 	tr.find('input,textarea,select').val('');
 	tr.find('.start_on_invoice_date, .end_on_invoice_date ').removeAttr('id');
-
 	tr.find('input.row_number').val(newRowNumber);
+
+	if(itemsToFill)
+	{
+		tr.find('input.tovs').val(itemsToFill['c']);
+		tr.find('input.tovsTitles ').val(itemsToFill['n']+' ('+itemsToFill['a']+')');
+	}
+	if(shopsToFill)
+	{
+		var ids = [], ttls = [];
+		for(ind in shopsToFill)
+		{
+			ids.push(shopsToFill[ind].id);
+			ttls.push(shopsToFill[ind].title);
+		}
+
+		tr.find('input[name^=shops]').val( ids.join() );
+		tr.find('input.shops').val( ttls.join() );
+	}
 
 	var t = $('.table_data table tbody').append(tr);
 	events();
+	$(window).trigger('resize');
 }
-function delRows()
+
+function delRows(allEmpty)
 {
-	if(confirm('Вы хотите удалить выбранные строки?'))
+	if(allEmpty || confirm('Вы хотите удалить выбранные строки?'))
 	{
-		$('.deleteRow:checked').parents('tr').remove();
+		if(allEmpty)
+		{
+			$('#tableTovs input.tovs[value=""]').parents('tr').remove();
+		}
+		else
+		{
+			$('.deleteRow:checked').parents('tr').remove();
+		}
 
 		$('#tableTovs input.row_number').each(function(index){
 			$(this).val(index);
 		});
 	}
+	$(window).trigger('resize');
 }
 
 function events()
@@ -870,7 +1076,7 @@ function events()
 		}
 	});
 
-	$("input.tovs").autocomplete({
+	$("input.tovsTitles").autocomplete({
 		source: function( request, response ){
 			var term = request.term;
 			if ( term in cache_avtocomplete_tovs )

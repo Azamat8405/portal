@@ -162,6 +162,12 @@ height: 500px;
 top: 0;
 background: #fff;
 }
+nav .handrail > div:hover{
+background: #d8d1bc;
+cursor:pointer;
+}
+
+
 section.content
 {
 	width:85%;

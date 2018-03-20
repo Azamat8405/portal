@@ -159,6 +159,34 @@ class SystemController extends Controller
         }
 	}
 
+	public function ajaxGetBrendsForAvtocomplete(Request $request)
+	{
+		if(trim($request->get('term')) == '')
+			return;
+		$words = explode(' ', $request->get('term'));
+
+		$where = [];
+		foreach ($words as $key => $value)
+		{
+			$where[] = ['name', 'like', '%'.$value.'%'];
+		}
+
+		$brends = DB::table('brends as br')
+			->where($where)
+            ->select('br.name as title', 'br.id')
+            ->get();
+
+        if($brends)
+        {
+			$result = [];
+			foreach ($brends as $value)
+			{
+				$result[] = ['label'=> $value->title, 'value' => $value->title, 'val' => $value->id];
+			}
+			echo json_encode($result);
+        }
+	}
+
 	public function ajaxGetShopsErarhi(Request $request)
 	{
 		// $shops = DB::connection('sqlsrv_imported_data')->select('SELECT
@@ -959,6 +987,187 @@ class SystemController extends Controller
   		//}
 	}
 
+	public function ajaxGetTovsToFillTable(Request $request)
+	{
+		if(trim($request->get('tovCategory')) == '' || trim($request->get('division')) == '')
+		{
+			echo 0;
+			return;
+		}
+		$result = [];
+		$region = $shop = 0;
+
+		if($request->get('shop') > 0)
+		{
+			$shop = $request->get('shop');
+		}
+		elseif($request->get('city') > 0)
+		{
+			$region = $request->get('city');
+		}
+		elseif($request->get('oblast') > 0)
+		{
+			$region = $request->get('oblast');
+		}
+		elseif($request->get('division') > 0)
+		{
+			$region = $request->get('division');
+		}
+
+		if($shop > 0)
+		{
+			$shop = Shop::select('id', 'title', 'code')->where('id', $shop)->get();
+			if($shop)
+			{
+				$result['shop'] = $shop;
+			}
+		}
+		else
+		{
+			if($region == 0)
+			{
+				$regs = DB::select('SELECT s.[id]
+					FROM [Portal].[dbo].[shop_regions] s
+					WHERE s.[level] = 3');
+			}
+			else
+			{
+				$regs = DB::select('SELECT s2.[id]
+					FROM [Portal].[dbo].[shop_regions] s, 
+						[Portal].[dbo].[shop_regions] s2
+					WHERE
+						s.[id] = ? AND
+						s.[left] <= s2.[left] AND
+						s.[right] >= s2.[right] AND
+						s2.[level] = 3',
+					[ $region ]);
+			}
+
+			$region_ids = [];
+			if($regs)
+			{
+				foreach ($regs as $v)
+				{
+					$region_ids[] = $v->id;
+				}
+			}
+			$shops = Shop::select('id', 'title', 'code')
+				->whereIN('region_id', $region_ids)
+				->orderBy('title')
+				->get();
+			if($shops)
+			{
+				$result['shop'] = $shops;
+			}
+		}
+
+		if($request->get('tovVidIsdeliya') > 0)
+		{
+			$getSubCategsFor = 0;
+			$cats_level_4 = [$request->get('tovVidIsdeliya')];
+		}
+		elseif($request->get('tovTipIsdeliya') > 0)
+		{
+			$getSubCategsFor = $request->get('tovTipIsdeliya');
+		}
+		elseif($request->get('tovGroup') > 0)
+		{
+			$getSubCategsFor = $request->get('tovGroup');
+		}
+		else
+		{
+			$getSubCategsFor = $request->get('tovCategory');
+		}
+
+		$str_brend = '';
+		if($request->get('tovBrend') > 0)
+		{
+			$tovBrend = DB::select('SELECT [code], [name] from [Portal].[dbo].[brends]
+			 	WHERE [id] = ? ',
+				[ $request->get('tovBrend') ]);
+			if($tovBrend)
+			{
+				$str_brend = ' AND [BrandCode] = \''.$tovBrend[0]->code.'\' AND [BrandName] = \''.$tovBrend[0]->name.'\'';
+			}
+		}
+
+		if($getSubCategsFor > 0)
+		{
+			//доставем все подразделы 4 уровня
+			$subCategs = DB::select('SELECT c2.id from [dbo].[tov_categs] c, [dbo].[tov_categs] c2
+			 	WHERE c.[id] = ? AND
+					c.[left] < c2.[left] AND
+					c.[right] > c2.[right] AND 
+					c2.[level] = 4',
+				[ $getSubCategsFor ]);
+
+			if($subCategs)
+			{
+				foreach ($subCategs as $key => $value)
+				{
+					$cats_level_4[] = $value->id;
+				}
+			}
+		}
+
+		//достаем все разделы 4 увроня с их родителями
+		$parCategs = DB::select('SELECT c.title as title4, c2.title as title3, c3.title as title2, c4.title as title1
+			FROM [dbo].[tov_categs] c, [dbo].[tov_categs] c2, [dbo].[tov_categs] c3, [dbo].[tov_categs] c4
+		 	WHERE c.[id] IN ( \''.implode('\',\'', $cats_level_4).'\' ) AND
+
+					c.[left] > c2.[left] AND
+					c.[right] < c2.[right]  AND 
+
+					c2.[left] > c3.[left] AND
+					c2.[right] < c3.[right] AND 
+
+					c3.[left] > c4.[left] AND
+					c3.[right] < c4.[right] AND 
+
+					c4.[level] = 1 AND
+					c3.[level] = 2 AND
+					c2.[level] = 3 AND
+					c.[level] = 4');
+		if($parCategs)
+		{
+			$str = '';
+			foreach ($parCategs as $key => $value)
+			{
+				$str .= '([LVL1] = \''.$value->title1.'\' AND
+						[LVL2] = \''.$value->title2.'\' AND
+						[LVL3] = \''.$value->title3.'\' AND
+						[LVL4] = \''.$value->title4.'\') OR ';
+			}
+			$str = substr($str, 0, -4);
+
+			$to = 20000;
+			$from = $request->get('page') > 0 ? $request->get('page') * $to : 0;
+
+			$tovs = DB::connection('sqlsrv_imported_data')->select('
+				SELECT ArtCode as c, ArtName as n, ArtArticle as a
+				FROM [Imported_Data].[dbo].[AstHrhy]
+	            WHERE '.$str.$str_brend.'
+				ORDER BY ArtName
+				OFFSET '.$from.' ROWS
+				FETCH NEXT '.$to.' ROWS ONLY');
+
+			if($tovs)
+			{
+				$page = $request->get('page');
+				$need = (count($tovs) < $to ? 0 : ++$page);
+
+				$result['items'] = $tovs;
+				$result['need'] = $need;
+
+				echo json_encode($result);
+			}
+			else
+			{
+				echo 0;
+			}
+		}
+	}
+
 	public function ajaxGetTovsForCateg(Request $request, $categId)
 	{
 		if(intval($categId) == 0)
@@ -986,7 +1195,6 @@ class SystemController extends Controller
 		{
 			return;
 		}
-
 // truncate table [Portal].[dbo].[brends]
 // truncate table [Portal].[dbo].[brends_categs_links]
 // truncate table [Portal].[dbo].[tov_categs]

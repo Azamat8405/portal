@@ -1,5 +1,40 @@
 $(function(){
 
+
+	if($('nav .handrail > div').length > 0)
+	{
+		$('nav .handrail > div').click(function(){
+			var el = this;
+			if($(el).parents('nav').width() > 0)
+			{
+
+				$('.content-panel').css('width', '99%');
+				$(".content").css('margin-left', 0);
+				$(".content").css('width', '100%');
+
+				$(el).parents('nav').width(0);
+
+				// $(".content").animate({
+				//     'margin-left': 0,
+				//     'width': '100%',
+				//    }, 100, function()  {
+
+				// 	$(el).parents('nav').width(0);
+				//   });
+    		}
+    		else
+    		{
+				$(el).parents('nav').width('15%');
+				$('.content').css('margin-left', '15%');
+				$('.content').css('width', '85%');
+				$('.content-panel').css('width', '84%');
+    		}
+
+			$(window).trigger('resize');
+
+		})
+	}
+
 	if($.fn.handsontable && $('#table_data').length > 0)
 	{
 		// var data = [
@@ -169,5 +204,8 @@ function left_menu_height()
 	let padd = parseInt($('section.header').css('padding-top')) + parseInt($('section.header').css('padding-bottom'))
 	let header = parseInt($('section.header').height()) + padd;
 
-	$('nav').height(parseInt($(window).height()) - header);
+	let h = parseInt($(window).height()) - header;
+
+	$('nav').height(h);
+	$('nav .handrail > div').height(h);
 }

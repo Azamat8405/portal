@@ -14,6 +14,8 @@ use App\ActionType;
 use App\ActionMark;
 use App\TovCategs;
 use App\ShopRegion;
+use App\Brend;
+use App\Document;
 use Validator;
 use File;
 use Excel;
@@ -22,8 +24,10 @@ use DB;
 class ProcessController extends Controller
 {
 	// хешируем сюда список магазинов
-	private $shops = [];
+	private $cache_shops = [];
 	private $validate_errors = [];
+	// $validate_errors['form'] = [];ошибки формы
+	// $validate_errors['file'] = [];ошибки файла загрузки
 
 	public function list()
 	{
@@ -43,81 +47,69 @@ class ProcessController extends Controller
 
 	public function add(Request $request)
 	{
+		$err = false;
+
 		// Валидация даты
 		$start_date = strtotime(Request::input('start_date'));
-		if($start_date < strtotime(date('d.m.Y 0:0:0.000', Process::getMinStartDate())))
+		$proc_type = ProcessType::find(Request::input('process_type'));
+		if($proc_type)
 		{
-			$this->validate_errors[0]['start_date'] = 'Дата начала акции должна быть больше '.strftime('%d-%m-%Y', Process::getMinStartDate());
+			$cur_date = mktime(0, 0, 0, date("n"), date("j"), date("Y"));
+			if($proc_type->dedlain + $cur_date > $start_date)
+			{
+				$this->validate_errors['form'][0]['start_date'] = 'Дата начала акции должна быть больше либо ровна '.strftime('%d-%m-%Y', $proc_type->dedlain + time());
+			}
+		}
+		else
+		{
+			$this->validate_errors['form'][0]['process_type'] = 'Нет Акций указанного типа';
 		}
 
 		$end_date = strtotime(Request::input('end_date'));
 		if($end_date <= $start_date)
 		{
-			$this->validate_errors[1]['end_date'] = 'Дата окончания акции должна быть больше даты начала.';
+			$this->validate_errors['form'][0]['end_date'] = 'Дата окончания акции должна быть больше даты начала.';
 		}
 
-		DB::transaction(function () use ($start_date, $end_date) {
+		// Если в шапке есть ошибки покаызваем их пока.
+		if(!empty($this->validate_errors['form']))
+		{
+			return redirect()->back()
+				->with('errors', $this->validate_errors)
+				->withInput();
+		}
 
-			$pr = new Process();
-			$pr->title = Request::input('process_title');
-			$pr->process_type_id = Request::input('process_type');
-			$pr->start_date = $start_date;
-			$pr->end_date = $end_date;
-			$pr->save();
+		$dataToInsert = [];
 
-			$step = new Step();
-			$step->process_id = $pr->id;
-			$step->title = 'Данные';
-			$step->conditions = '';
-			$step->from_ids = 0;
-			$step->to_ids = 0;
-			$step->save();
+		// Проверка полей формы
+		foreach($request::input('tovs') as $key => $value)
+		{
+			$dataToInsert[$key]['ArtCode'] = $value;
+			// $dataToInsert[$key]['articule_sk'] = $value;
 
-			// if(!Schema::hasTable('step_'.$step->id.'_values'))
-			// {
-			// 	Schema::create('step_'.$step->id.'_values', function ($table) {
-			// 		$table->increments('id');
-			// 		$table->string('idddd');
-			// 	});
-			// }
+			if(isset($request::input('shops')[$key]))
+			{
+				$dataToInsert[$key]['shops'] = explode(',', $request::input('shops')[$key]);
+			}
 
+			$dataToInsert[$key]['type'] = $request::input('types')[$key] ?? null;
+			$dataToInsert[$key]['skidka_on_invoice'] = $request::input('skidka_on_invoice')[$key] ?? null;
+			$dataToInsert[$key]['kompensaciya_off_invoice'] = $request::input('kompensaciya_off_invoice')[$key] ?? null;
+			$dataToInsert[$key]['skidka_itogo'] = $request::input('skidka_itogo')[$key] ?? null;
+			$dataToInsert[$key]['zakup_old'] = $request::input('zakup_old')[$key] ?? null;
+			$dataToInsert[$key]['zakup_new'] = $request::input('zakup_new')[$key] ?? null;
+			$dataToInsert[$key]['start_date_on_invoice'] = $request::input('start_date_on_invoice')[$key] ?? null;
+			$dataToInsert[$key]['end_date_on_invoice'] = $request::input('end_date_on_invoice')[$key] ?? null;
+			$dataToInsert[$key]['roznica_old'] = $request::input('roznica_old')[$key] ?? null;
+			$dataToInsert[$key]['roznica_new'] = $request::input('roznica_new')[$key] ?? null;
+			$dataToInsert[$key]['descr'] = $request::input('descr')[$key] ?? null;
+			$dataToInsert[$key]['marks'] = $request::input('marks')[$key] ?? null;
 
+			$this->validateData($dataToInsert[$key], 'form', $start_date, $end_date);
+		}
 
-		});
-
-//	Array (
-// 	[_token] => DhOqtNlotk8Th0fWvjedXr7tRlwYZEHQKSh7PrED 
-
-// 	[start_date] => 19-04-2018 
-// 	[end_date] => 21-04-2018 
-
-// 	[name_action] => впавп 
-// 	[process_type] => 1 
-
-// 	[catsTovs] => Array ( [0] => [1] => ) [tovs] => Array ( [0] => [1] => ) 
-// 	[shops] => Array ( [0] => [1] => GL0012806,GL0012799,000077027,GL0012863,GL0012346,GL0012664,GL0012858,GL0012665,GL0012653,GL0012816,GL0012815,GL0012401,000077018,GL0012814 ) 
-// 	[distr] => Array ( [0] => [1] => 000019683,001000292,GL0277110,GL0238838 ) 
-
-// 	[types] => Array ( 
-// 		[0] => 3 
-// 		[1] => 1 ) 
-// 	[skidka_on_invoice] => Array ( [0] => 20 [1] => 5 )
-// 	[kompensaciya_off_invoice] => Array ( [0] => 5 [1] => 5 ) 
-// 	[zakup_old] => Array ( [0] => 50 [1] => 5 ) 
-// 	[zakup_new] => Array ( [0] => 45 [1] => 5 ) 
-// 	[start_date_on_invoice] => Array ( [0] => 14-03-2018 [1] => 24-03-2018 ) 
-// 	[end_date_on_invoice] => Array ( [0] => 21-03-2018 [1] => 31-03-2018 ) 
-// 	[roznica_old] => Array ( [0] => 100 [1] => 50 ) 
-// 	[roznica_new] => Array ( [0] => 99 [1] => 45 ) 
-// 	[descr] => Array ( [0] => Описание акции [1] => 22222222222 ) 
-// 	[marks] => Array ( [0] => 2 [1] => 3 ) )
-
-
-print_r(Request::all());
-exit();
-
-		// Проверяем загружен ли файл Exel
-		if (Request::hasFile('file'))
+		//	Проверяем загружен ли файл Exel.
+		if(Request::hasFile('file'))
 		{
 			$validator = Validator::make(Request::all(), ['file' => 'mimes:xlsx,xls']);
 			if(!$validator->fails())
@@ -145,7 +137,7 @@ exit();
 						if(($handle = fopen($csv_path_file, "r")) !== FALSE)
 						{
 							$i = 0;
-							$err = false;
+
 							while (($data = fgetcsv($handle, 1200, ",")) !== FALSE)
 						    {
 								//Первые две строки заголовки, пропускаем
@@ -153,7 +145,11 @@ exit();
 						    	if($i <= 2)
 						    		continue;
 
-								if(!$this->validateData($data, $start_date, $end_date))
+								// $dataToInsert
+								// $data['brend']
+								// $data['ArtName']
+
+								if(!$this->validateData($data, 'file', $start_date, $end_date))
 								{
 									$err = true;
 								}
@@ -171,20 +167,196 @@ exit();
 								{
 									Storage::delete(str_replace(base_path(), '', $csv_path_file));
 								}
-
-								return redirect()->back()
-										->with('errors', $this->validate_errors)
-										->withInput();
-							}
-							else
-							{
-								return redirect()->back()->with('ok', 'Добавление прошло успешно');
 							}
 						}
 					}
 				}
 				catch(Exception $e){}
 			}
+		}
+
+//	print_r($this->validate_errors);
+//	exit();
+
+		// if($err || !empty($this->validate_errors))
+		// {
+		// 	return redirect()->back()
+		// 		->with('errors', $this->validate_errors)
+		// 		->withInput();
+		// }
+		// else
+		// {
+		// 	return redirect()->back()->with('ok', 'Добавление прошло успешно');
+		// }
+
+		// tovs
+		// shops
+
+//	distr
+
+		// types
+		// skidka_on_invoice
+		// kompensaciya_off_invoice
+		// skidka_itogo
+		// zakup_old
+		// zakup_new
+		// start_date_on_invoice
+		// end_date_on_invoice
+		// roznica_old
+		// roznica_new
+		// descr
+		// marks
+
+		try
+		{
+			DB::transaction(function () use ($start_date, $end_date, $proc_type, $dataToInsert)
+			{
+				$pr = new Process();
+				if(trim(Request::input('process_title')) == '')
+				{
+					$pr->title = $proc_type->title.' '.Request::input('start_date');
+				}
+				else
+				{
+					$pr->title = Request::input('process_title');
+				}
+				$pr->process_type_id = Request::input('process_type');
+				$pr->start_date = $start_date;
+				$pr->end_date = $end_date;
+				$pr->save();
+
+				$step_title = 'Данные';
+
+				$step = new Step();
+				$step->process_id = $pr->id;
+				$step->title = $step_title;
+				$step->conditions = '';
+				$step->from_ids = 0;
+				$step->to_ids = 0;
+				$step->save();
+
+				$doc = new Document();
+				$doc->step_id = $step->id;
+				$doc->title = 'Документ '.$step_title;
+				$doc->save();
+
+				// TODO нужно на лету создавать эту таблицу. И удалять ее если удаляется документ(родительский документ)
+				if(!\Schema::hasTable('documents_values_'.$doc->id))
+				{
+					\Schema::create('documents_values_'.$doc->id, function ($table) {
+						$table->increments('id');
+
+			            $table->integer('shop_id')->unsigned();
+			            $table->integer('process_id')->unsigned();
+
+			            $table->string('kod_dis')->comment('код ДиС Ном. Номер');
+			            $table->string('articule_sk')->comment('Артикул ШК это артикул по базе поставщика');
+
+						$table->integer('action_types_id')->unsigned();
+
+			            $table->string('on_invoice');
+			            $table->string('off_invoice');
+			            $table->string('skidka_itogo');
+
+			            $table->string('old_zakup_price');
+			            $table->string('new_zakup_price');
+
+			            $table->string('on_invoice_start')->comment('Дата начала предоставления скидки он инвойс');
+			            $table->string('on_invoice_end')->comment('Дата окончания предоставления скидки он инвойс');
+
+			            $table->string('old_roznica_price');
+			            $table->string('new_roznica_price');
+
+			            $table->text('description')->comment('подписи, слоганы, расшифровки и пояснения, которые Вы хотели бы видеть к своим товарам.');
+
+			            $table->text('metka')->comment('Хит, Новинка, Суперцена, Выгода 0000  рублей...');
+			            //TODO внешний ключ ???
+
+						$table->timestamps();
+			            $table->softDeletes();
+					});
+				}
+
+				foreach ($dataToInsert as $key => $value)
+				{
+					// $dataToInsert[$key]['ArtCode'] = $value;
+					// $dataToInsert[$key]['shops'] = $request::input('shops')[$key] ?? null;
+					// $dataToInsert[$key]['type'] = $request::input('types')[$key] ?? null;
+					// $dataToInsert[$key]['skidka_on_invoice'] = $request::input('skidka_on_invoice')[$key] ?? null;
+					// $dataToInsert[$key]['kompensaciya_off_invoice'] = $request::input('kompensaciya_off_invoice')[$key] ?? null;
+					// $dataToInsert[$key]['skidka_itogo'] = $request::input('skidka_itogo')[$key] ?? null;
+					// $dataToInsert[$key]['zakup_old'] = $request::input('zakup_old')[$key] ?? null;
+					// $dataToInsert[$key]['zakup_new'] = $request::input('zakup_new')[$key] ?? null;
+					// $dataToInsert[$key]['start_date_on_invoice'] = $request::input('start_date_on_invoice')[$key] ?? null;
+					// $dataToInsert[$key]['end_date_on_invoice'] = $request::input('end_date_on_invoice')[$key] ?? null;
+					// $dataToInsert[$key]['roznica_old'] = $request::input('roznica_old')[$key] ?? null;
+					// $dataToInsert[$key]['roznica_new'] = $request::input('roznica_new')[$key] ?? null;
+					// $dataToInsert[$key]['descr'] = $request::input('descr')[$key] ?? null;
+					// $dataToInsert[$key]['marks'] = $request::input('marks')[$key] ?? null;
+
+
+// Array
+// (
+// 	[0] => Array
+// 	(
+// 		[ArtCode] => GL000282356
+// 		[shops] => 186,185,184,183,182,181,180,179,178,177,176,175,174,173,172,171,170,169,168,166,167,165,164,163,162,161,118,160,159,158,155,157,156,154,153,152,151,150,149,148,147,145,144,146,143,141,142,140,139,138,137,136,99,112,106,111,98,129,107,113,126,132,119,105,101,103,127,108,123,122,135,104,130,124,100,115,114,121,120,116,133,109,131,125,134,102,117,128,110,96,97,95,94,93,90,91,92,89,88,87,86,85,84,83,82,81,80,79,78,77,75,74,76,73,72,71,70,69,66,67,68,65,64,63,60,59,62,61,55,58,47,49,51,52,53,54,56,48,57,50,46,45,44,42,43,41,40,39,38,37,10,36,35,34,33,32,31,30,27,29,28,25,26,22,23,24,21,20,19,18,17,16,14,15,13,7,8,12,11,9,6,5,4,3,1,2
+// 		[type] => 1
+// 		[skidka_on_invoice] => 12
+// 		[kompensaciya_off_invoice] => 2
+//         [skidka_itogo] => 83.3
+//         [zakup_old] => 12
+//         [zakup_new] => 2
+//         [start_date_on_invoice] => 20-03-2018
+//         [end_date_on_invoice] => 23-03-2018
+//         [roznica_old] => 12
+//         [roznica_new] => 2
+//         [descr] => 12
+//         [marks] => 12
+//     )
+// )
+					foreach ($value['shops'] as $value2)
+					{
+						\DB::table('documents_values_'.$doc->id)->insert(
+		 					[
+								'shop_id' => $value2,
+					            'process_id' => $pr->id, // Нужно это поле тут???
+					            'kod_dis' => $value['ArtCode'],
+					            'articule_sk' => $value['articule_sk'],
+								'action_types_id' => $value['type'],
+					            'on_invoice' => $value['skidka_on_invoice'],
+					            'off_invoice' => $value['kompensaciya_off_invoice'],
+					            'skidka_itogo' => $value['skidka_itogo'],
+					            'old_zakup_price' => $value['zakup_old'],
+					            'new_zakup_price' => $value['zakup_new'],
+					            'on_invoice_start' => $value['start_date_on_invoice'],
+					            'on_invoice_end' => $value['end_date_on_invoice'],
+					            'old_roznica_price' => $value['roznica_old'],
+					            'new_roznica_price' => $value['roznica_new'],
+					            'description' => $value['descr'],
+					            'metka' => $value['marks']
+		 					]
+		 				);
+
+					}
+				}
+			}, 2);
+		}
+		catch(Exception $e)
+		{
+			$this->validate_errors['form'][0]['error_db_save'] = 'Не удалось сохранить данные. Попробуйте еще раз либо обратитесь к администратору системы.';
+		}
+
+
+		if($err || !empty($this->validate_errors))
+		{
+			return redirect()->back()
+				->with('errors', $this->validate_errors)
+				->withInput();
+		}
+		else
+		{
+			return redirect()->back()->with('ok', 'Добавление прошло успешно');
 		}
 	}
 
@@ -221,251 +393,291 @@ exit();
      * @param  $end_date - дата когда должна окончиться акция
      * @return void
      */
-    protected function validateData(Array $data, $start_date, $end_date)
+    protected function validateData(Array &$data, $source, $start_date, $end_date)
     {
-		array_walk($data, 'trim');
-
-		$v_err_count = count($this->validate_errors);
-
-		$this->validate_errors[$v_err_count] = [];
+		if(!isset($this->validate_errors[$source]))
+		{
+			$this->validate_errors[$source] = [];
+		}
+		$v_err_count = count($this->validate_errors[$source]);
 
 		// Проверяем список магазинов,
-		if(empty($this->shops))
+		// Кешируем список магазинов ($this->cache_shops), чтоб каждый раз за ними не ходить.
+		if(empty($this->cache_shops))
 		{
-			$tmp = DB::connection('sqlsrv_imported_data')->select('SELECT sm.StoreCode
-      				,sr.StoreCity
-      				,sr.StoreRegion
-      				,sr.StoreMacroRegion
-	  				,sm.StoreName
-				FROM [Imported_Data].[dbo].[Store_Region] as sr 
-						RIGHT JOIN 
-					[Imported_Data].[dbo].[Store_Main] as sm ON 
-						sr.IDStore = sm.IDStore');
-
+			$tmp = Shop::all();
 			foreach ($tmp as $key => $value)
 			{
-				$value->StoreName = Shop::prepareShopName($value->StoreName);
-				if(!isset($this->shops[$value->StoreCode]))
+				$value->title = Shop::prepareShopName($value->title);
+				if(!isset($this->cache_shops[$value->code]))
 				{
-					$this->shops[$value->StoreCode] = (array)$value;
+					$this->cache_shops[$value->code] = [$value->code, $value->title, $value->id];
 				}
 			}
 		}
 
-		foreach (explode(',', $data[10]) as $value)
+		if(isset($data['shops']))
 		{
-			$exist = false;
-			foreach ($this->shops as $val)
+			foreach ($data['shops'] as $value)
 			{
-				if(in_array(Shop::prepareShopName($value), $val))
+				$exist = false;
+				foreach ($this->cache_shops as $val)
 				{
-					$exist = true;
-					break;
+					if(in_array(Shop::prepareShopName($value), $val))
+					{
+						$exist = true;
+						break;
+					}
+				}
+				if(!$exist)
+				{
+					$this->validate_errors[$source][$v_err_count]['shops'] = 'Указанный магазин не найден "'.$value.'"';
 				}
 			}
-			if(!$exist)
-			{
-				$this->validate_errors[$v_err_count][10] = 'Указанный магазин не найден "'.$value.'"';
-			}
-		}
-
-		foreach (explode(',', $data[11]) as $value)
-		{
-			$exist = false;
-			foreach ($this->shops as $val)
-			{
-				if(in_array(Shop::prepareShopName($value), $val))
-				{
-					$exist = true;
-					break;
-				}
-			}
-
-			if(!$exist)
-			{
-				$this->validate_errors[$v_err_count][11] = 'Указанный магазин-исключение не найден "'.$value.'"';
-			}
-		}
-
-		$tmp = DB::connection('sqlsrv_imported_data')->select('select [ArtName], [BrandName] FROM [Imported_Data].[dbo].[Assortment] 
-				WHERE ArtCode=\''.$data[14].'\'');
-		if(!$tmp)
-		{
-			$this->validate_errors[$v_err_count][14] = 'Не найден товар с указанным Артикуром "'.$data[14].'"';
 		}
 		else
 		{
-			if(trim($tmp[0]->BrandName) != trim($data[6]))
-			{
-				$this->validate_errors[$v_err_count][6] = 'Не верно указан Бренд для товара "'.($tmp[0]->BrandName).'". Введен "'.$data[6].'".';
-			}
+			$this->validate_errors[$source][$v_err_count]['shops'] = 'Не указаны магазины для товара';
+		}
 
-			if(trim($tmp[0]->ArtName) != trim($data[13]))
+		//проверка магазинов исключений
+		if(isset($data['shops_exception']) && trim($data['shops_exception']) != '')
+		{
+			foreach (explode(',', $data['shops_exception']) as $value)
 			{
-				$this->validate_errors[$v_err_count][13] = 'Не верно указано Наименование товара "'.($tmp[0]->ArtName).'". Введено "'.$data[13].'".';
+				$exist = false;
+				foreach ($this->cache_shops as $val)
+				{
+					if(in_array(Shop::prepareShopName($value), $val))
+					{
+						$exist = true;
+						break;
+					}
+				}
+				if(!$exist)
+				{
+					$this->validate_errors[$source][$v_err_count]['shops_exception'] = 'Указанные магазины-исключения не найдены "'.$value.'"';
+				}
 			}
 		}
 
+		if(isset($data['ArtCode']))
+		{
+			$tmp = DB::connection('sqlsrv_imported_data')->select('select [ArtName], [BrandName], [ArtArticle] FROM [Imported_Data].[dbo].[Assortment] 
+				WHERE ArtCode=\''.$data['ArtCode'].'\'');
+			if(!$tmp)
+			{
+				$this->validate_errors[$source][$v_err_count]['ArtCode'] = 'Не найден товар с указанным Артикуром "'.$data['ArtCode'].'"';
+			}
+			else
+			{
+				$data['articule_sk'] = $tmp[0]->ArtArticle;
+
+				// Если данные из файла то должен быть передан параметр $data['brend']. Нужно проверить правильность заполнения бренда
+				if(isset($data['brend']))
+				{
+					if(trim($tmp[0]->BrandName) != trim($data['brend']))
+					{
+						$this->validate_errors[$source][$v_err_count]['brend'] = 'Не верно указан Бренд для товара "'.($tmp[0]->BrandName).'". Введен "'.$data['brend'].'".';
+					}
+				}
+
+				// Если данные из файла то должен быть передан параметр $data['ArtName']. Нужно проверить правильность заполнения Наименования товара
+				if(isset($data['ArtName']))
+				{
+					if(trim($tmp[0]->ArtName) != trim($data['ArtName']))
+					{
+						$this->validate_errors[$source][$v_err_count]['ArtName'] = 'Не верно указано Наименование товара "'.($tmp[0]->ArtName).'". Введено "'.$data['ArtName'].'".';
+					}
+				}
+			}
+		}
+
+		// Проверка типа маркетинговой акции
+		if(isset($data['type']))
+		{
+			if(intval($data['type']) == $data['type'])
+			{
+				$action_type = ActionType::find($data['type']);
+			}
+			else
+			{
+				$action_type = ActionType::where('title = ?', $data['type']);
+			}
+
+			if(!$action_type)
+			{
+				$this->validate_errors[$source][$v_err_count]['type'] = 'Указанный тип маркетинговой акции не найден "'.$data['type'].'"';
+			}
+		}
+		else
+		{
+			$this->validate_errors[$source][$v_err_count]['type'] = 'Не указан тип акции для товара';
+		}
 		// Размер скидки ON INVOICE
-		if(!$this->validateDataProcent($data[17]))
+		if(isset($data['skidka_on_invoice']))
 		{
-			$this->validate_errors[$v_err_count][17] = 'Не верное значение процента. Значение должно быть от 0 - 100.';
+			if(!$this->validateDataProcent($data['skidka_on_invoice']))
+			{
+				$this->validate_errors[$source][$v_err_count]['skidka_on_invoice'] = 'Не верное значение процента. Значение должно быть от 0 - 100.';
+			}
 		}
-
 		// Процент компенсации OFF INVOICE 
-		if(!$this->validateDataProcent($data[18]))
+		if(isset($data['kompensaciya_off_invoice']))
 		{
-			$this->validate_errors[$v_err_count][18] = 'Не верное значение процента. Значение должно быть от 0 - 100.';
+			if(!$this->validateDataProcent($data['kompensaciya_off_invoice']))
+			{
+				$this->validate_errors[$source][$v_err_count]['kompensaciya_off_invoice'] = 'Не верное значение процента. Значение должно быть от 0 - 100.';
+			}
 		}
 
 		// Скидка ИТОГО  (%)
-		if(!$this->validateDataProcent($data[19]))
+		if(isset($data['skidka_itogo']))
 		{
-			$this->validate_errors[$v_err_count][19] = 'Не верное значение процента. Значение должно быть от 0 - 100.';
+			if(!$this->validateDataProcent($data['skidka_itogo']))
+			{
+				$this->validate_errors[$source][$v_err_count]['skidka_itogo'] = 'Не верное значение процента. Значение должно быть от 0 - 100.';
+			}
 		}
 
 		//Закупочная цена
-		if(trim($data[20]) == '' || !preg_match('/^[0-9\.\,\-]+$/', $data[20]))
+		if(trim($data['zakup_old']) == '' || !preg_match('/^[0-9\.\,\-]+$/', $data['zakup_old']))
 		{
-			$this->validate_errors[$v_err_count][20] = 'Не указана старая закупочная цена или указана неверно.';
+			$this->validate_errors[$source][$v_err_count]['zakup_old'] = 'Не указана старая закупочная цена или указана неверно.';
 		}
-		if(trim($data[21]) == '' || !preg_match('/^[0-9\.\,\-]+$/', $data[21]))
+
+		if(trim($data['zakup_new']) == '' || !preg_match('/^[0-9\.\,\-]+$/', $data['zakup_new']))
 		{
-			$this->validate_errors[$v_err_count][21] = 'Не указана новая закупочная цена или указана неверно.';
+			$this->validate_errors[$source][$v_err_count]['zakup_new'] = 'Не указана новая закупочная цена или указана неверно.';
 		}
-		if(intval($data[21]) >= intval($data[20]))
+		if(intval($data['zakup_new']) >= intval($data['zakup_old']))
 		{
-			$this->validate_errors[$v_err_count][21] = 'Новая закупочная цена должны быть меньше старой закупочной цены.';
+			$this->validate_errors[$source][$v_err_count]['zakup_new'] = 'Новая закупочная цена должны быть меньше старой закупочной цены.';
 		}
 
 		// Розничная цена
-		if(trim($data[24]) == '' || !preg_match('/^[0-9\.\,\-]+$/', $data[24]))
+		if(trim($data['roznica_old']) == '' || !preg_match('/^[0-9\.\,\-]+$/', $data['roznica_old']))
 		{
-			$this->validate_errors[$v_err_count][24] = 'Не указана старая розничная цена или указана неверно.';
+			$this->validate_errors[$source][$v_err_count]['roznica_old'] = 'Не указана старая розничная цена или указана неверно.';
 		}
-		if(trim($data[25]) == '' || !preg_match('/^[0-9\.\,\-]+$/', $data[25]))
+		if(trim($data['roznica_new']) == '' || !preg_match('/^[0-9\.\,\-]+$/', $data['roznica_new']))
 		{
-			$this->validate_errors[$v_err_count][25] = 'Не указана новая розничная цена или указана неверно.';
+			$this->validate_errors[$source][$v_err_count]['roznica_new'] = 'Не указана новая розничная цена или указана неверно.';
 		}
-		if(intval($data[25]) >= intval($data[24]))
+		if(intval($data['roznica_new']) >= intval($data['roznica_old']))
 		{
-			$this->validate_errors[$v_err_count][25] = 'Новая розничная цена должны быть меньше старой розничной цены.';
+			$this->validate_errors[$source][$v_err_count]['roznica_new'] = 'Новая розничная цена должны быть меньше старой розничной цены.';
 		}
 
 		// если предоставляется скидка он-инвойс,
-		if(trim($data[17]) != '')
+		if(trim($data['skidka_on_invoice']) != '')
 		{
 			//дата начала
 			// не пусто
-			if(trim($data[22]) == '')
+			if(trim($data['start_date_on_invoice']) == '')
 			{
-				$this->validate_errors[$v_err_count][22] = 'Не указана дата начала предоставления скидки ON INVOICE.';
+				$this->validate_errors[$source][$v_err_count]['start_date_on_invoice'] = 'Не указана дата начала предоставления скидки ON INVOICE.';
 			}
 			// тип данных = дата
-			$is_date = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $data[22]);
+			$is_date = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $data['start_date_on_invoice']);
 			if(!$is_date)
 			{
-				$this->validate_errors[$v_err_count][22] = 'Неверный формат даты начала представления скидки ON INVOICE.';
+				$this->validate_errors[$source][$v_err_count]['start_date_on_invoice'] = 'Неверный формат даты начала предоставления скидки ON INVOICE.';
 			}
 			// дата начала предоставления скидки он-инвойс <= дата начала акции
-			if(strtotime($data[22]) > strtotime($data[0]))
+			if(strtotime($data['start_date_on_invoice']) > $start_date)
 			{
-				$this->validate_errors[$v_err_count][22] = 'Дата начала предоставления скидки ON INVOICE не должна быть больше даты акции.';
+				$this->validate_errors[$source][$v_err_count]['start_date_on_invoice'] = 'Дата начала предоставления скидки ON INVOICE не должна быть больше даты акции.';
 			}
 
-			//дата окончания
+			// дата окончания
 			// не пусто
-			if(trim($data[23]) == '')
+			if(trim($data['end_date_on_invoice']) == '')
 			{
-				$this->validate_errors[$v_err_count][23] = 'Не указана дата окончания предоставления скидки ON INVOICE.';
+				$this->validate_errors[$source][$v_err_count]['end_date_on_invoice'] = 'Не указана дата окончания предоставления скидки ON INVOICE.';
 			}
 			// тип данных = дата
-			$is_date = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $data[23]);
+			$is_date = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $data['end_date_on_invoice']);
 			if(!$is_date)
 			{
-				$this->validate_errors[$v_err_count][23] = 'Неверный формат даты окончания представления скидки ON INVOICE.';
+				$this->validate_errors[$source][$v_err_count]['end_date_on_invoice'] = 'Неверный формат даты окончания предоставления скидки ON INVOICE.';
 			}
 
 			// дата начала предоставления скидки он-инвойс <= дата начала акции
-			if(strtotime($data[22]) > strtotime($data[23]))
+			if(strtotime($data['start_date_on_invoice']) > strtotime($data['end_date_on_invoice']))
 			{
-				$this->validate_errors[$v_err_count][23] = 'Дата начала предоставления скидки ON INVOICE не должна быть больше даты окончания скидки.';
+				$this->validate_errors[$source][$v_err_count]['end_date_on_invoice'] = 'Дата начала предоставления скидки ON INVOICE не должна быть больше даты окончания скидки.';
 			}
 		}
 
-		if(!$this->validateDataStartProcessDate($data[0], [$start_date]))
+		// если данные из файла, то дата старта процесса(акции) будет находитя в файла. Ее нужно проверить для каждой строки
+		if(isset($data['start_date']))
 		{
-			$this->validate_errors[$v_err_count][0] = 'Дата начала акции должна быть в формате dd-mm-yyyy. Дата должна быть больше даты начала процесса.';
+			if(!$this->validateDataStartProcessDate($data['start_date'], $start_date))
+			{
+				$this->validate_errors[$source][$v_err_count]['start_date'] = 'Дата начала акции должна быть в формате dd-mm-yyyy. Дата должна быть больше даты начала процесса.';
+			}
 		}
-		if(!$this->validateDataEndProcessDate($data[1], [$end_date]))
+		// если данные из файла, то дата окончания процесса(акции) будет находитя в файла. Ее нужно проверить для каждой строки
+		if(isset($data['end_date']))
 		{
-			$this->validate_errors[$v_err_count][1] = 'Дата окончания акции должна быть в формате dd-mm-yyyy. Дата должна быть меньше даты окончания процесса.';
+			if(!$this->validateDataEndProcessDate($data['end_date'], $end_date))
+			{
+				$this->validate_errors[$source][$v_err_count]['end_date'] = 'Дата окончания акции должна быть в формате dd-mm-yyyy. Дата должна быть меньше даты окончания процесса.';
+			}
 		}
 
-		if (!empty($this->validate_errors[$v_err_count]))
+		if (!empty($this->validate_errors[$source][$v_err_count]))
 		{
 			return false;
 		}
 
-		//TODO
-		// if($data[17] <= 1 && $data[17] > 0)
-		// 	$data[17] = $data[17]*100;
+		//	TODO
+		//	if($data[17] <= 1 && $data[17] > 0)
+		//	$data[17] = $data[17]*100;
 
-		// if($data[18] <= 1 && $data[18] > 0)
-		// 	$data[18] = $data[18]*100;
+		//	if($data[18] <= 1 && $data[18] > 0)
+		//	$data[18] = $data[18]*100;
 
 		return true;
 	}
 
-	private function validateDataStartProcessDate($value, $parameters = [])
+	/**
+	* $start_date - из шапки из формы
+	* $proc_type_dedlain - дедлайн выбранногопроцесса
+	* $value - из файла НЕ из формы
+	*/
+	private function validateDataStartProcessDate($value, $start_date)
 	{
-        $valid = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $value);
+		$valid = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $value);
         if($valid)
         {
-            $valid = ($parameters[0] <= strtotime($value));
+			$valid = ($start_date <= strtotime($value));
         }
         return $valid;
 	}
 
-	private function validateDataEndProcessDate($value, $parameters = [])
+	private function validateDataEndProcessDate($value, $end_date)
 	{
         $valid = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $value);
         if($valid)
         {
-			// $start_date = strtotime(Request::input('start_date'));
-			// if($start_date < strtotime(date('d.m.Y 0:0:0.000', time() + $this->processType->dedlain)))
-			// {
-
-			// }
-
-// echo date('d.m.Y H:i:s', strtotime($value));
-// echo strtotime($value);
-
-// echo date('d.m.Y H:i:s', $parameters[0]);
-// echo $parameters[0];
-
-// 17-04-2018
-// 17.04.2018 00:00:00
-
-// var_dump(($parameters[0] <= strtotime($value)));
-// exit();
-
-			$valid = ($parameters[0] >= strtotime($value));
+			$valid = ($end_date >= strtotime($value));
         }
+
         return $valid;
 	}
 
 	private function validateDataProcent($value, $parameters = [])
 	{
-        if(trim($value) != '')
+		$valid = !(bool) preg_match("/[^\.\,0-9]+/", $value);
+        if($valid && trim($value) != '')
         {
-            if(floatval($value) < 100 && floatval($value) > 0)
+			if(floatval($value) < 100 && floatval($value) > 0)
             {
-                return true;
+				return true;
             }
-        }
-        return false;
+		}
+		return false;
 	}
 }
-
-

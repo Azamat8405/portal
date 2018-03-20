@@ -34,6 +34,8 @@ Route::group(['middleware' => 'auth'], function () {
 		Route::get('/sys/getSubRegions/{regionId}',			'SystemController@ajaxGetSubRegions');
 		Route::get('/sys/getShopsForRegion/{regionId}',		'SystemController@ajaxGetShopsForRegion');
 		Route::get('/sys/getBrendsForCategs/{categId}',		'SystemController@ajaxGetBrendsForCategs');
+		Route::get('/sys/getBrendsForAvtocomplete',			'SystemController@ajaxGetBrendsForAvtocomplete');
+		Route::get('/sys/getTovsToFillTable',				'SystemController@ajaxGetTovsToFillTable');
 
 		Route::get('/sys/getShops', 			'SystemController@ajaxGetShops');
 		Route::get('/sys/getShopsErarhi', 		'SystemController@ajaxGetShopsErarhi');

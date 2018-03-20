@@ -26,7 +26,7 @@ return [
     |
     */
 
-    'env' => env('APP_ENV', 'development'),//production
+    'env' => env('APP_ENV', 'development'),//production || development
 
     /*
     |--------------------------------------------------------------------------
