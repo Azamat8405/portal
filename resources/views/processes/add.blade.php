@@ -583,11 +583,11 @@
 
 @section('addition_js')
 	<script src="{{ asset('js/jquery.mask.min.js') }}"></script>
-	<script src="{{ asset('js/chosen.jquery.min.js') }}"></script>
+	<script src="{{ asset('js/select2.full.min.js') }}"></script>
 	<script src="{{ asset('js/add_action_form.js') }}"></script>
 @endsection
 
 @section('addition_css')
 	@
-	<link href="{{ asset('css/chosen.min.css') }}" rel="stylesheet">
+	<link href="{{ asset('css/select2.min.css') }}" rel="stylesheet">
 @endsection

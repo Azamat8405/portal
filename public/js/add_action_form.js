@@ -100,138 +100,194 @@ $(function(){
 	var selects = ['#tovCategory','#tovGroup','#tovTipIsdeliya','#tovVidIsdeliya', '#tovBrendSelect'];
 	$.each(selects, function(index, value){
 
-		$(value).selectmenu({
-			open: function( event, ui )
+
+		$(value).select2({
+			width:'180',
+			minimumResultsForSearch:Infinity
+ 		});
+
+		$(value).on('select2:open', function(){
+
+console.log('555');
+
+			if(selects[index] == '#tovBrendSelect')
 			{
-				if(selects[index] == '#tovBrendSelect')
+				if($('#tovBrendSelect-button').find('li.ui-menu-item').length <= 1)
 				{
-					if($('#tovBrendSelect-button').find('li.ui-menu-item').length <= 1)
+					if($('#tovBrendSelect option').length <= 1)
 					{
-						if($('#tovBrendSelect option ').length <= 1)
-						{
-							$('#tovBrendSelect').selectmenu('destroy');
-							$('#tovBrendSelect').hide();
 
-							let inpt =  $('<input />');
-							inpt.attr('id', 'tovBrendAvtoComplete');
-							$('#tovBrendSelect').after(inpt);
-							inpt.button();
-							inpt.focus();
+
+
+		// 					$('#tovBrendSelect').selectmenu('destroy');
+		// 					$('#tovBrendSelect').hide();
+
+		// 					let inpt =  $('<input />');
+		// 					inpt.attr('id', 'tovBrendAvtoComplete');
+		// 					$('#tovBrendSelect').after(inpt);
+		// 					inpt.button();
+		// 					inpt.focus();
 						
-							$('#tovBrendAvtoComplete').autocomplete(
-							{
-								source: function( request, response ){
-									var term = request.term;
-									if ( term in cache_avtocomplete_brends )
-									{
-										response(cache_avtocomplete_brends[term]);
-										return;
-									}
-									$.getJSON( "/sys/getBrendsForAvtocomplete", request, function( data, status, xhr ) {
-										cache_avtocomplete_brends[term] = data;
-										response(data);
-									});
-								},
-								minLength: 2,
-								select: function( event, ui ) {
-									$('#tovBrend').val(ui.item.val);
-								}
-							});
-						}
+		// 					$('#tovBrendAvtoComplete').autocomplete(
+		// 					{
+		// 						source: function( request, response ){
+		// 							var term = request.term;
+		// 							if ( term in cache_avtocomplete_brends )
+		// 							{
+		// 								response(cache_avtocomplete_brends[term]);
+		// 								return;
+		// 							}
+		// 							$.getJSON( "/sys/getBrendsForAvtocomplete", request, function( data, status, xhr ) {
+		// 								cache_avtocomplete_brends[term] = data;
+		// 								response(data);
+		// 							});
+		// 						},
+		// 						minLength: 2,
+		// 						select: function( event, ui ) {
+		// 							$('#tovBrend').val(ui.item.val);
+		// 						}
+		// 					});
+
 					}
 				}
-			},
-			change:function(e, ui){
-				if(selects[index] == '#tovVidIsdeliya')
-				{
-					if($('#tovBrendAvtoComplete').length > 0)
-					{
-						$('#tovBrendAvtoComplete').remove();
-						$('#tovBrendSelect').selectmenu({
-							open: function( event, ui )
-							{
-								if($('#tovBrendSelect-button').find('li.ui-menu-item').length <= 1)
-								{
-									if($('#tovBrendSelect option ').length <= 1)
-									{
-										$('#tovBrendSelect').selectmenu('destroy');
-										$('#tovBrendSelect').hide();
-
-										let inpt =  $('<input />');
-										inpt.attr('id', 'tovBrendAvtoComplete');
-										$('#tovBrendSelect').after(inpt);
-										inpt.button();
-										inpt.focus();
-									
-										$('#tovBrendAvtoComplete').autocomplete(
-										{
-											source: function( request, response ){
-												var term = request.term;
-												if ( term in cache_avtocomplete_brends )
-												{
-													response(cache_avtocomplete_brends[term]);
-													return;
-												}
-												$.getJSON( "/sys/getBrendsForAvtocomplete", request, function( data, status, xhr ) {
-													cache_avtocomplete_brends[term] = data;
-													response(data);
-												});
-											},
-											minLength: 2,
-											select: function( event, ui ) {
-												$('#tovBrend').val(ui.item.val);
-											}
-										});
-									}
-								}
-							},
-							change:function(e, ui){
-
-								$('#tovBrend').val(ui.item.value);
-								$(selects[index]).find('[value='+ui.item.value+']').prop('selected', true);
-							}
-						});
-					}
-				}
-
-				if(!cache_tovs_categs[ui.item.value] || $.isEmptyObject(cache_tovs_categs[ui.item.value]))
-				{
-					if(selects[index] == '#tovVidIsdeliya')
-					{
-						$.ajax({
-							url: "/sys/getBrendsForCategs/"+ui.item.value,
-							dataType:'json',
-							success: function(data){
-
-								cache_tovs_categs[ui.item.value] = data;
-								fillRegionsFilter(selects[index+1], data);
-							}
-						});
-					}
-					else if(selects[index] != '#tovBrendSelect')
-					{
-						$.ajax({
-							url: "/sys/getSubCategs/"+ui.item.value,
-							dataType:'json',
-							success: function(data){
-								cache_tovs_categs[ui.item.value] = data;
-								fillCategsFilter(selects[index+1], data);
-							}
-						});
-					}
-				}
-				else
-				{
-					fillCategsFilter(selects[index+1], cache_tovs_categs[ui.item.value]);
-				}
-
-				if(selects[index] == '#tovBrendSelect')
-				{
-					$('#tovBrend').val(ui.item.value);
-				}
-				$(selects[index]).find('[value='+ui.item.value+']').prop('selected', true);
 			}
 		});
+
+
+		// $(value).selectmenu({
+		// 	open: function( event, ui )
+		// 	{
+		// 		if(selects[index] == '#tovBrendSelect')
+		// 		{
+		// 			if($('#tovBrendSelect-button').find('li.ui-menu-item').length <= 1)
+		// 			{
+		// 				if($('#tovBrendSelect option ').length <= 1)
+		// 				{
+		// 					$('#tovBrendSelect').selectmenu('destroy');
+		// 					$('#tovBrendSelect').hide();
+
+		// 					let inpt =  $('<input />');
+		// 					inpt.attr('id', 'tovBrendAvtoComplete');
+		// 					$('#tovBrendSelect').after(inpt);
+		// 					inpt.button();
+		// 					inpt.focus();
+						
+		// 					$('#tovBrendAvtoComplete').autocomplete(
+		// 					{
+		// 						source: function( request, response ){
+		// 							var term = request.term;
+		// 							if ( term in cache_avtocomplete_brends )
+		// 							{
+		// 								response(cache_avtocomplete_brends[term]);
+		// 								return;
+		// 							}
+		// 							$.getJSON( "/sys/getBrendsForAvtocomplete", request, function( data, status, xhr ) {
+		// 								cache_avtocomplete_brends[term] = data;
+		// 								response(data);
+		// 							});
+		// 						},
+		// 						minLength: 2,
+		// 						select: function( event, ui ) {
+		// 							$('#tovBrend').val(ui.item.val);
+		// 						}
+		// 					});
+		// 				}
+		// 			}
+		// 		}
+		// 	},
+		// 	change:function(e, ui){
+
+		// 		if(selects[index] == '#tovVidIsdeliya')
+		// 		{
+		// 			if($('#tovBrendAvtoComplete').length > 0)
+		// 			{
+		// 				$('#tovBrendAvtoComplete').remove();
+		// 				$('#tovBrendSelect').selectmenu({
+		// 					open: function( event, ui )
+		// 					{
+		// 						if($('#tovBrendSelect-button').find('li.ui-menu-item').length <= 1)
+		// 						{
+		// 							if($('#tovBrendSelect option ').length <= 1)
+		// 							{
+		// 								$('#tovBrendSelect').selectmenu('destroy');
+		// 								$('#tovBrendSelect').hide();
+
+		// 								let inpt =  $('<input />');
+		// 								inpt.attr('id', 'tovBrendAvtoComplete');
+		// 								$('#tovBrendSelect').after(inpt);
+		// 								inpt.button();
+		// 								inpt.focus();
+									
+		// 								$('#tovBrendAvtoComplete').autocomplete(
+		// 								{
+		// 									source: function( request, response ){
+		// 										var term = request.term;
+		// 										if ( term in cache_avtocomplete_brends )
+		// 										{
+		// 											response(cache_avtocomplete_brends[term]);
+		// 											return;
+		// 										}
+		// 										$.getJSON( "/sys/getBrendsForAvtocomplete", request, function( data, status, xhr ) {
+		// 											cache_avtocomplete_brends[term] = data;
+		// 											response(data);
+		// 										});
+		// 									},
+		// 									minLength: 2,
+		// 									select: function( event, ui ) {
+		// 										$('#tovBrend').val(ui.item.val);
+		// 									}
+		// 								});
+		// 							}
+		// 						}
+		// 					},
+		// 					change:function(e, ui){
+
+		// 						$('#tovBrend').val(ui.item.value);
+		// 						$(selects[index]).find('[value='+ui.item.value+']').prop('selected', true);
+		// 					}
+		// 				});
+		// 			}
+		// 		}
+
+		// 		if(!cache_tovs_categs[ui.item.value] || $.isEmptyObject(cache_tovs_categs[ui.item.value]))
+		// 		{
+		// 			if(selects[index] == '#tovVidIsdeliya')
+		// 			{
+		// 				$.ajax({
+		// 					url: "/sys/getBrendsForCategs/"+ui.item.value,
+		// 					dataType:'json',
+		// 					success: function(data){
+
+		// 						cache_tovs_categs[ui.item.value] = data;
+		// 						fillRegionsFilter(selects[index+1], data);
+		// 					}
+		// 				});
+		// 			}
+		// 			else if(selects[index] != '#tovBrendSelect')
+		// 			{
+		// 				$.ajax({
+		// 					url: "/sys/getSubCategs/"+ui.item.value,
+		// 					dataType:'json',
+		// 					success: function(data){
+		// 						cache_tovs_categs[ui.item.value] = data;
+		// 						fillCategsFilter(selects[index+1], data);
+		// 					}
+		// 				});
+		// 			}
+		// 		}
+		// 		else
+		// 		{
+		// 			fillCategsFilter(selects[index+1], cache_tovs_categs[ui.item.value]);
+		// 		}
+
+		// 		if(selects[index] == '#tovBrendSelect')
+		// 		{
+		// 			$('#tovBrend').val(ui.item.value);
+		// 		}
+		// 		$(selects[index]).find('[value='+ui.item.value+']').prop('selected', true);
+		// 	}
+		// });
+
 	});
 
 	var selectsBrens = ['#division','#oblast','#city','#shop'];
@@ -305,29 +361,6 @@ $(function(){
 		}
 	});
 
-
-// 	$('#process_type').selectmenu({
-// 		open: function( event, ui ) {
-
-// console.log('55');
-
-// 		},
-// 		create: function( event, ui ){
-
-// console.log('11');
-
-// 		},
-// 		change:function(e, ui){
-// 			var d = new Date();
-// 			d.setTime(d.getTime() + ui.item.element.data('dedlain') * 1000 );
-// 			from.datepicker( "option", "minDate", d);
-// 		}
-// 	});
-
-// 	$( "#process_type" ).on( "selectmenucreate", function( event, ui ) {
-// console.log('11');
-// 	});
-
 	if($.fn.datepicker)
 	{
 		var from = $('#start_date').datepicker({
@@ -347,6 +380,9 @@ $(function(){
 		});
 	}
 
+
+
+
 	if($("#process_type").length > 0)
 	{
 		var tmp = function (){
@@ -354,19 +390,16 @@ $(function(){
 			d.setTime(d.getTime() + $("#process_type option:selected").data('dedlain') * 1000 );
 			from.datepicker( "option", "minDate", d);
 		}
-		$("#process_type").on('chosen:ready', function(evt, params) {
-			tmp();
-		});
-		$("#process_type").chosen({
-			disable_search_threshold: 10,
-			width: "95%"
-		});
+		$('#process_type').select2({
+			width:'160',
+			minimumResultsForSearch:Infinity
+ 		});
+		tmp();
 		$("#process_type").on('change', function(evt, params) {
 			tmp();
 		});
 	}
 
-	$('chosen');
 
 	// выбор чекбоксов во всплывающем окне выбора
 	$('#shops_dialog, #tovs_dialog').on('click', 'input[type=checkbox]', function(e){
