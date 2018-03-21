@@ -14,9 +14,9 @@ class SystemController extends Controller
 {
 	public function ajaxGetContragentsErarhi()
 	{
-		$agents = DB::connection('sqlsrv_Imp_1C_temporary')->select('SELECT [Наименование], [Код], [ИНН_Строка]
-			FROM [Imp_1C_temporary].[dbo].[Справочник_Контрагенты]
-			WHERE [ПометкаУдаления]=0 AND [Поставщик_Булево]=1
+		$agents = DB::connection('sqlsrv_imported_data')->select('
+			SELECT [Наименование], [Код], [ИНН]
+			FROM [Imported_Data].[dbo].[Действующие_Поставщики]
 			ORDER BY [Наименование]');
 
 		if($agents)
@@ -27,7 +27,7 @@ class SystemController extends Controller
 				$result[] = [
 					'label'=> $value->{'Наименование'},
 					'val' => $value->{'Код'},
-					'inn' => $value->{'ИНН_Строка'}];
+					'inn' => $value->{'ИНН'}];
 			}
 			echo json_encode($result);
 		}
@@ -40,22 +40,21 @@ class SystemController extends Controller
 
 		$words = explode(' ', $request->get('term'));
 
-		$str1 = $str2 = $str3 = '';
+		$str1 = $str2 = '';
 		foreach ($words as $key => $value)
 		{
 			$str1 .= ' [Наименование] LIKE \'%'.$value.'%\' AND ';
-			$str2 .= ' [НаименованиеПолное_Строка] LIKE \'%'.$value.'%\' AND ';
-			$str3 .= ' [ИНН_Строка] LIKE \'%'.$value.'%\' AND ';
+			$str2 .= ' [ИНН] LIKE \'%'.$value.'%\' AND ';
 		}
 		$str1 = '('.mb_substr($str1, 0, -4).')';
 		$str2 = '('.mb_substr($str2, 0, -4).')';
-		$str3 = '('.mb_substr($str3, 0, -4).')';
 
-		$agents = DB::connection('sqlsrv_Imp_1C_temporary')->select('SELECT TOP 20 [Наименование], [Код]
-			FROM [Imp_1C_temporary].[dbo].[Справочник_Контрагенты]
-			WHERE 
-				[ПометкаУдаления]=0 AND [Поставщик_Булево]=1 AND
-				'.$str1.' OR '.$str2.' OR '.$str3);
+		$agents = DB::connection('sqlsrv_imported_data')->select('
+			SELECT TOP 20 [Наименование], [Код]
+			FROM [Imported_Data].[dbo].[Действующие_Поставщики]
+			WHERE '.$str1.' OR '.$str2.'
+			ORDER BY [Наименование]');
+
 		if($agents)
 		{
 			$result = [];
@@ -111,21 +110,17 @@ class SystemController extends Controller
 		$str1 = '';
 		foreach ($words as $key => $value)
 		{
-			$str1 .= ' [StoreName] LIKE \'%'.$value.'%\' AND ';
+			$str1 .= ' [title] LIKE \'%'.$value.'%\' AND ';
 		}
-		$str1 = '('.mb_substr($str1, 0, -4).')';
+		$str1 = mb_substr($str1, 0, -4);
 
-		$shops = DB::connection('sqlsrv_imported_data')->select('SELECT StoreCode, StoreName
-			FROM [Imported_Data].[dbo].[Store_All_Stores]
-			WHERE 
-				Store_Is_Active = 1 AND
-				'.$str1);
-		if($shops)
+		$shops = DB::select('select * FROM shops WHERE '.$str1.' ');
+		if(count($shops) > 0)
 		{
 			$result = [];
 			foreach ($shops as $value)
 			{
-				$result[] = ['label'=> $value->{'StoreName'}, 'value' => $value->{'StoreName'}, 'val' => $value->{'StoreCode'}];
+				$result[] = ['label'=> $value->title, 'value' => $value->title, 'val' => $value->code];
 			}
 			echo json_encode($result);
 		}

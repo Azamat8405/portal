@@ -93,7 +93,7 @@
 								@endif
 						    </div>
 					    	<div>
-					            <select name="process_type" id="process_type" class="select">
+					            <select name="process_type" id="process_type" class="select_chosen">
 					            	<option value="0"> --- </option>
 									@if($process_types)
 										@foreach($process_types as $type)
@@ -292,30 +292,29 @@
 			</div>
 
 			@if (Session::has('errors.form'))
+				<div class="err_dialog_messages">
 				@foreach (Session::get('errors.form') as $messages)
 					@foreach ($messages as $message)
 						<p>{!! $message !!}</p>
 					@endforeach
 				@endforeach
+				</div>
 			@endif
-
 			@if (Session::has('errors.file'))
+				<div class="err_dialog_messages">
 				@foreach (Session::get('errors.file') as $messages)
 					@foreach ($messages as $message)
 						<p>{!! $message !!}</p>
 					@endforeach
 				@endforeach
+				</div>
 			@endif
-{{--
-
---}}
-
 			@if (Session::has('ok'))
-				<p>okok{!! Session::get('ok') !!}</p>
+				<div class="ok_dialog_messages">
+					<p>{!! Session::get('ok') !!}</p>
+				</div>
 			@endif
-
 		</div>
-
 
 		<div class="table_data">
 			<div id="shops_dialog"></div>
@@ -374,9 +373,12 @@
 									</div>
 								</td>
 								<td>
+									@if(Session::has('errors.form.'.$k.'.distr'))
+										<div class="error_message">{{Session::get('errors.form.'.$k.'.distr')}}</div>
+									@endif
 			   						<div class="field_input_file">
-										<input type="input" name="distrTitles[]" value="{{old('distrTitles.'.$k)}}" class="distr"/>
-										<input type="hidden" name="distr[]" value="{{old('distr.'.$k)}}"/>
+										<input type="input" name="distrTitles[]" class="distrTitles" value="{{old('distrTitles.'.$k)}}" />
+										<input type="hidden" name="distr[]" class="distr" value="{{old('distr.'.$k)}}"/>
 										<div class="file" data-type="getContagentsErarhi">...</div>
 									</div>
 								</td>
@@ -501,8 +503,8 @@
 							</td>
 							<td>
 		   						<div class="field_input_file">
-									<input type="input" name="distrTitles[]" class="distr"/>
-									<input type="hidden" name="distr[]"/>
+									<input type="input" name="distrTitles[]" class="distrTitles" value=""/>
+									<input type="hidden" name="distr[]" class="distr" value=""/>
 									<div class="file" data-type="getContagentsErarhi">...</div>
 								</div>
 							</td>
@@ -562,7 +564,7 @@
 				</tbody>
 			</table>
 		</div>
-<!--
+
 		<div class="form-field-input">
  			<div class="div_table">
 		        <div class="left">
@@ -573,7 +575,7 @@
 		        </div>
 		    </div>
 		</div>
--->
+
 
 	</form>
 
@@ -581,10 +583,11 @@
 
 @section('addition_js')
 	<script src="{{ asset('js/jquery.mask.min.js') }}"></script>
+	<script src="{{ asset('js/chosen.jquery.min.js') }}"></script>
 	<script src="{{ asset('js/add_action_form.js') }}"></script>
 @endsection
 
 @section('addition_css')
 	@
-	<script src="{{ asset('js/add_action_form.js') }}"></script>
+	<link href="{{ asset('css/chosen.min.css') }}" rel="stylesheet">
 @endsection

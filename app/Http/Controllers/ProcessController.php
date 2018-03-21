@@ -52,6 +52,7 @@ class ProcessController extends Controller
 		// Валидация даты
 		$start_date = strtotime(Request::input('start_date'));
 		$proc_type = ProcessType::find(Request::input('process_type'));
+
 		if($proc_type)
 		{
 			$cur_date = mktime(0, 0, 0, date("n"), date("j"), date("Y"));
@@ -65,10 +66,13 @@ class ProcessController extends Controller
 			$this->validate_errors['form'][0]['process_type'] = 'Нет Акций указанного типа';
 		}
 
-		$end_date = strtotime(Request::input('end_date'));
-		if($end_date <= $start_date)
+		if($proc_type)
 		{
-			$this->validate_errors['form'][0]['end_date'] = 'Дата окончания акции должна быть больше даты начала.';
+			$end_date = strtotime(Request::input('end_date'));
+			if($end_date <= $start_date)
+			{
+				$this->validate_errors['form'][0]['end_date'] = 'Дата окончания акции должна быть больше даты начала.';
+			}
 		}
 
 		// Если в шапке есть ошибки покаызваем их пока.
@@ -91,7 +95,7 @@ class ProcessController extends Controller
 			{
 				$dataToInsert[$key]['shops'] = explode(',', $request::input('shops')[$key]);
 			}
-
+			$dataToInsert[$key]['distr'] = $request::input('distr')[$key] ?? null;
 			$dataToInsert[$key]['type'] = $request::input('types')[$key] ?? null;
 			$dataToInsert[$key]['skidka_on_invoice'] = $request::input('skidka_on_invoice')[$key] ?? null;
 			$dataToInsert[$key]['kompensaciya_off_invoice'] = $request::input('kompensaciya_off_invoice')[$key] ?? null;
@@ -136,8 +140,8 @@ class ProcessController extends Controller
 
 						if(($handle = fopen($csv_path_file, "r")) !== FALSE)
 						{
+							$data_count = count($dataToInsert);
 							$i = 0;
-
 							while (($data = fgetcsv($handle, 1200, ",")) !== FALSE)
 						    {
 								//Первые две строки заголовки, пропускаем
@@ -145,14 +149,33 @@ class ProcessController extends Controller
 						    	if($i <= 2)
 						    		continue;
 
-								// $dataToInsert
-								// $data['brend']
-								// $data['ArtName']
+								$dataToInsert[$data_count]['start_date'] = $data[0] ?? null;
+								$dataToInsert[$data_count]['end_date'] = $data[1] ?? null;
+								$dataToInsert[$data_count]['brend'] = $data[6] ?? null;
+								$dataToInsert[$data_count]['ArtName'] = $data[13] ?? null;
+								$dataToInsert[$data_count]['shops'] = explode(',', $data[10]) ?? null;
+								$dataToInsert[$data_count]['shops_exception'] = explode(',', $data[11]) ?? null;
+								$dataToInsert[$data_count]['distr'] = $data[12] ?? null;
+								$dataToInsert[$data_count]['ArtCode'] = $data[14] ?? null;
+								$dataToInsert[$data_count]['articule_sk'] = $data[15] ?? null;
+								$dataToInsert[$data_count]['type'] = $data[16] ?? null;
+								$dataToInsert[$data_count]['skidka_on_invoice'] = $data[17] ?? null;
+								$dataToInsert[$data_count]['kompensaciya_off_invoice'] = $data[18] ?? null;
+								$dataToInsert[$data_count]['skidka_itogo'] = $data[19] ?? null;
+								$dataToInsert[$data_count]['zakup_old'] = $data[20] ?? null;
+								$dataToInsert[$data_count]['zakup_new'] = $data[21] ?? null;
+								$dataToInsert[$data_count]['start_date_on_invoice'] = $data[22] ?? null;
+								$dataToInsert[$data_count]['end_date_on_invoice'] = $data[23] ?? null;
+								$dataToInsert[$data_count]['roznica_old'] = $data[24] ?? null;
+								$dataToInsert[$data_count]['roznica_new'] = $data[25] ?? null;
+								$dataToInsert[$data_count]['descr'] = $data[26] ?? null;
+								$dataToInsert[$data_count]['marks'] = $data[27] ?? null;
 
-								if(!$this->validateData($data, 'file', $start_date, $end_date))
+								if(!$this->validateData($dataToInsert[$data_count], 'file', $start_date, $end_date))
 								{
 									$err = true;
 								}
+								$data_count++;
 						    }
 							fclose($handle);
 
@@ -175,37 +198,12 @@ class ProcessController extends Controller
 			}
 		}
 
-//	print_r($this->validate_errors);
-//	exit();
-
-		// if($err || !empty($this->validate_errors))
-		// {
-		// 	return redirect()->back()
-		// 		->with('errors', $this->validate_errors)
-		// 		->withInput();
-		// }
-		// else
-		// {
-		// 	return redirect()->back()->with('ok', 'Добавление прошло успешно');
-		// }
-
-		// tovs
-		// shops
-
-//	distr
-
-		// types
-		// skidka_on_invoice
-		// kompensaciya_off_invoice
-		// skidka_itogo
-		// zakup_old
-		// zakup_new
-		// start_date_on_invoice
-		// end_date_on_invoice
-		// roznica_old
-		// roznica_new
-		// descr
-		// marks
+		if($err || !empty($this->validate_errors['form']) || !empty($this->validate_errors['file']))
+		{
+			return redirect()->back()
+				->with('errors', $this->validate_errors)
+				->withInput();
+		}
 
 		try
 		{
@@ -243,33 +241,32 @@ class ProcessController extends Controller
 				// TODO нужно на лету создавать эту таблицу. И удалять ее если удаляется документ(родительский документ)
 				if(!\Schema::hasTable('documents_values_'.$doc->id))
 				{
-					\Schema::create('documents_values_'.$doc->id, function ($table) {
+					$res = \Schema::create('documents_values_'.$doc->id, function ($table) {
 						$table->increments('id');
 
 			            $table->integer('shop_id')->unsigned();
-			            $table->integer('process_id')->unsigned();
+			            // $table->integer('process_id')->unsigned();
 
 			            $table->string('kod_dis')->comment('код ДиС Ном. Номер');
 			            $table->string('articule_sk')->comment('Артикул ШК это артикул по базе поставщика');
 
 						$table->integer('action_types_id')->unsigned();
 
-			            $table->string('on_invoice');
-			            $table->string('off_invoice');
+			            $table->string('on_invoice')->nullable();
+			            $table->string('off_invoice')->nullable();
 			            $table->string('skidka_itogo');
 
 			            $table->string('old_zakup_price');
 			            $table->string('new_zakup_price');
 
-			            $table->string('on_invoice_start')->comment('Дата начала предоставления скидки он инвойс');
-			            $table->string('on_invoice_end')->comment('Дата окончания предоставления скидки он инвойс');
+			            $table->string('on_invoice_start')->nullable()->comment('Дата начала предоставления скидки он инвойс');
+			            $table->string('on_invoice_end')->nullable()->comment('Дата окончания предоставления скидки он инвойс');
 
 			            $table->string('old_roznica_price');
 			            $table->string('new_roznica_price');
 
-			            $table->text('description')->comment('подписи, слоганы, расшифровки и пояснения, которые Вы хотели бы видеть к своим товарам.');
-
-			            $table->text('metka')->comment('Хит, Новинка, Суперцена, Выгода 0000  рублей...');
+			            $table->text('description')->comment('подписи, слоганы, расшифровки и пояснения, которые Вы хотели бы видеть к своим товарам.')->nullable();
+			            $table->text('metka')->comment('Хит, Новинка, Суперцена, Выгода 0000  рублей...')->nullable();
 			            //TODO внешний ключ ???
 
 						$table->timestamps();
@@ -294,33 +291,11 @@ class ProcessController extends Controller
 					// $dataToInsert[$key]['descr'] = $request::input('descr')[$key] ?? null;
 					// $dataToInsert[$key]['marks'] = $request::input('marks')[$key] ?? null;
 
-
-// Array
-// (
-// 	[0] => Array
-// 	(
-// 		[ArtCode] => GL000282356
-// 		[shops] => 186,185,184,183,182,181,180,179,178,177,176,175,174,173,172,171,170,169,168,166,167,165,164,163,162,161,118,160,159,158,155,157,156,154,153,152,151,150,149,148,147,145,144,146,143,141,142,140,139,138,137,136,99,112,106,111,98,129,107,113,126,132,119,105,101,103,127,108,123,122,135,104,130,124,100,115,114,121,120,116,133,109,131,125,134,102,117,128,110,96,97,95,94,93,90,91,92,89,88,87,86,85,84,83,82,81,80,79,78,77,75,74,76,73,72,71,70,69,66,67,68,65,64,63,60,59,62,61,55,58,47,49,51,52,53,54,56,48,57,50,46,45,44,42,43,41,40,39,38,37,10,36,35,34,33,32,31,30,27,29,28,25,26,22,23,24,21,20,19,18,17,16,14,15,13,7,8,12,11,9,6,5,4,3,1,2
-// 		[type] => 1
-// 		[skidka_on_invoice] => 12
-// 		[kompensaciya_off_invoice] => 2
-//         [skidka_itogo] => 83.3
-//         [zakup_old] => 12
-//         [zakup_new] => 2
-//         [start_date_on_invoice] => 20-03-2018
-//         [end_date_on_invoice] => 23-03-2018
-//         [roznica_old] => 12
-//         [roznica_new] => 2
-//         [descr] => 12
-//         [marks] => 12
-//     )
-// )
 					foreach ($value['shops'] as $value2)
 					{
 						\DB::table('documents_values_'.$doc->id)->insert(
 		 					[
 								'shop_id' => $value2,
-					            'process_id' => $pr->id, // Нужно это поле тут???
 					            'kod_dis' => $value['ArtCode'],
 					            'articule_sk' => $value['articule_sk'],
 								'action_types_id' => $value['type'],
@@ -337,7 +312,6 @@ class ProcessController extends Controller
 					            'metka' => $value['marks']
 		 					]
 		 				);
-
 					}
 				}
 			}, 2);
@@ -348,7 +322,7 @@ class ProcessController extends Controller
 		}
 
 
-		if($err || !empty($this->validate_errors))
+		if($err || !empty($this->validate_errors['form']) || !empty($this->validate_errors['file']))
 		{
 			return redirect()->back()
 				->with('errors', $this->validate_errors)
@@ -411,13 +385,14 @@ class ProcessController extends Controller
 				$value->title = Shop::prepareShopName($value->title);
 				if(!isset($this->cache_shops[$value->code]))
 				{
-					$this->cache_shops[$value->code] = [$value->code, $value->title, $value->id];
+					$this->cache_shops[$value->code] = ['code' => $value->code, 'title' => $value->title, 'id' => $value->id];
 				}
 			}
 		}
 
 		if(isset($data['shops']))
 		{
+			$tmp = [];
 			foreach ($data['shops'] as $value)
 			{
 				$exist = false;
@@ -425,6 +400,7 @@ class ProcessController extends Controller
 				{
 					if(in_array(Shop::prepareShopName($value), $val))
 					{
+						$tmp[] = $val['id'];
 						$exist = true;
 						break;
 					}
@@ -434,6 +410,7 @@ class ProcessController extends Controller
 					$this->validate_errors[$source][$v_err_count]['shops'] = 'Указанный магазин не найден "'.$value.'"';
 				}
 			}
+			$data['shops'] = $tmp;
 		}
 		else
 		{
@@ -441,9 +418,9 @@ class ProcessController extends Controller
 		}
 
 		//проверка магазинов исключений
-		if(isset($data['shops_exception']) && trim($data['shops_exception']) != '')
+		if(isset($data['shops_exception']))
 		{
-			foreach (explode(',', $data['shops_exception']) as $value)
+			foreach ($data['shops_exception'] as $value)
 			{
 				$exist = false;
 				foreach ($this->cache_shops as $val)
@@ -454,6 +431,7 @@ class ProcessController extends Controller
 						break;
 					}
 				}
+
 				if(!$exist)
 				{
 					$this->validate_errors[$source][$v_err_count]['shops_exception'] = 'Указанные магазины-исключения не найдены "'.$value.'"';
@@ -461,10 +439,33 @@ class ProcessController extends Controller
 			}
 		}
 
-		if(isset($data['ArtCode']))
+		if(isset($data['distr']))
+		{
+			$postavshik = DB::connection('sqlsrv_imported_data')->select('
+				SELECT TOP 2 [Наименование], [Код], [ИНН]
+				FROM [Imported_Data].[dbo].[Действующие_Поставщики]
+				WHERE 
+					(
+						[Наименование] LIKE \''.$data['distr'].'\'
+						OR
+						[Код] LIKE \''.$data['distr'].'\'
+					)');
+			$tmp = count($postavshik);
+			if($tmp > 1 || $tmp == 0)
+			{
+				$this->validate_errors[$source][$v_err_count]['distr'] = 'Не удалось определить поставщика(Дистрибьютора)';
+			}
+		}
+		else
+		{
+			$this->validate_errors[$source][$v_err_count]['distr'] = 'Не указан поставщик для товара';
+		}
+
+		if(isset($data['ArtCode']) && trim($data['ArtCode']) != '')
 		{
 			$tmp = DB::connection('sqlsrv_imported_data')->select('select [ArtName], [BrandName], [ArtArticle] FROM [Imported_Data].[dbo].[Assortment] 
-				WHERE ArtCode=\''.$data['ArtCode'].'\'');
+				WHERE ArtCode = ? ', [$data['ArtCode']]);
+
 			if(!$tmp)
 			{
 				$this->validate_errors[$source][$v_err_count]['ArtCode'] = 'Не найден товар с указанным Артикуром "'.$data['ArtCode'].'"';
@@ -492,20 +493,26 @@ class ProcessController extends Controller
 				}
 			}
 		}
-
+		else
+		{
+			$this->validate_errors[$source][$v_err_count]['ArtCode'] = 'Не указан товар, либо указан неверно.';
+		}
 		// Проверка типа маркетинговой акции
 		if(isset($data['type']))
 		{
-			if(intval($data['type']) == $data['type'])
+			if(!preg_match('/[^0-9]+/i', $data['type']))
 			{
 				$action_type = ActionType::find($data['type']);
 			}
 			else
 			{
-				$action_type = ActionType::where('title = ?', $data['type']);
+				$action_type = ActionType::where('title', $data['type'])->get();
+				if(count($action_type) > 0)
+				{
+					$data['type'] = $action_type[0]->id;
+				}
 			}
-
-			if(!$action_type)
+			if(count($action_type) == 0)
 			{
 				$this->validate_errors[$source][$v_err_count]['type'] = 'Указанный тип маркетинговой акции не найден "'.$data['type'].'"';
 			}
@@ -585,9 +592,13 @@ class ProcessController extends Controller
 				$this->validate_errors[$source][$v_err_count]['start_date_on_invoice'] = 'Неверный формат даты начала предоставления скидки ON INVOICE.';
 			}
 			// дата начала предоставления скидки он-инвойс <= дата начала акции
-			if(strtotime($data['start_date_on_invoice']) > $start_date)
+			elseif(strtotime($data['start_date_on_invoice']) > $start_date)
 			{
 				$this->validate_errors[$source][$v_err_count]['start_date_on_invoice'] = 'Дата начала предоставления скидки ON INVOICE не должна быть больше даты акции.';
+			}
+			else
+			{
+				$data['start_date_on_invoice'] = strtotime($data['start_date_on_invoice']);
 			}
 
 			// дата окончания
@@ -604,9 +615,13 @@ class ProcessController extends Controller
 			}
 
 			// дата начала предоставления скидки он-инвойс <= дата начала акции
-			if(strtotime($data['start_date_on_invoice']) > strtotime($data['end_date_on_invoice']))
+			elseif(strtotime($data['start_date_on_invoice']) > strtotime($data['end_date_on_invoice']))
 			{
 				$this->validate_errors[$source][$v_err_count]['end_date_on_invoice'] = 'Дата начала предоставления скидки ON INVOICE не должна быть больше даты окончания скидки.';
+			}
+			else
+			{
+				$data['start_date_on_invoice'] = strtotime($data['start_date_on_invoice']);
 			}
 		}
 

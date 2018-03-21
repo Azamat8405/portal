@@ -7,10 +7,13 @@ use DB;
 use Excel;
 use Illuminate\Http\Request;
 
+use App\ProcessType;
+
 class TestController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+
 
 exit();
 

@@ -47,8 +47,14 @@
 
         @guest
         @else
+
+{{--
             <link rel="stylesheet" type="text/css" href="{{ asset('css/handsontable.full.min.css') }}">
+--}}
         @endguest
+
+        @yield('addition_css')
+
         <link href="{{ asset('css/panel.css') }}" rel="stylesheet">
         <link href="{{ asset('css/style.css') }}" rel="stylesheet">
     </head>
@@ -115,7 +121,9 @@
 
         @guest
         @else
+{{--
             <script src="{{ asset('js/handsontable.full.min.js') }}"></script>
+--}}
         @endguest
 
         @yield('addition_js')

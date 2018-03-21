@@ -17,7 +17,8 @@ class CreateDocumentsTable extends Migration
             $table->increments('id');
 
             $table->string('title');
-            $table->integer('step_id')->unsigned();
+            $table->integer('step_id')->unsigned()->nullable();
+            $table->integer('process_id')->unsigned()->nullable();
 
             $table->timestamps();
         });

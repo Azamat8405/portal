@@ -269,13 +269,25 @@ margin:0 auto;
 width:83%;
 overflow-x:auto;
 }
+
+.error_dialog{
+background: #ffc8c8;
+}
+.success_dialog{
+background: #c8ffcc;
+}
+
+.err_dialog_messages, .ok_dialog_messages{
+display:none;
+}
+
 .error_message, .success_message{
 padding:10px;
 line-height: 16px;
 width:100%;
 }
 .error_message{
-background:#f7aeae;
+background:#ffc8c8;
 border:1px solid #a54747;
 }
 .success_message{
