@@ -366,6 +366,8 @@ $(function(){
 		});
 	}
 
+	$('chosen');
+
 	// выбор чекбоксов во всплывающем окне выбора
 	$('#shops_dialog, #tovs_dialog').on('click', 'input[type=checkbox]', function(e){
 		e.stopPropagation();
