@@ -97,15 +97,19 @@
                 <nav>
                     <div class="handrail"><div></div></div>
                     <ul>
-                        <li><a href="">Задачи</a></li>
-                        <li><a href="">Участники</a>
+                        <li><a href="{{ route('processes') }}">Акции</a></li>
+                        <li><a href="{{ route('ucenka.list') }}">Уценка</a></li>
+
+<!--
+                            <li><a href="">Участники</a>
                             <ul>
                                 <li><a href="">Иванов И.И</a></li>
                                 <li><a href="">Петров П.П.</a></li>
                                 <li><a href="">Сидоров С.С</a></li>
                             </ul>
                         </li>
-                        <li><a href="{{ route('processes') }}">Акции</a></li>
+-->
+
                     </ul>
                 </nav>
             @endguest

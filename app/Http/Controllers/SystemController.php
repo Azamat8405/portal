@@ -10,6 +10,7 @@ use App\ShopRegion;
 use App\Shop;
 use App\Brend;
 
+// TODO поиск по вхождению сделать нормально, с проверкой данных на инъекцию
 class SystemController extends Controller
 {
 	public function ajaxGetContragentsErarhi()
@@ -434,254 +435,6 @@ class SystemController extends Controller
 			}
 		}
 	}
-
-	/**
-	* Заполняем таблицу разделов в древовидной форме
-	*/
-	// public function fillTov2CategsTable(Request $request)
-	// {
-	// 	$import_categs = [];
-	// 	$import_categs[] = 'ИГРУШКИ';
-	// 	$import_categs[] = 'КАНЦТОВАРЫ, КНИГИ, ДИСКИ';
-	// 	$import_categs[] = 'СОПУТСТВУЮЩИЕ ТОВАРЫ';
-	// 	$import_categs[] = 'КРУПНОГАБАРИТНЫЙ ТОВАР';
-	// 	$import_categs[] = 'ОБУВЬ';
-	// 	$import_categs[] = 'ДЕТСКОЕ ПИТАНИЕ';
-	// 	$import_categs[] = 'КОСМЕТИКА/ГИГИЕНА';
-	// 	$import_categs[] = 'ПОДГУЗНИКИ';
-	// 	$import_categs[] = 'ТОВАРЫ ДЛЯ КОРМЛЕНИЯ';
-	// 	$import_categs[] = 'ТЕКСТИЛЬ, ТРИКОТАЖ';
-
-	// 	$cats = DB::table('tov_categs')
-	// 			->select('lvl1', 'lvl2', 'lvl3', 'lvl4')
-	// 			->orderBy('lvl1', 'asc')
-	// 			->orderBy('lvl2', 'asc')
-	// 			->orderBy('lvl3', 'asc')
-	// 			->orderBy('lvl4', 'asc')
-	// 			->get();
-	// 	if($cats)
-	// 	{
-	// 		foreach ($cats as $key => $value)
-	// 		{
-	// 			$lvl1_right = 0;
-	// 			if($value->lvl1 != '')
-	// 			{
- // 					$lvl1 = trim($value->lvl1);
-	// 				if(!in_array($lvl1, $import_categs))
-	// 				{
-	// 					continue;
-	// 				}
-
-	// 				$exist_lvl1 = DB::table('tov2_categs')
-	// 						->where('title', $lvl1)
-	// 						->where('level', 1)
-	// 						->get()->first();
-	// 				if(!$exist_lvl1)
-	// 				{
-	// 					$root = DB::table('tov2_categs')->get()->first();
-	// 					if(!$root)
-	// 					{
-	// 						$root = new Tov2Categs();
-	// 						$root->title = 'root';
-
-	// 						$root->left = 1;
-	// 						$root->right = 2;
-	// 						$root->level = 0;
-
-	// 						$root->save();
-	// 					}
-
-	// 					DB::update('UPDATE [dbo].[tov2_categs]
-	// 					   		SET [right] = [right]+2
-	// 					 		WHERE [right] >= ?',
-	// 						[
-	// 							$root->right
-	// 						]);
-
-	// 					$exist_lvl1 = new Tov2Categs();
-	// 					$exist_lvl1->title = $lvl1;
-
-	// 					$exist_lvl1->left = $root->right;
-	// 					$exist_lvl1->right = $root->right+1;
-	// 					$exist_lvl1->level = 1;
-
-	// 					$exist_lvl1->save();
-
-	// 					$lvl1_right = $exist_lvl1->right;
-	// 				}
-	// 				else
-	// 				{
-	// 					$lvl1_right = $exist_lvl1->right;
-	// 				}
-	// 			}
-
-	// 			if($value->lvl2 != '')
-	// 			{
- // 					$lvl2 = trim($value->lvl2);
-	// 				$exist_lvl2 = DB::select('SELECT c.[right] as self_right
-	// 						from [dbo].[tov2_categs] c, [dbo].[tov2_categs] c2
-
-	// 					 	WHERE c.[title] = ? AND
-	// 							c.[level] = 2 AND
-
-	// 							c.[left] > c2.[left] AND
-	// 							c.[right] < c2.[right] AND
-
-	// 							c2.[title] = ? AND
-	// 							c2.[level] = 1',
-	// 						[
-	// 							$lvl2, $lvl1
-	// 						]);
-	// 				if(!$exist_lvl2)
-	// 				{
-	// 					DB::update('UPDATE [dbo].[tov2_categs]
-	// 					   		SET [right] = [right]+2
-	// 					 		WHERE [right] >= ?',
-	// 						[
-	// 							$lvl1_right
-	// 						]);
-	// 					DB::update('UPDATE [dbo].[tov2_categs]
-	// 					   		SET [left] = [left]+2
-	// 					 		WHERE [left] > ?',
-	// 						[
-	// 							$lvl1_right
-	// 						]);
-
-	// 					$exist_lvl2 = new Tov2Categs();
-	// 					$exist_lvl2->title = $lvl2;
-
-	// 					$exist_lvl2->left = $lvl1_right;
-	// 					$exist_lvl2->right = $lvl1_right+1;
-	// 					$exist_lvl2->level = 2;
-
-	// 					$exist_lvl2->save();
-	// 					$lvl2_right = $exist_lvl2->right;
-	// 				}
-	// 				else
-	// 				{
-	// 					$lvl2_right = $exist_lvl2[0]->self_right;
-	// 				}
-	// 			}
-
-	// 			if($value->lvl3 != '')
-	// 			{
-	// 				$lvl3 = trim($value->lvl3);
-	// 				$exist_lvl3 = DB::select('SELECT c.[right] as self_right from [dbo].[tov2_categs] c, [dbo].[tov2_categs] c2
-
-	// 					 	WHERE c.[title] = ? AND
-	// 							c.[level] = 3 AND
-
-	// 							c.[left] > c2.[left] AND
-	// 							c.[right] < c2.[right] AND
-
-	// 							c2.[level] = 2 AND
-	// 							c2.[title] = ? AND
-
-	// 							(
-	// 								SELECT COUNT(*) from [dbo].[tov2_categs] c3 WHERE 
-	// 									c3.[level] = 1 AND
-	// 									c3.[title] = ? AND
-	// 									c3.[left] < c2.[left] AND
-	// 									c3.[right] > c2.[right]
-	// 							) > 0 ',
-	// 						[
-	// 							$lvl3, $lvl2, $lvl1
-	// 						]);
-
-	// 				if(!$exist_lvl3)
-	// 				{
-	// 					DB::update('UPDATE [dbo].[tov2_categs]
-	// 					   		SET [right] = [right]+2
-	// 					 		WHERE [right] >= ?',
-	// 						[
-	// 							$lvl2_right
-	// 						]);
-	// 					DB::update('UPDATE [dbo].[tov2_categs]
-	// 					   		SET [left] = [left]+2
-	// 					 		WHERE [left] > ?',
-	// 						[
-	// 							$lvl2_right
-	// 						]);
-
-	// 					$exist_lvl3 = new Tov2Categs();
-	// 					$exist_lvl3->title = $lvl3;
-
-	// 					$exist_lvl3->left = $lvl2_right;
-	// 					$exist_lvl3->right = $lvl2_right+1;
-	// 					$exist_lvl3->level = 3;
-
-	// 					$exist_lvl3->save();
-	// 					$lvl3_right = $exist_lvl3->right;
-	// 				}
-	// 				else
-	// 				{
-	// 					$lvl3_right = $exist_lvl3[0]->self_right;
-	// 				}
-	// 			}
-
-
-	// 			if($value->lvl4 != '')
-	// 			{
- // 					$lvl4 = trim($value->lvl4);
-
-	// 				$exist_lvl4 = DB::select('SELECT c.[right] as self_right from [dbo].[tov2_categs] c, [dbo].[tov2_categs] c2
-
-	// 				 	WHERE c.[title] = ? AND
-	// 							c.[level] = 4 AND
-
-	// 							c.[left] > c2.[left] AND
-	// 							c.[right] < c2.[right] AND
-
-	// 							c2.[level] = 3 AND
-	// 							c2.[title] = ? AND
-
-	// 							(
-	// 								SELECT COUNT(*) from [dbo].[tov2_categs] c3 WHERE 
-	// 									c3.[level] = 2 AND
-	// 									c3.[title] = ? AND
-	// 									c3.[left] < c2.[left] AND
-	// 									c3.[right] > c2.[right]
-	// 							) > 0  AND
-
-	// 							(
-	// 								SELECT COUNT(*) from [dbo].[tov2_categs] c3 WHERE 
-	// 									c3.[level] = 1 AND
-	// 									c3.[title] = ? AND
-	// 									c3.[left] < c2.[left] AND
-	// 									c3.[right] > c2.[right]
-	// 							) > 0 ',
-	// 						[
-	// 							$lvl4, $lvl3, $lvl2, $lvl1
-	// 						]);
-
-	// 				if(!$exist_lvl4)
-	// 				{
-	// 					DB::update('UPDATE [dbo].[tov2_categs]
-	// 					   		SET [right] = [right]+2
-	// 					 		WHERE [right] >= ?',
-	// 						[
-	// 							$lvl3_right
-	// 						]);
-	// 					DB::update('UPDATE [dbo].[tov2_categs]
-	// 					   		SET [left] = [left]+2
-	// 					 		WHERE [left] > ?',
-	// 						[
-	// 							$lvl3_right
-	// 						]);
-
-	// 					$exist_lvl4 = new Tov2Categs();
-	// 					$exist_lvl4->title = $lvl4;
-
-	// 					$exist_lvl4->left = $lvl3_right;
-	// 					$exist_lvl4->right = $lvl3_right+1;
-	// 					$exist_lvl4->level = 4;
-
-	// 					$exist_lvl4->save();
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
 
 	public function fillTovCategsTable(Request $request)
 	{
@@ -1190,6 +943,7 @@ class SystemController extends Controller
 		{
 			return;
 		}
+
 // truncate table [Portal].[dbo].[brends]
 // truncate table [Portal].[dbo].[brends_categs_links]
 // truncate table [Portal].[dbo].[tov_categs]
@@ -1255,30 +1009,28 @@ class SystemController extends Controller
 			return;
 
 		$tmp = [];
-		foreach ($cat_ids as $key => $value) {
+		foreach ($cat_ids as $key => $value)
+		{
 			$tmp[] = "'".$value."'";
 		}
 
 		// достаем все родительские разделы выбранного раздела.
 		// чтобы по их названиям достать id-шники товаров из таблицы [Imported_Data].[dbo].[AstHrhy]
-		$parCategs = DB::select('SELECT c2.id, c2.title, c2.level from [dbo].[tov_categs] c, [dbo].[tov_categs] c2
+		$parCategs = DB::select('SELECT c2.id, c2.title, c2.level
+				FROM [dbo].[tov_categs] c, [dbo].[tov_categs] c2
 			 	WHERE c.[id] IN ('.implode(',', $tmp).') AND
 						c.[left] >= c2.[left] AND
 						c.[right] <= c2.[right] AND 
 						c2.[level] != 0');
 		$ctgs = [];
 		$ctgs_str = [];
-
 		if($parCategs)
 		{
 			$i = 0;
 			foreach ($parCategs as $value)
 			{
 				$i++;
-
-				// $ctgs[$value->level] = $value->title;
 				$ctgs[] = '[LVL'.$value->level.'] = \''.$value->title.'\'';
-
 				if($i%4 == 0)
 				{
 					$ctgs_str[] = '('.implode(' AND ', $ctgs).')';

@@ -1,6 +1,10 @@
 .content-panel
 {
 font-size:80%;
+position:fixed;
+top:43px;
+width:84%;
+z-index:100;
 }
 .content-panel:after{
 content:'';

@@ -26,6 +26,7 @@ class ProcessController extends Controller
 	// хешируем сюда список магазинов
 	private $cache_shops = [];
 	private $validate_errors = [];
+
 	// $validate_errors['form'] = [];ошибки формы
 	// $validate_errors['file'] = [];ошибки файла загрузки
 
