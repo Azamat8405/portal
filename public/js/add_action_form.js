@@ -8,10 +8,50 @@ var cache_shops_regions = {};
 var cache_tovs_categs_dialog = {};
 var cache_tovs_categs = {};
 var cache_tovs_dialog = {};
+var selects_cats = ['#tovCategory','#tovGroup','#tovTipIsdeliya','#tovVidIsdeliya', '#tovBrendSelect'];
+var selectsBrens = ['#division','#oblast','#city','#shop'];
+var select2Option = {
+	width:'180',
+	minimumResultsForSearch:Infinity,
+};
+var select2OptionBrends = {
+	width:'180',
+	ajax:{
+		delay: 300,
+	    url: "/sys/getBrendsForAvtocomplete",
+	    dataType: 'json',
+	    cache: true,
+	    language: "ru",
+		data: function (params) {
+		    return {
+		        term: params.term
+			};
+		},
+		processResults: function (data) {
+			let newData = [];
+			for(ind in data)
+			{
+				newData[ind] = {'id':data[ind].val, 'text':data[ind].label};
+			}
+			return {
+		        results:newData
+		    };
+	    }
+	}
+};
 
 $(function(){
 
 	events();
+
+	$('.addProcessForm').keydown(function(e)
+ 	{
+        if(e.keyCode == 13)
+        {
+			e.preventDefault();
+			return false;
+        }
+	});
 
 	if($('.err_dialog_messages').length > 0)
 	{
@@ -78,7 +118,7 @@ $(function(){
 		    'overflow':'hidden',
 		    'z-index':'15',
 		});
-		$thead.find('th').each(function(){
+		$thead.find('th').each(function(index){
 			var $newdiv = $('<div />', {
 				style: 'width:'+ $(this).outerWidth() + 'px'
 	        });
@@ -92,240 +132,56 @@ $(function(){
 				'line-height':'16px',
 				'text-align': 'center'
 			});
-	        $newdiv.text($(this).text());
+
+			if(index == 0)
+			{
+	        	$newdiv.html($(this).html());
+			}
+			else
+			{
+	        	$newdiv.text($(this).text());
+			}
+
 	        $header.append($newdiv);
 		});
 	}, 100);
 
-	var selects = ['#tovCategory','#tovGroup','#tovTipIsdeliya','#tovVidIsdeliya', '#tovBrendSelect'];
-	$.each(selects, function(index, value){
+	$('#tableHeader').on('click', '#delAll', function(){
+		if($(this).is(':checked'))
+		{
+			$('.deleteRow').prop('checked', true);
+		}
+		else
+		{
+			$('.deleteRow').prop('checked', false);
+		}	
+	})
 
 
-		$(value).select2({
-			width:'180',
-			minimumResultsForSearch:Infinity
- 		});
-
-		$(value).on('select2:open', function(){
-
-console.log('555');
-
-			if(selects[index] == '#tovBrendSelect')
-			{
-				if($('#tovBrendSelect-button').find('li.ui-menu-item').length <= 1)
-				{
-					if($('#tovBrendSelect option').length <= 1)
-					{
-
-
-
-		// 					$('#tovBrendSelect').selectmenu('destroy');
-		// 					$('#tovBrendSelect').hide();
-
-		// 					let inpt =  $('<input />');
-		// 					inpt.attr('id', 'tovBrendAvtoComplete');
-		// 					$('#tovBrendSelect').after(inpt);
-		// 					inpt.button();
-		// 					inpt.focus();
-						
-		// 					$('#tovBrendAvtoComplete').autocomplete(
-		// 					{
-		// 						source: function( request, response ){
-		// 							var term = request.term;
-		// 							if ( term in cache_avtocomplete_brends )
-		// 							{
-		// 								response(cache_avtocomplete_brends[term]);
-		// 								return;
-		// 							}
-		// 							$.getJSON( "/sys/getBrendsForAvtocomplete", request, function( data, status, xhr ) {
-		// 								cache_avtocomplete_brends[term] = data;
-		// 								response(data);
-		// 							});
-		// 						},
-		// 						minLength: 2,
-		// 						select: function( event, ui ) {
-		// 							$('#tovBrend').val(ui.item.val);
-		// 						}
-		// 					});
-
-					}
-				}
-			}
-		});
-
-
-		// $(value).selectmenu({
-		// 	open: function( event, ui )
-		// 	{
-		// 		if(selects[index] == '#tovBrendSelect')
-		// 		{
-		// 			if($('#tovBrendSelect-button').find('li.ui-menu-item').length <= 1)
-		// 			{
-		// 				if($('#tovBrendSelect option ').length <= 1)
-		// 				{
-		// 					$('#tovBrendSelect').selectmenu('destroy');
-		// 					$('#tovBrendSelect').hide();
-
-		// 					let inpt =  $('<input />');
-		// 					inpt.attr('id', 'tovBrendAvtoComplete');
-		// 					$('#tovBrendSelect').after(inpt);
-		// 					inpt.button();
-		// 					inpt.focus();
-						
-		// 					$('#tovBrendAvtoComplete').autocomplete(
-		// 					{
-		// 						source: function( request, response ){
-		// 							var term = request.term;
-		// 							if ( term in cache_avtocomplete_brends )
-		// 							{
-		// 								response(cache_avtocomplete_brends[term]);
-		// 								return;
-		// 							}
-		// 							$.getJSON( "/sys/getBrendsForAvtocomplete", request, function( data, status, xhr ) {
-		// 								cache_avtocomplete_brends[term] = data;
-		// 								response(data);
-		// 							});
-		// 						},
-		// 						minLength: 2,
-		// 						select: function( event, ui ) {
-		// 							$('#tovBrend').val(ui.item.val);
-		// 						}
-		// 					});
-		// 				}
-		// 			}
-		// 		}
-		// 	},
-		// 	change:function(e, ui){
-
-		// 		if(selects[index] == '#tovVidIsdeliya')
-		// 		{
-		// 			if($('#tovBrendAvtoComplete').length > 0)
-		// 			{
-		// 				$('#tovBrendAvtoComplete').remove();
-		// 				$('#tovBrendSelect').selectmenu({
-		// 					open: function( event, ui )
-		// 					{
-		// 						if($('#tovBrendSelect-button').find('li.ui-menu-item').length <= 1)
-		// 						{
-		// 							if($('#tovBrendSelect option ').length <= 1)
-		// 							{
-		// 								$('#tovBrendSelect').selectmenu('destroy');
-		// 								$('#tovBrendSelect').hide();
-
-		// 								let inpt =  $('<input />');
-		// 								inpt.attr('id', 'tovBrendAvtoComplete');
-		// 								$('#tovBrendSelect').after(inpt);
-		// 								inpt.button();
-		// 								inpt.focus();
-									
-		// 								$('#tovBrendAvtoComplete').autocomplete(
-		// 								{
-		// 									source: function( request, response ){
-		// 										var term = request.term;
-		// 										if ( term in cache_avtocomplete_brends )
-		// 										{
-		// 											response(cache_avtocomplete_brends[term]);
-		// 											return;
-		// 										}
-		// 										$.getJSON( "/sys/getBrendsForAvtocomplete", request, function( data, status, xhr ) {
-		// 											cache_avtocomplete_brends[term] = data;
-		// 											response(data);
-		// 										});
-		// 									},
-		// 									minLength: 2,
-		// 									select: function( event, ui ) {
-		// 										$('#tovBrend').val(ui.item.val);
-		// 									}
-		// 								});
-		// 							}
-		// 						}
-		// 					},
-		// 					change:function(e, ui){
-
-		// 						$('#tovBrend').val(ui.item.value);
-		// 						$(selects[index]).find('[value='+ui.item.value+']').prop('selected', true);
-		// 					}
-		// 				});
-		// 			}
-		// 		}
-
-		// 		if(!cache_tovs_categs[ui.item.value] || $.isEmptyObject(cache_tovs_categs[ui.item.value]))
-		// 		{
-		// 			if(selects[index] == '#tovVidIsdeliya')
-		// 			{
-		// 				$.ajax({
-		// 					url: "/sys/getBrendsForCategs/"+ui.item.value,
-		// 					dataType:'json',
-		// 					success: function(data){
-
-		// 						cache_tovs_categs[ui.item.value] = data;
-		// 						fillRegionsFilter(selects[index+1], data);
-		// 					}
-		// 				});
-		// 			}
-		// 			else if(selects[index] != '#tovBrendSelect')
-		// 			{
-		// 				$.ajax({
-		// 					url: "/sys/getSubCategs/"+ui.item.value,
-		// 					dataType:'json',
-		// 					success: function(data){
-		// 						cache_tovs_categs[ui.item.value] = data;
-		// 						fillCategsFilter(selects[index+1], data);
-		// 					}
-		// 				});
-		// 			}
-		// 		}
-		// 		else
-		// 		{
-		// 			fillCategsFilter(selects[index+1], cache_tovs_categs[ui.item.value]);
-		// 		}
-
-		// 		if(selects[index] == '#tovBrendSelect')
-		// 		{
-		// 			$('#tovBrend').val(ui.item.value);
-		// 		}
-		// 		$(selects[index]).find('[value='+ui.item.value+']').prop('selected', true);
-		// 	}
-		// });
-
+	$.each(selects_cats, function(index, value){
+		if(selects_cats[index] == '#tovBrendSelect')
+		{
+			$(value).select2(select2OptionBrends);
+		}
+		else
+		{
+			$(value).select2(select2Option);
+			$(value).on('change.select2', function(e){
+				var params = [];
+				params['id'] = selects_cats[index];
+				change_select2_cats(e, this, params);
+			});
+		}
 	});
 
-	var selectsBrens = ['#division','#oblast','#city','#shop'];
 	$.each(selectsBrens, function(index, value){
-		$(value).selectmenu({
-			change:function(e, ui){
 
-				if(!cache_shops_regions[ui.item.value] || $.isEmptyObject(cache_shops_regions[ui.item.value]))
-				{
-					if(selectsBrens[index] == '#city')
-					{
-						$.ajax({
-							url: "/sys/getShopsForRegion/"+ui.item.value,
-							dataType:'json',
-							success: function(data){
-								cache_shops_regions[ui.item.value] = data;
-								fillRegionsFilter(selectsBrens[index+1], data);
-							}
-						});
-					}
-					else
-					{
-						$.ajax({
-							url: "/sys/getSubRegions/"+ui.item.value,
-							dataType:'json',
-							success: function(data){
-								cache_shops_regions[ui.item.value] = data;
-								fillRegionsFilter(selectsBrens[index+1], data);
-							}
-						});
-					}
-				}
-				else
-				{
-					fillRegionsFilter(selectsBrens[index+1], cache_shops_regions[ui.item.value]);
-				}
-				$(selectsBrens[index]).find('[value='+ui.item.value+']').prop('selected', true);
-			}
+		$(value).select2(select2Option);
+		$(value).on('change.select2', function(e){
+
+			var params = [];
+			params['id'] = selectsBrens[index];
+			change_select2_cats(e, this, params);
 		});
 	});
 
@@ -361,18 +217,23 @@ console.log('555');
 		}
 	});
 
+	function tmp2(val)
+	{
+		var cur_date = new Date();
+		var dateObj = $.datepicker.parseDate( "dd-mm-yy", val);
+		dateObj.setTime(dateObj.getTime() + 86400000);
+
+		to.datepicker( "option", "minDate",  dateObj);
+		$('.start_on_invoice_date').datepicker( "option", "maxDate", val);
+	}
+
 	if($.fn.datepicker)
 	{
 		var from = $('#start_date').datepicker({
 			dateFormat: "dd-mm-yy"
 		}).change(function() {
 
-			var cur_date = new Date();
-			var dateObj = $.datepicker.parseDate( "dd-mm-yy", this.value);
-			dateObj.setTime(dateObj.getTime() + 86400000);
-
-			to.datepicker( "option", "minDate",  dateObj);
-			$('.start_on_invoice_date').datepicker( "option", "maxDate", this.value);
+			tmp2(this.value);
 		});
 		var to = $('#end_date').datepicker({
 			minDate: new Date(),
@@ -380,23 +241,26 @@ console.log('555');
 		});
 	}
 
-
-
-
 	if($("#process_type").length > 0)
 	{
 		var tmp = function (){
 			var d = new Date();
 			d.setTime(d.getTime() + $("#process_type option:selected").data('dedlain') * 1000 );
 			from.datepicker( "option", "minDate", d);
+			return d;
 		}
 		$('#process_type').select2({
 			width:'160',
 			minimumResultsForSearch:Infinity
  		});
-		tmp();
-		$("#process_type").on('change', function(evt, params) {
+ 		tmp();
+ 		$("#process_type").on('change', function(evt) {
 			tmp();
+
+			if($('#start_date').val() != '')
+			{
+				tmp2( $('#start_date').val() );
+			}
 		});
 	}
 
@@ -446,137 +310,10 @@ console.log('555');
 		}
 	});
 
-	//подгрузка товаров в раздел. в окне выбора товаров.
-	// $('#tovs_dialog').on('click', ' ul li  ul li  ul li  ul li', function(e){
-	// 	if($(this).find('[value]').length > 0)
-	// 	{
-	// 		return;
-	// 	}
-	// 	e.preventDefault();
-
-	// 	var ul_el = $(this).find(' > ul');
-	// 	if(ul_el.find('li').length == 0)
-	// 	{
-	// 		var id_categ = $(this).find('[data-value]').data('value');
-	// 		if(cache_tovs_dialog[id_categ])
-	// 		{
-	// 			build_tov_list(cache_tovs_dialog[id_categ], ul_el);
-	// 		}
-	// 		else
-	// 		{
-	// 			ul_el.append('<img class="load_img" src="/img/load75x75.gif">');
-	// 			if(id_categ != '')
-	// 			{
-	// 				$.ajax({
-	// 					url: "/sys/getTovsForCateg/"+id_categ,
-	// 					dataType:'json',
-	// 					success: function(data){
-	// 						cache_tovs_dialog[id_categ] = data;
-	// 						build_tov_list(data, ul_el);
-	// 					}
-	// 				});
-	// 			}
-	// 		}
-	// 	}
-	// });
-
-	$('*').on('click', '.field_input_file > .file', function(){
+	$('div').on('click', '.field_input_file > .file', function(){
 		var el = this;
-		if($(this).data('type') == 'getShopsErarhi')
-		{
-			// $("#shops_dialog").dialog({
-			// 	title: "Выбор магазинов",
-			// 	open:function( event, ui){
-			// 		get_shop_list($(el).prev().val().split(','));
-			// 	},
-			// 	resizable:true,
-			// 	width:500,
-			// 	modal:true,
-			// 	position:{
-			// 		my:"top",
-			// 		at:"top",
-			// 		of:window
-			// 	},
-			// 	maxHeight:$(window).height()-50,
-			// 	closeOnEscape:true,
-			// 	buttons:{
-			// 	    "Выбрать магазин": function(e){
-			// 			var ids=[],titles=[];
-			// 			$('#shops_dialog input[value]:checked').each(function(){
-			// 				ids.push($(this).val());
-			// 				titles.push($(this).data('title'));
-			// 			});
 
-			// 			var row_n = getRowNumber(el);
-
-			// 			$('input[name^=shops]:eq('+row_n+')').val(ids.join());
-			// 			$('input.shops:eq('+row_n+')').val(titles.join());
-
-			// 			$("#shops_dialog").dialog("close");
-			// 	    }
-			// 	}
-			// });
-		}
-		else if($(this).data('type') == 'getTovsErarhi')
-		{
-			// $("#tovs_dialog").dialog({
-			// 	modal: true,
-			// 	title: "Выбор товаров",
-			// 	open:function( event, ui )
-			// 	{
-			// 		let selIds = $(el).prev().val().split(',');
-			// 		let selCategsIds = $(el).prev().prev('input[name^="catsTovs"]').val().split(',');
-
-			// 		$("#tovs_dialog").dialog( "option", 'selTovs', selIds);
-			// 		$("#tovs_dialog").dialog( "option", 'selCategs', selCategsIds);
-
-			// 		get_tovs_categs_list();
-			// 	},
-			// 	resizable:true,
-			// 	width:750,
-			// 	position: {
-			// 		my: "top",
-			// 		at: "top",
-			// 		of: window
-			// 	},
-			// 	maxHeight:$(window).height()-50,
-			// 	closeOnEscape:true,
-			// 	buttons:{
-			// 	    "Выбрать товар": function(e){
-			// 			var ids=[], titles=[];
-
-			// 			$('#tovs_dialog input[id^=tov]:checked').each(function(){
-			// 				ids.push($(this).val());
-			// 				titles.push($(this).data('title'));
-			// 			});
-
-			// 			//берем все выбранные разделы
-			// 			var checked_categs = [];
-			// 			$('#tovs_dialog input.tov_categs:checked').each(function(){
-
-			// 				var ul = $(this).next().next();
-
-			// 				//запоминаем раздел только если в нет нет товаров или есть НЕ выбранные товары
-			// 				if($(ul).find('input[id^=tov]').length == 0 || $(ul).find('input[id^=tov]').not(':checked').length > 0)
-			// 				{
-			// 					checked_categs.push($(this).data('value'));
-			// 					titles.push($(this).data('title'));
-			// 				}
-			// 			});
-
-			// 			var row_n = getRowNumber(el);
-			// 			$('input[name^=catsTovs]:eq('+row_n+')').val(checked_categs.join());
-
-			// 			$('input.tovs:eq('+row_n+')').val(ids.join());
-			// 			$('input.tovsTitles:eq('+row_n+')').val(titles.join());
-
-			// 			$("#tovs_dialog").dialog("close");
-			// 	    }
-			// 	}
-			// });
-
-		}
-		else if($(this).data('type') == 'getContagentsErarhi')
+		if($(el).data('type') == 'getContagentsErarhi')
 		{
 			$("#contragent_dialog").dialog({
 				title: "Выбор контрагента",
@@ -626,40 +363,49 @@ console.log('555');
 		var arr = {};
 		if($('#tovCategory').val() == 0)
 		{
-			$('#tovCategory-button').css('border','1px solid red');
+			$('#select2-tovCategory-container').parents('.select2-selection').css('border','1px solid red')
 			err = true;
 		}
 		else
 		{
-			$('#tovCategory-button').css('border','1px solid #ccc');
+			$('#select2-tovCategory-container').parents('.select2-selection').css('border','1px solid #aaa')
 			arr.tovCategory = $('#tovCategory').val();
 		}
 
 		if($('#tovGroup').val() == 0)
 		{
-			$('#tovGroup-button').css('border','1px solid red');
+			$('#select2-tovGroup-container').parents('.select2-selection').css('border','1px solid red')
 			err = true;
 		}
 		else
 		{
-			$('#tovGroup-button').css('border','1px solid #ccc');
+			$('#select2-tovGroup-container').parents('.select2-selection').css('border','1px solid #aaa')
 			arr.tovGroup = $('#tovGroup').val();
 		}
 
 		if($('#tovTipIsdeliya').val() == 0)
 		{
-			$('#tovTipIsdeliya-button').css('border','1px solid red');
+			$('#select2-tovTipIsdeliya-container').parents('.select2-selection').css('border','1px solid red')
 			err = true;
 		}
 		else
 		{
-			$('#tovTipIsdeliya-button').css('border','1px solid #ccc');
+			$('#select2-tovTipIsdeliya-container').parents('.select2-selection').css('border','1px solid #aaa')
 			arr.tovTipIsdeliya = $('#tovTipIsdeliya').val();
 		}
 
-		arr.tovVidIsdeliya = $('#tovVidIsdeliya').val();
-		arr.tovBrend = $('#tovBrend').val();
+		if($('#tovVidIsdeliya').val() == 0)
+		{
+			$('#select2-tovVidIsdeliya-container').parents('.select2-selection').css('border','1px solid red')
+			err = true;
+		}
+		else
+		{
+			$('#select2-tovVidIsdeliya-container').parents('.select2-selection').css('border','1px solid #aaa')
+			arr.tovVidIsdeliya = $('#tovVidIsdeliya').val();
+		}
 
+		arr.tovBrend = $('#tovBrendSelect').val();
 		arr.division = $('#division').val();
 		arr.oblast = $('#oblast').val();
 		arr.city = $('#city').val();
@@ -693,206 +439,16 @@ function getTovsToFillTable(arr, page)
 
 			for(ind in data.items)
 			{
-				addRow(data.items[ind], data.shop);
+				if($('.tovs[value='+data.items[ind].c+']').length == 0)
+				{
+					addRow(data.items[ind], data.shop);
+				}
 			}
 			delRows(true);
 		}
 	});
 }
 
-function build_list(cache_shops_dialog, ids)
-{
-	// $('#shops_dialog').html('');
-	// var ul = $('<ul>');
-
-	// ul.addClass("tree");
-	// $('#shops_dialog').append(ul);
-
-	// var li = '';
-	// for(ind in cache_shops_dialog)
-	// {
-	// 	var display = '';
-
-	// 	var macreg = 'checked="checked"';
-	// 	var lii = '';
-	// 	for(inde in cache_shops_dialog[ind])
-	// 	{
-	// 		if(!cache_shops_dialog[ind][inde]['title'])
-	// 			continue;
-
-	// 		reg_ch = 'checked="checked"';
-	// 		var liii = '';
-	// 		for(index in cache_shops_dialog[ind][inde])
-	// 		{
-	// 			if(!cache_shops_dialog[ind][inde][index]['title'])
-	// 				continue;
-
-	// 			city_ch = 'checked="checked"';
-	// 			var li4 = '';
-	// 			for(indexx in cache_shops_dialog[ind][inde][index])
-	// 			{
-	// 				if(indexx == 'title')
-	// 					continue;
-
-	// 				ch = '';
-	// 				if($.inArray(indexx, ids) >= 0)
-	// 				{
-	// 					ch = 'checked="checked"';
-	// 					display = ' class="active" ';
-	// 				}
-	// 				else
-	// 				{
-	// 					city_ch = '';
-	// 				}
-	// 				li4 += '<li class="no_icon"><input type="checkbox" value="'+indexx+'" id="shop'+indexx+'" data-title="'+escape(cache_shops_dialog[ind][inde][index][indexx])+'" '+ch+'>'+
-	// 					'<label for="shop'+indexx+'">Магазин '+cache_shops_dialog[ind][inde][index][indexx]+'</label></li>';
-	// 			}
-	// 			if(city_ch == '')
-	// 				reg_ch = '';
-
-	// 			liii += '<li '+display+'><input type="checkbox" '+city_ch+'>'+
-	// 				'<label>'+cache_shops_dialog[ind][inde][index]['title']+'</label><ul>'+li4+'</ul></li>';
-	// 		}
-
-	// 		if(reg_ch == '')
-	// 			macreg = '';
-
-	// 		lii += '<li '+display+'><input type="checkbox" '+reg_ch+'>'+
-	// 			'<label>'+cache_shops_dialog[ind][inde]['title']+'</label><ul>'+liii+'</ul></li>';
-	// 	}
-
-	// 	li += '<li '+display+'><input type="checkbox" '+macreg+'>'+
-	// 		'<label>'+cache_shops_dialog[ind]['title']+'</label><ul>'+lii+'</ul></li>';
-	// }
-	// $('#shops_dialog > ul').append(li);
-	// $('#shops_dialog').prepend($('<input style="margin:0 3px 8px 9px ;" type="checkbox" id="checkAllShop"><label style="margin:0 0 8px 0;" for="checkAllShop">Выбрать все магазины</label>'));
-}
-
-function build_tov_list(cache_tovs, ul_el)
-{
-	// ul_el.html('');
-
-	// var parent_checked = ul_el.prev().prev().is(':checked');
-	// for(ind in cache_tovs)
-	// {
-	// 	let ch1 = '';
-	// 	if($.inArray(ind, $("#tovs_dialog").dialog( "option", 'selTovs')) >= 0 ||
-	// 		parent_checked
-	// 	)
-	// 	{
-	// 		ch1 = 'checked="checked"';
-	// 		display = ' style="display:block;" ';
-	// 	}
-	// 	ul_el.append('<li class="no_icon"><input type="checkbox" id="tov'+ ind + '" '+
-	// 		' value="' + ind + '" data-title="'+escape(cache_tovs[ind]['n'])+'" '+ch1+'>'+
-	// 		'<label for="tov'+ ind + '">'+cache_tovs[ind]['n']+' '+(cache_tovs[ind]['art'] ? '('+cache_tovs[ind]['art']+')' : '')+'</label></li>');
-	// }
-}
-
-// function build_tov_categs_list(cache_tovs_categs_dialog)
-// {
-// 	$('#tovs_dialog').html('');
-
-// 	var ul = $('<ul>');
-// 	ul.addClass("tree");
-// 	$('#tovs_dialog').append(ul);
-
-// 	var showTovs = [];
-// 	var selTovs = $("#tovs_dialog").dialog( "option", 'selTovs');
-// 	var selCategs = $("#tovs_dialog").dialog( "option", 'selCategs');
-
-// 	var li = '';
-// 	for(ind in cache_tovs_categs_dialog)
-// 	{
-// 		var display = '';
-// 		var macreg = '';
-// 		var lii = '';
-// 		for(inde in cache_tovs_categs_dialog[ind])
-// 		{
-// 			if(!cache_tovs_categs_dialog[ind][inde]['t'])
-// 				continue;
-// 			var reg_ch = 0;
-// 			var liii = '';
-// 			for(index in cache_tovs_categs_dialog[ind][inde])
-// 			{
-// 				if(!cache_tovs_categs_dialog[ind][inde][index]['t'])
-// 					continue;
-// 				var city_ch = 0;
-// 				var li4 = '';
-// 				for(indexx in cache_tovs_categs_dialog[ind][inde][index])
-// 				{
-// 					if(indexx == 't')
-// 						continue;
-
-// 					var ch = 0;
-// 					if($.inArray(indexx, selCategs) >= 0)
-// 					{
-// 						ch = 1;
-// 					}
-// 					for(tovId in cache_tovs_dialog[indexx])
-// 					{
-// 						if($.inArray(tovId, selTovs) >= 0)
-// 						{
-// 							display = ' class="active" ';
-// 							showTovs[indexx] = 1;
-// 							if(ch != 2)
-// 								ch = 1;
-// 						}
-// 						else
-// 						{
-// 							ch = 2;
-// 							break;
-// 						}
-// 					}
-// 					if(ch == 1)
-// 					{
-// 						if(city_ch != 2)
-// 							city_ch = 1;
-// 					}
-// 					else
-// 						city_ch = 2;
-
-// 					var title = cache_tovs_categs_dialog[ind][inde][index][indexx]['t']
-// 					li4 += '<li '+display+'><input data-title="'+escape(title)+'" class="tov_categs" type="checkbox" data-level="4" data-value="' + indexx + '" '+(ch == 1 ? ' checked="checked" ' : '')+'>'+
-// 						'<label>'+title+'</label><ul ></ul></li>';
-// 				}
-// 				if(city_ch == 1)
-// 				{
-// 					if(reg_ch != 2)
-// 						reg_ch = 1;
-// 				}
-// 				else
-// 					reg_ch = 2;
-
-// 				var title = cache_tovs_categs_dialog[ind][inde][index]['t'];
-// 				liii += '<li '+display+'><input data-title="'+escape(title)+'" class="tov_categs" type="checkbox" data-value="'+index+'" '+( city_ch == 1 ? ' checked=""checked' : '')+'>'+
-// 					'<label>'+title+'</label><ul>'+li4+'</ul></li>';
-// 			}
-// 			if(reg_ch == 1)
-// 			{
-// 				if(macreg != 2)
-// 					macreg = 1;
-// 			}
-// 			else
-// 				macreg = 2;
-
-// 			var title = cache_tovs_categs_dialog[ind][inde]['t'];
-
-// 			lii += '<li '+display+'><input data-title="'+escape(title)+'" class="tov_categs" type="checkbox" data-value="'+inde+'" '+( reg_ch == 1 ? ' checked=""checked' : '') + '>' +
-// 				'<label>'+title+'</label><ul>'+liii+'</ul></li>';
-// 		}
-
-// 		var title = cache_tovs_categs_dialog[ind]['t'];
-// 		li += '<li '+display+'><input data-title="'+escape(title)+'" class="tov_categs" type="checkbox" data-value="'+ind+'" '+ ( macreg == 1 ? ' checked=""checked' : '') +'>'+
-// 			'<label>'+title+'</label><ul>'+lii+'</ul></li>';
-// 	}
-// 	$('#tovs_dialog > ul').append(li);
-// 	for (ind in showTovs)
-// 	{
-// 		var ul_el = $('input[data-value='+ind+']').next().next();
-// 		build_tov_list(cache_tovs_dialog[ind], ul_el);
-// 	}
-// }
 
 function build_contragents_list(cache_contragents)
 {
@@ -915,43 +471,6 @@ function build_contragents_list(cache_contragents)
 			'<label for="c_'+cache_contragents[ind]['val']+'">'+cache_contragents[ind]['label']+' (ИНН:'+cache_contragents[ind]['inn']+')</label></li>';
 	}
 	root.find(' > ul').append(li);
-}
-
-function get_shop_list(ids)
-{
-	// if($.isEmptyObject(cache_shops_dialog))
-	// {
-	// 	$.ajax({
-	// 		url: "/sys/getShopsErarhi",
-	// 		dataType:'json',
-	// 		success: function(data){
-	// 			cache_shops_dialog = data;
-	// 			build_list(data, ids);
-	// 		}
-	// 	});
-	// }
-	// else
-	// {
-	// 	build_list(cache_shops_dialog, ids);
-	// }
-}
-function get_tovs_categs_list()
-{
-	// if($.isEmptyObject(cache_tovs_categs_dialog))
-	// {
-	// 	$.ajax({
-	// 		url: "/sys/getTovsCategsErarhi",
-	// 		dataType:'json',
-	// 		success: function(data){
-	// 			cache_tovs_categs_dialog = data;
-	// 			build_tov_categs_list(data);
-	// 		}
-	// 	});
-	// }
-	// else
-	// {
-	// 	build_tov_categs_list(cache_tovs_categs_dialog);
-	// }
 }
 
 function get_contragents_list()
@@ -994,17 +513,29 @@ function escape(string) {
     });
 };
 
-function addRow(itemsToFill, shopsToFill)
+function addRow(itemsToFill, shopsToFill, tr)
 {
-	$('.select').selectmenu("destroy");
-	$('.start_on_invoice_date, .end_on_invoice_date').datepicker( "destroy" );
+	if($('.select').selectmenu().length)
+	{
+		$('.select').selectmenu("destroy");
+	}
+	$('.start_on_invoice_date, .end_on_invoice_date').datepicker("destroy");
 
-	var t = $('.table_data table tr:eq(1)').html();
+	if(!tr)
+	{
+		var t = $('.table_data table tr:eq(1)').html();
+		var tr = $('<tr>');
+		tr.append(t);
+	}
+	else
+	{
+		tr = $(tr);
+	}
+
 	let newRowNumber = ($('.table_data table tr').length - 1)
 
-	var tr = $('<tr>');
-	tr.append(t);
 	tr.find('input,textarea,select').val('');
+	tr.find('.error_message').remove();
 	tr.find('.start_on_invoice_date, .end_on_invoice_date ').removeAttr('id');
 	tr.find('input.row_number').val(newRowNumber);
 
@@ -1026,7 +557,7 @@ function addRow(itemsToFill, shopsToFill)
 		tr.find('input.shops').val( ttls.join() );
 	}
 
-	var t = $('.table_data table tbody').append(tr);
+	$('.table_data table tbody').append(tr);
 	events();
 	$(window).trigger('resize');
 }
@@ -1043,13 +574,26 @@ function delRows(allEmpty)
 		{
 			if($('#tableTovs input.row_number').length > 1)
 			{
+				let addEmptyTr = null;
+				if($('.deleteRow:checked').length == $('.deleteRow').length)
+				{
+					addEmptyTr = $('.deleteRow').parents('tr').get(0);
+				}
 				$('.deleteRow:checked').parents('tr').remove();
+
+				if(addEmptyTr)
+				{
+					$('.table_data table tbody').append(addEmptyTr);
+					addRow(false, false, addEmptyTr);
+				}
 			}
 		}
+
 		$('#tableTovs input.row_number').each(function(index){
 			$(this).val(index);
 		});
 	}
+	$('#delAll').prop('checked', false);
 	$(window).trigger('resize');
 }
 
@@ -1104,14 +648,6 @@ function events()
 				{
 				 	$(currentField).val('');
 				}
-
-				// var reg2 = new RegExp("[^\.\,0-9]+");
-				// var reg = new RegExp("[0-9]{1,6}[(\.|\,)]*[0-9]{0,2}");
-
-				// if(parseFloat(cep) < 0 || !reg.test(cep) || reg2.test(cep))
-				// {
-				// 	$(currentField).val('');
-				// }
 			},
 			translation:{
       			'Z': {
@@ -1183,6 +719,7 @@ function events()
 		});
 	}
 
+	//TODO удалить модель selectmenu
 	$('.select').selectmenu();
 
 	$("input.distrTitles").autocomplete({
@@ -1193,14 +730,13 @@ function events()
 				response(cache_avtocomplete_contr[term]);
 				return;
 			}
-
 			$.getJSON( "/sys/getContragentsForAvtocomplete", request, function( data, status, xhr ) {
 				cache_avtocomplete_contr[term] = data;
 				response(data);
 			});
 		},
 		minLength: 2,
-		select: function( event, ui ) {
+		select: function(event, ui) {
 			$('input.distr').val(ui.item.val);
 		}
 	});
@@ -1221,7 +757,7 @@ function events()
 		minLength: 2,
 		select: function( event, ui )
 		{
-			$(this).next().next().val(ui.item.val);
+			$(this).parents().find('.tovs').val(ui.item.val);
 		}
 	});
 
@@ -1246,7 +782,7 @@ function events()
 	});
 }
 
-function fillCategsFilter(id, data)
+function fillCategsSelect2Filter(id, data)
 {
 	var select = $(id);
 	select.find('option').each(function(index)
@@ -1256,7 +792,6 @@ function fillCategsFilter(id, data)
 			$(this).remove();
 		}
 	});
-	select.selectmenu('refresh');
 
 	if(id == '#tovGroup')
 	{
@@ -1267,8 +802,9 @@ function fillCategsFilter(id, data)
 				$(this).remove();
 			}
 		});
-		$('#tovTipIsdeliya').selectmenu('refresh');
+		$('#tovTipIsdeliya').select2(select2Option).trigger('change');
 	}
+
 	if(id == '#tovGroup' || id == '#tovTipIsdeliya')
 	{
 		$('#tovVidIsdeliya option').each(function(index)
@@ -1278,30 +814,8 @@ function fillCategsFilter(id, data)
 				$(this).remove();
 			}
 		});
-		$('#tovVidIsdeliya').selectmenu('refresh');
+		$('#tovVidIsdeliya').select2(select2Option).trigger('change');
 	}
-
-	for(var i = data.length - 1; i >= 0; i--)
-	{
-		let op = $('<option />');
-		op.text(data[i].title);
-		op.attr('value', data[i].id);
-		select.append(op);
-	}
-	select.selectmenu('refresh');
-}
-
-function fillRegionsFilter(id, data)
-{
-	var select = $(id);
-	select.find('option').each(function(index)
-	{
-		if(index != 0)
-		{
-			$(this).remove();
-		}
-	});
-	select.selectmenu('refresh');
 
 	if(id == '#oblast')
 	{
@@ -1312,7 +826,7 @@ function fillRegionsFilter(id, data)
 				$(this).remove();
 			}
 		});
-		$('#city').selectmenu('refresh');
+		$('#city').select2(select2Option).trigger('change');
 	}
 
 	if(id == '#oblast' || id == '#city')
@@ -1324,7 +838,7 @@ function fillRegionsFilter(id, data)
 				$(this).remove();
 			}
 		});
-		$('#shop').selectmenu('refresh');
+		$('#shop').select2(select2Option).trigger('change');
 	}
 
 	for(var i = data.length - 1; i >= 0; i--)
@@ -1334,5 +848,94 @@ function fillRegionsFilter(id, data)
 		op.attr('value', data[i].id);
 		select.append(op);
 	}
-	select.selectmenu('refresh');
+
+	if(id == '#tovBrendSelect')
+	{
+		if(select.find('option').length <= 1)
+		{
+			select.select2(select2OptionBrends).trigger('change');
+		}
+		else
+		{
+			select.select2(select2Option);
+		}
+	}
+	else
+	{
+		select.select2(select2Option).trigger('change');
+		select.select2(select2Option).on('change.select2', function(e){
+			var params = [];
+			params['id'] = id;
+			change_select2_cats(e, this, params);
+		});
+	}
+}
+
+function change_select2_cats(evt, this_el, params)
+{
+	if($.inArray(params['id'], selects_cats) >= 0)
+	{
+		var ind = selects_cats.indexOf(params['id']);
+		var cache = cache_tovs_categs;
+		var selects = selects_cats;
+	}
+	else
+	{
+		var ind = selectsBrens.indexOf(params['id']);
+		var cache = cache_shops_regions;
+		var selects = selectsBrens;
+	}
+
+	if(!cache[$(this_el).val()] || $.isEmptyObject(cache[$(this_el).val()]))
+	{
+		if(params['id'] == '#tovVidIsdeliya')
+		{
+			$.ajax({
+				url: "/sys/getBrendsForCategs/"+$(this_el).val(),
+				dataType:'json',
+				success: function(data){
+					cache[$(this_el).val()] = data;
+					fillCategsSelect2Filter(selects[ind+1], data);
+				}
+			});
+		}
+		else if($.inArray(params['id'], selects_cats) >= 0 && params['id'] != '#tovBrendSelect')
+		{
+			$.ajax({
+				url: "/sys/getSubCategs/"+$(this_el).val(),
+				dataType:'json',
+				success: function(data) {
+
+					cache[$(this_el).val()] = data;
+					fillCategsSelect2Filter(selects[ind+1], data);
+				}
+			});
+		}
+		else if(params['id'] == '#city')
+		{
+			$.ajax({
+				url: "/sys/getShopsForRegion/"+$(this_el).val(),
+				dataType:'json',
+				success: function(data){
+					cache_shops_regions[$(this_el).val()] = data;
+					fillCategsSelect2Filter(selectsBrens[ind+1], data);
+				}
+			});
+		}
+		else if($.inArray(params['id'], selectsBrens) >= 0 )
+		{
+			$.ajax({
+				url: "/sys/getSubRegions/"+$(this_el).val(),
+				dataType:'json',
+				success: function(data){
+					cache_shops_regions[$(this_el).val()] = data;
+					fillCategsSelect2Filter(selectsBrens[ind+1], data);
+				}
+			});
+		}
+	}
+	else
+	{
+		fillCategsSelect2Filter(selects[ind+1], cache[$(this_el).val()]);
+	}
 }

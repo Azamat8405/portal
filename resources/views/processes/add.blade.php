@@ -124,7 +124,7 @@
 								@endif
 					        </div>
 					        <div>
-					            <input id="start_date" type="input" name="start_date" value="{{ old('start_date') }}">
+					            <input id="start_date" type="input" autocomplete="off" name="start_date" value="{{ old('start_date') }}">
 					        </div>
 						</div>
 					</div>
@@ -138,7 +138,7 @@
 								@endif
 						    </div>
 					    	<div>
-					            <input id="end_date" type="input" name="end_date" value="{{ old('end_date') }}">
+					            <input id="end_date" type="input" autocomplete="off" name="end_date" value="{{ old('end_date') }}">
 						    </div>
 						</div>
 					</div>
@@ -146,7 +146,7 @@
 				<div class="content-panel-inputs">
 					<input type="button" onclick="addRow();" value="Добавить строку">
 					<input type="button" onclick="delRows();" value="Удалить строки">
-					<input type="submit" value="Сохранить акцию">
+					<input type="submit" onclick="submitForm(this);" value="Сохранить акцию">
 				</div>
 			</div>
 
@@ -211,7 +211,6 @@
 								<label>Бренд</label>
 						    </div>
 					    	<div>
-					    		<input type="hidden" id="tovBrend" value="">
 					            <select id="tovBrendSelect" >
 					            	<option value="0"> --- </option>
 					            </select>
@@ -319,7 +318,9 @@
 			<table id="tableTovs">
 				<thead>
 					<tr>
-					    <th width="20"></th>
+					    <th width="20">
+					    	<input type="checkbox" id="delAll">
+					    </th>
 					    <th>Товар</th>
 					    <th>Магазин</th>
 					    <th>Дистрибьютор</th>
@@ -576,10 +577,13 @@
 @section('addition_js')
 	<script src="{{ asset('js/jquery.mask.min.js') }}"></script>
 	<script src="{{ asset('js/select2.full.min.js') }}"></script>
+	<script src="{{ asset('js/select2.full.min.ru.js') }}"></script>
 	<script src="{{ asset('js/add_action_form.js') }}"></script>
 @endsection
 
 @section('addition_css')
 	@
 	<link href="{{ asset('css/select2.min.css') }}" rel="stylesheet">
+	<link href="{{ asset('css/select2.change.css') }}" rel="stylesheet">
+	
 @endsection

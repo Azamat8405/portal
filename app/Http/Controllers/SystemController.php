@@ -38,7 +38,6 @@ class SystemController extends Controller
 	{
 		if(trim($request->get('term')) == '')
 			return;
-
 		$words = explode(' ', $request->get('term'));
 
 		$str1 = $str2 = '';
@@ -51,7 +50,7 @@ class SystemController extends Controller
 		$str2 = '('.mb_substr($str2, 0, -4).')';
 
 		$agents = DB::connection('sqlsrv_imported_data')->select('
-			SELECT TOP 20 [Наименование], [Код]
+			SELECT TOP 50 [Наименование], [Код]
 			FROM [Imported_Data].[dbo].[Действующие_Поставщики]
 			WHERE '.$str1.' OR '.$str2.'
 			ORDER BY [Наименование]');
@@ -61,7 +60,11 @@ class SystemController extends Controller
 			$result = [];
 			foreach ($agents as $value)
 			{
-				$result[] = ['label'=> $value->{'Наименование'}, 'value' => $value->{'Наименование'}, 'val' => $value->{'Код'}];
+				$result[] = [
+					'label'=> $value->{'Наименование'}.' ('.$value->{'Код'}.')',
+					'value' => $value->{'Наименование'}.' ('.$value->{'Код'}.')',
+					'val' => $value->{'Код'}
+				];
 			}
 			echo json_encode($result);
 		}
@@ -86,7 +89,7 @@ class SystemController extends Controller
 		$str2 = '('.mb_substr($str2, 0, -4).')';
 		$str3 = '('.mb_substr($str3, 0, -4).')';
 
-		$tovs = DB::connection('sqlsrv_imported_data')->select('SELECT TOP 70 [ArtName], [ArtCode]
+		$tovs = DB::connection('sqlsrv_imported_data')->select('SELECT TOP 30 [ArtName], [ArtCode]
 			FROM [Imported_Data].[dbo].[Assortment]
 			WHERE
 				'.$str1.' OR '.$str2.' OR '.$str3);
@@ -689,10 +692,10 @@ class SystemController extends Controller
 
 				if($value->BrandCode != '')
 				{
-					$brend = DB::table('brends')
+					$br = DB::table('brends')
 						->where('name', $value->BrandName)
 						->get()->first();
-					if(!$brend)
+					if(!$br)
 					{
 						DB::transaction(function() use ($value, $exist_lvl4_id) {
 
@@ -707,32 +710,22 @@ class SystemController extends Controller
 							$bcl->save();
 						});
 					}
+					else
+					{
+						$br2 = DB::table('brends_categs_links')
+							->where('brend_id', $br->id)
+							->where('categ_id', $exist_lvl4_id)
+							->get()->first();
+						if(!$br2)
+						{
+							$brl = new BrendsCategsLinks();
+							$brl->brend_id = $br->id;
+							$brl->categ_id = $exist_lvl4_id;
+							$brl->save();
+						}
+					}
 				}
 			}
-
-		// foreach($tovs as $value)
-		// {
-		// 	if($value->LVL1 != '' AND
-		// 		$value->LVL2 != '' AND
-		// 		$value->LVL3 != '' AND 
-		// 		$value->LVL4)
-		// 	{
-		// 		$exist = TovCategs::whereRaw(
-		// 			'lvl1 = ? AND lvl2 = ? AND lvl3 = ? AND lvl4 = ?',
-		// 			[$value->LVL1, $value->LVL2, $value->LVL3, $value->LVL4])->first();
-		// 		if(!$exist)
-		// 		{
-		// 			$categs = new TovCategs();
-
-		// 			$categs->lvl1 = $value->LVL1;
-		// 			$categs->lvl2 = $value->LVL2;
-		// 			$categs->lvl3 = $value->LVL3;
-		// 			$categs->lvl4 = $value->LVL4;
-
-		// 			$categs->save();
-		// 		}
-		// 	}
-  		//}
 	}
 
 	public function ajaxGetTovsToFillTable(Request $request)

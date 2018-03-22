@@ -76,6 +76,11 @@ class ProcessController extends Controller
 			}
 		}
 
+		if(!$request::has('tovs'))
+		{
+			$this->validate_errors['form'][0]['tovs'] = 'Не указан доватор или указан не верно.';
+		}
+
 		// Если в шапке есть ошибки покаызваем их пока.
 		if(!empty($this->validate_errors['form']))
 		{
