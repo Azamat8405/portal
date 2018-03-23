@@ -26,9 +26,8 @@ class SystemController extends Controller
 			foreach ($agents as $value)
 			{
 				$result[] = [
-					'label'=> $value->{'Наименование'},
-					'val' => $value->{'Код'},
-					'inn' => $value->{'ИНН'}];
+					'label'=> $value->{'Наименование'}.' ('.$value->{'Код'}.')',
+					'val' => $value->{'Код'}];
 			}
 			echo json_encode($result);
 		}
@@ -98,7 +97,7 @@ class SystemController extends Controller
 			$result = [];
 			foreach ($tovs as $value)
 			{
-				$result[] = ['label'=> $value->{'ArtName'}, 'value' => $value->{'ArtName'}, 'val' => $value->{'ArtCode'}];
+				$result[] = ['label'=> $value->ArtName, 'value' => $value->ArtName.' ('.$value->ArtCode.')', 'val' => $value->ArtCode];
 			}
 			echo json_encode($result);
 		}
@@ -188,64 +187,66 @@ class SystemController extends Controller
 
 	public function ajaxGetShopsErarhi(Request $request)
 	{
-		// $shops = DB::connection('sqlsrv_imported_data')->select('SELECT
-		// 		sm.StoreCode
-  // 				,sr.StoreCity
-  // 				,sr.StoreRegion
-  // 				,sr.StoreMacroRegion
-  // 				,sm.StoreName
-		// 	FROM [Imported_Data].[dbo].[Store_Region] as sr 
-		// 			INNER JOIN
-		// 		[Imported_Data].[dbo].[Store_All_Stores] as sm ON 
-		// 			sr.IDStore = sm.IDStore AND
-		// 			sm.Store_Is_Active = 1 AND
-		// 			sm.StoreName NOT LIKE \'%(закрыт)%\'
-		// 	ORDER BY sr.StoreCity DESC
-		// 		,sr.StoreRegion DESC 
-		// 		,sr.StoreMacroRegion DESC');
-		// if($shops)
-		// {
-		// 	$result = [];
-		// 	foreach ($shops as $value)
-		// 	{
-		// 		if(trim($value->{'StoreMacroRegion'}.$value->{'StoreRegion'}.$value->{'StoreCity'}) == '')
-		// 		{
-		// 			continue;
-		// 		}
-		// 		if(trim($value->{'StoreMacroRegion'}) == '')
-		// 			continue;	
+		$shops = DB::connection('sqlsrv_imported_data')->select('SELECT
+				sm.StoreCode
+  				,sr.StoreCity
+  				,sr.StoreRegion
+  				,sr.StoreMacroRegion
+  				,sm.StoreName
+			FROM [Imported_Data].[dbo].[Store_Region] as sr 
+					INNER JOIN
+				[Imported_Data].[dbo].[Store_All_Stores] as sm ON 
+					sr.IDStore = sm.IDStore AND
+					sm.Store_Is_Active = 1 AND
+					sm.StoreName NOT LIKE \'%(закрыт)%\'
+			ORDER BY sr.StoreCity
+				,sr.StoreRegion
+				,sr.StoreMacroRegion
+				,sm.StoreName');
 
-		// 		//id-шников у нас нету делаем хеши
-		// 		$hashMacroRegion = $hashRegion = $hashCity = '';
-		// 		if(trim($value->{'StoreMacroRegion'}) != '')
-		// 		{
-		// 			$hashMacroRegion = md5($value->{'StoreMacroRegion'});
-		// 		}
-		// 		if(trim($value->{'StoreRegion'}) != '')
-		// 		{
-		// 			$hashRegion = md5($value->{'StoreRegion'});
-		// 		}
-		// 		if(trim($value->{'StoreRegion'}) != '')
-		// 		{
-		// 			$hashCity = md5($value->{'StoreCity'});
-		// 		}
+		if($shops)
+		{
+			$result = [];
+			foreach ($shops as $value)
+			{
+				if(trim($value->{'StoreMacroRegion'}.$value->{'StoreRegion'}.$value->{'StoreCity'}) == '')
+				{
+					continue;
+				}
+				if(trim($value->{'StoreMacroRegion'}) == '')
+					continue;	
 
-		// 		if($hashMacroRegion != '' && !isset($result[$hashMacroRegion]))
-		// 		{
-		// 			$result[$hashMacroRegion] = ['title' => $value->{'StoreMacroRegion'}];
-		// 		}
-		// 		if(isset($result[$hashMacroRegion]) AND $hashRegion != '' && !isset($result[$hashMacroRegion][$hashRegion]))
-		// 		{
-		// 			$result[$hashMacroRegion][$hashRegion] = ['title' => $value->{'StoreRegion'}];
-		// 		}
-		// 		if(isset($result[$hashMacroRegion][$hashRegion]) AND $hashCity != '' && !isset($result[$hashMacroRegion][$hashRegion][$hashCity]))
-		// 		{
-		// 			$result[$hashMacroRegion][$hashRegion][$hashCity] = ['title' => $value->{'StoreCity'}];
-		// 		}
-		// 		$result[$hashMacroRegion][$hashRegion][$hashCity][$value->{'StoreCode'}] = $value->{'StoreName'};
-		// 	}
-		// 	echo json_encode($result);
-		// }
+				//id-шников у нас нету делаем хеши
+				$hashMacroRegion = $hashRegion = $hashCity = '';
+				if(trim($value->{'StoreMacroRegion'}) != '')
+				{
+					$hashMacroRegion = md5($value->{'StoreMacroRegion'});
+				}
+				if(trim($value->{'StoreRegion'}) != '')
+				{
+					$hashRegion = md5($value->{'StoreRegion'});
+				}
+				if(trim($value->{'StoreRegion'}) != '')
+				{
+					$hashCity = md5($value->{'StoreCity'});
+				}
+
+				if($hashMacroRegion != '' && !isset($result[$hashMacroRegion]))
+				{
+					$result[$hashMacroRegion] = ['title' => $value->{'StoreMacroRegion'}];
+				}
+				if(isset($result[$hashMacroRegion]) AND $hashRegion != '' && !isset($result[$hashMacroRegion][$hashRegion]))
+				{
+					$result[$hashMacroRegion][$hashRegion] = ['title' => $value->{'StoreRegion'}];
+				}
+				if(isset($result[$hashMacroRegion][$hashRegion]) AND $hashCity != '' && !isset($result[$hashMacroRegion][$hashRegion][$hashCity]))
+				{
+					$result[$hashMacroRegion][$hashRegion][$hashCity] = ['title' => $value->{'StoreCity'}];
+				}
+				$result[$hashMacroRegion][$hashRegion][$hashCity][$value->{'StoreCode'}] = $value->{'StoreName'};
+			}
+			echo json_encode($result);
+		}
 	}
 
 	public function fillRegionsTable(Request $request)
@@ -767,21 +768,23 @@ class SystemController extends Controller
 		{
 			if($region == 0)
 			{
-				$regs = DB::select('SELECT s.[id]
-					FROM [Portal].[dbo].[shop_regions] s
-					WHERE s.[level] = 3');
+				$regs = DB::table('shop_regions as s')
+			        ->select('s.id')
+			        ->where('s.level', 3)
+			        ->get();
 			}
 			else
 			{
-				$regs = DB::select('SELECT s2.[id]
-					FROM [Portal].[dbo].[shop_regions] s, 
-						[Portal].[dbo].[shop_regions] s2
-					WHERE
-						s.[id] = ? AND
-						s.[left] <= s2.[left] AND
-						s.[right] >= s2.[right] AND
-						s2.[level] = 3',
-					[ $region ]);
+				$regs = DB::table('shop_regions as s')
+					->join('shop_regions as s2', function($join) use ($region)
+			        {
+						$join->on('s.left', '<=' , "s2.left")
+							->on('s.right', '>=' , 's2.right')
+							->where('s.id', '=', $region)
+			            	->where('s2.level', '=' , 3);
+					})
+			        ->select('s2.id')
+			        ->get();
 			}
 
 			$region_ids = [];
@@ -794,6 +797,18 @@ class SystemController extends Controller
 			}
 			$shops = Shop::select('id', 'title', 'code')
 				->whereIN('region_id', $region_ids)
+				->where(function($query) use ($request) {
+
+					$shopsIskluch = $request->get('shopsIskluch');
+					if(trim($shopsIskluch) != '')
+					{
+						$shopsIskluch = explode(',', $shopsIskluch);
+						foreach($shopsIskluch as $val)
+						{
+							$query->where('code', '!=', $val);
+						}
+					}
+				})
 				->orderBy('title')
 				->get();
 			if($shops)

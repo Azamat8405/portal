@@ -14,6 +14,8 @@ var select2Option = {
 	width:'180',
 	minimumResultsForSearch:Infinity,
 };
+
+var copied_shops_index = null;
 var select2OptionBrends = {
 	width:'180',
 	ajax:{
@@ -53,52 +55,13 @@ $(function(){
         }
 	});
 
-	if($('.err_dialog_messages').length > 0)
+	if($('.error_dialog_messages').length > 0)
 	{
-		let div = $('<div id="">');
-		div.attr('id', 'err_dialog_messages');
-		$('body').append(div);
-
-		$('#err_dialog_messages').dialog({
-			autoOpen: true,
-			width:550,
-			title:'Внимание!',
-			classes: {
-				'ui-dialog-titlebar':'error_dialog',
-			},
-			open:function()
-			{
-				let html = '';
-				$('.err_dialog_messages').each(function(){
-					html += $(this).html()+"<br>";
-				});
-				$('#err_dialog_messages').html(html);
-			}
-		});
+		showMessage('error', '.error_dialog_messages');
 	}
-
-	if($('.ok_dialog_messages').length > 0)
+	if($('.success_dialog_messages').length > 0)
 	{
-		let div = $('<div id="">');
-		div.attr('id', 'ok_dialog_messages');
-		$('body').append(div);
-
-		$('#ok_dialog_messages').dialog({
-			autoOpen: true,
-			width:550,
-			title:'Внимание!',
-			classes: {
-				'ui-dialog-titlebar':'success_dialog',
-			},
-			open:function()
-			{
-				let html = '';
-				$('.ok_dialog_messages').each(function(){
-					html += $(this).html()+"<br>";
-				});
-				$('#ok_dialog_messages').html(html);
-			}
-		});
+		showMessage('success', '.success_dialog_messages');
 	}
 
 	$('.addProcessForm').submit(function(){
@@ -116,7 +79,7 @@ $(function(){
 		    'position':'fixed',
 		    'background':'#fff',
 		    'overflow':'hidden',
-		    'z-index':'15',
+		    'z-index':'95',
 		});
 		$thead.find('th').each(function(index){
 			var $newdiv = $('<div />', {
@@ -141,7 +104,6 @@ $(function(){
 			{
 	        	$newdiv.text($(this).text());
 			}
-
 	        $header.append($newdiv);
 		});
 	}, 100);
@@ -157,7 +119,6 @@ $(function(){
 		}	
 	})
 
-
 	$.each(selects_cats, function(index, value){
 		if(selects_cats[index] == '#tovBrendSelect')
 		{
@@ -166,7 +127,12 @@ $(function(){
 		else
 		{
 			$(value).select2(select2Option);
-			$(value).on('change.select2', function(e){
+			$(value).on('change.select2', function(e, u){
+
+				if($(this).val() > 0)
+				{
+					$(value).next().find('.select2-selection').removeClass('error_input');
+				}
 				var params = [];
 				params['id'] = selects_cats[index];
 				change_select2_cats(e, this, params);
@@ -233,34 +199,38 @@ $(function(){
 			dateFormat: "dd-mm-yy"
 		}).change(function() {
 
+			$(this).parents('.form-field-input').find('label').removeClass('error_input');
 			tmp2(this.value);
 		});
 		var to = $('#end_date').datepicker({
 			minDate: new Date(),
 			dateFormat: "dd-mm-yy"
+		}).change(function(){
+			$(this).parents('.form-field-input').find('label').removeClass('error_input');
 		});
 	}
 
 	if($("#process_type").length > 0)
 	{
-		var tmp = function (){
-			var d = new Date();
-			d.setTime(d.getTime() + $("#process_type option:selected").data('dedlain') * 1000 );
-			from.datepicker( "option", "minDate", d);
-			return d;
-		}
+		// var tmp = function (){
+		// 	var d = new Date();
+		// 	d.setTime(d.getTime() + $("#process_type option:selected").data('dedlain') * 1000 );
+		// 	from.datepicker( "option", "minDate", d);
+		// 	return d;
+		// }
 		$('#process_type').select2({
 			width:'160',
 			minimumResultsForSearch:Infinity
  		});
- 		tmp();
+ 		// tmp();
  		$("#process_type").on('change', function(evt) {
-			tmp();
+			$(this).parents('.form-field-input').find('label').removeClass('error_input');
 
-			if($('#start_date').val() != '')
-			{
-				tmp2( $('#start_date').val() );
-			}
+			// tmp();
+			// if($('#start_date').val() != '')
+			// {
+			// 	tmp2( $('#start_date').val() );
+			// }
 		});
 	}
 
@@ -313,7 +283,42 @@ $(function(){
 	$('div').on('click', '.field_input_file > .file', function(){
 		var el = this;
 
-		if($(el).data('type') == 'getContagentsErarhi')
+		if($(this).data('type') == 'getShopsErarhi')
+		{
+			$("#shops_dialog").dialog({
+				title: "Выбор магазинов",
+				open:function( event, ui){
+					get_shop_list($(el).prev().val().split(','));
+				},
+				resizable:true,
+				width:500,
+				modal:true,
+				position:{
+					my:"top",
+					at:"top",
+					of:window
+				},
+				maxHeight:$(window).height()-50,
+				closeOnEscape:true,
+				buttons:{
+				    "Выбрать магазин": function(e){
+						var ids=[],titles=[];
+						$('#shops_dialog input[value]:checked').each(function(){
+							ids.push($(this).val());
+							titles.push($(this).data('title'));
+						});
+
+						var row_n = getRowNumber(el);
+
+						$(el).parents('.field_input_file').find('input.shops').val(ids.join());
+						$(el).parents('.field_input_file').find('input.shopsTitles').val(titles.join(';  '));
+
+						$("#shops_dialog").dialog("close");
+				    }
+				}
+			});
+		}
+		else if($(el).data('type') == 'getContagentsErarhi')
 		{
 			$("#contragent_dialog").dialog({
 				title: "Выбор контрагента",
@@ -349,7 +354,7 @@ $(function(){
 						var row_n = getRowNumber(el);
 
 						$('input.distr:eq('+row_n+')').val(ids.join());
-						$('input.distrTitles:eq('+row_n+')').val(titles.join());
+						$('input.distrTitles:eq('+row_n+')').val(titles.join(';  '));
 
 						$("#contragent_dialog").dialog("close");
 					}
@@ -361,51 +366,63 @@ $(function(){
 	$('#fillTable').click(function(){
 		var err = false;
 		var arr = {};
+
 		if($('#tovCategory').val() == 0)
 		{
-			$('#select2-tovCategory-container').parents('.select2-selection').css('border','1px solid red')
+			$('#select2-tovCategory-container').parents('.select2-selection').addClass('error_input');
 			err = true;
 		}
 		else
 		{
-			$('#select2-tovCategory-container').parents('.select2-selection').css('border','1px solid #aaa')
+			$('#select2-tovCategory-container').parents('.select2-selection').removeClass('error_input');
 			arr.tovCategory = $('#tovCategory').val();
 		}
 
 		if($('#tovGroup').val() == 0)
 		{
-			$('#select2-tovGroup-container').parents('.select2-selection').css('border','1px solid red')
+			$('#select2-tovGroup-container').parents('.select2-selection').addClass('error_input');
 			err = true;
 		}
 		else
 		{
-			$('#select2-tovGroup-container').parents('.select2-selection').css('border','1px solid #aaa')
+			$('#select2-tovGroup-container').parents('.select2-selection').removeClass('error_input');
 			arr.tovGroup = $('#tovGroup').val();
 		}
 
 		if($('#tovTipIsdeliya').val() == 0)
 		{
-			$('#select2-tovTipIsdeliya-container').parents('.select2-selection').css('border','1px solid red')
+			$('#select2-tovTipIsdeliya-container').parents('.select2-selection').addClass('error_input');
 			err = true;
 		}
 		else
 		{
-			$('#select2-tovTipIsdeliya-container').parents('.select2-selection').css('border','1px solid #aaa')
+			$('#select2-tovTipIsdeliya-container').parents('.select2-selection').removeClass('error_input');
 			arr.tovTipIsdeliya = $('#tovTipIsdeliya').val();
 		}
 
 		if($('#tovVidIsdeliya').val() == 0)
 		{
-			$('#select2-tovVidIsdeliya-container').parents('.select2-selection').css('border','1px solid red')
+			$('#select2-tovVidIsdeliya-container').parents('.select2-selection').addClass('error_input');
 			err = true;
 		}
 		else
 		{
-			$('#select2-tovVidIsdeliya-container').parents('.select2-selection').css('border','1px solid #aaa')
+			$('#select2-tovVidIsdeliya-container').parents('.select2-selection').removeClass('error_input');
 			arr.tovVidIsdeliya = $('#tovVidIsdeliya').val();
 		}
 
-		arr.tovBrend = $('#tovBrendSelect').val();
+		if($('#tovBrendSelect').val() == 0)
+		{
+			$('#select2-tovBrendSelect-container').parents('.select2-selection').addClass('error_input');
+			err = true;
+		}
+		else
+		{
+			$('#select2-tovBrendSelect-container').parents('.select2-selection').removeClass('error_input');
+			arr.tovBrend = $('#tovBrendSelect').val();
+		}
+
+		arr.shopsIskluch = $('#shopsIskluch').val();
 		arr.division = $('#division').val();
 		arr.oblast = $('#oblast').val();
 		arr.city = $('#city').val();
@@ -413,6 +430,7 @@ $(function(){
 
 		if(!err)
 			getTovsToFillTable(arr, 0);
+
 	});
 });
 
@@ -468,7 +486,7 @@ function build_contragents_list(cache_contragents)
 		li += '<li><input type="radio" name="postavshik" id="c_'+cache_contragents[ind]['val']+'" value="'+cache_contragents[ind]['val']+'" '+
 			ch+
 			' data-title="'+escape(cache_contragents[ind]['label'])+'" >'+
-			'<label for="c_'+cache_contragents[ind]['val']+'">'+cache_contragents[ind]['label']+' (ИНН:'+cache_contragents[ind]['inn']+')</label></li>';
+			'<label for="c_'+cache_contragents[ind]['val']+'">'+cache_contragents[ind]['label']+'</label></li>';
 	}
 	root.find(' > ul').append(li);
 }
@@ -519,6 +537,8 @@ function addRow(itemsToFill, shopsToFill, tr)
 	{
 		$('.select').selectmenu("destroy");
 	}
+
+	$('.start_on_invoice_date, .end_on_invoice_date').removeClass("hasDatepicker")
 	$('.start_on_invoice_date, .end_on_invoice_date').datepicker("destroy");
 
 	if(!tr)
@@ -542,7 +562,7 @@ function addRow(itemsToFill, shopsToFill, tr)
 	if(itemsToFill)
 	{
 		tr.find('input.tovs').val(itemsToFill['c']);
-		tr.find('input.tovsTitles ').val(itemsToFill['n']+' ('+itemsToFill['a']+')');
+		tr.find('input.tovsTitles').val(itemsToFill['n']+' ('+itemsToFill['c']+')');
 	}
 	if(shopsToFill)
 	{
@@ -553,8 +573,8 @@ function addRow(itemsToFill, shopsToFill, tr)
 			ttls.push(shopsToFill[ind].title);
 		}
 
-		tr.find('input[name^=shops]').val( ids.join() );
-		tr.find('input.shops').val( ttls.join() );
+		tr.find('input.shops').val( ids.join() );
+		tr.find('input.shopsTitles').val( ttls.join(';  ') );
 	}
 
 	$('.table_data table tbody').append(tr);
@@ -564,7 +584,7 @@ function addRow(itemsToFill, shopsToFill, tr)
 
 function delRows(allEmpty)
 {
-	if(allEmpty || confirm('Вы хотите удалить выбранные строки?'))
+	if($('.deleteRow:checked').length > 0 && confirm('Вы хотите удалить выбранные строки?') || allEmpty )
 	{
 		if(allEmpty)
 		{
@@ -593,12 +613,65 @@ function delRows(allEmpty)
 			$(this).val(index);
 		});
 	}
-	$('#delAll').prop('checked', false);
+	$('#delAll, .deleteRow').prop('checked', false);
 	$(window).trigger('resize');
 }
 
 function events()
 {
+	$('.shopsTitles, .tovsTitles, .distrTitles, .maskProcent, .maskPrice, .maskDate').off('change');
+	$('.shopsTitles, .tovsTitles, .distrTitles, .maskProcent, .maskPrice, .maskDate').on('change', function()
+	{
+		$(this).parents('td').find('.error_message').remove();
+	});
+
+	$('.shopsTitles').off('copy');
+	$('.shopsTitles').on('copy', function(e){
+		copied_shops_index = getRowNumber(this);
+	});
+	$('.shopsTitles').off('paste');
+	$('.shopsTitles').on('paste', function(e){
+		let copied = $('.shops:eq(' + copied_shops_index + ')').val();
+		$('.shops:eq(' + getRowNumber(this) + ')').val(copied);
+	});
+
+	$('.distrTitles').off('copy');
+	$('.distrTitles').on('copy', function(e){
+		copied_shops_index = getRowNumber(this);
+	});
+	$('.distrTitles').off('paste');
+	$('.distrTitles').on('paste', function(e){
+		let copied = $('.distr:eq(' + copied_shops_index + ')').val();
+		$('.distr:eq(' + getRowNumber(this) + ')').val(copied);
+	});
+
+	$('.field_input_file > .file[data-type=getShopsErarhi]').off( "mouseenter mouseleave" );
+	$('.field_input_file > .file[data-type=getShopsErarhi]').hover(function(e){
+			var row_n = getRowNumber(this);
+			let tmp = $(this).parents('.field_input_file').find('.shopsTitles').val();
+			if(tmp == '')
+			{
+				return;
+			}
+
+			var d = $(this).find('> div');
+			if(d.length == 0)
+			{
+				var d = $('<div />');
+				d.addClass('file_hint');
+			}
+			$(this).append(d);
+
+			tmp = tmp.split('; ');
+			d.html(tmp.join('<br>'));
+			d.show();
+		},
+		function()
+		{
+			$(this).find('> div').hide();
+		}
+	);
+
 	if($.fn.mask)
 	{
 		$('.maskProcent').mask('ZZZZZ', {
@@ -608,7 +681,7 @@ function events()
 				var reg2 = new RegExp("[^\.\,0-9]+");
 				var reg = new RegExp("[0-9]{1,3}[(\.|\,)]*[0-9]{0,2}");
 
-				if(parseFloat(cep) > 100 || parseFloat(cep) < 0 || !reg.test(cep) || reg2.test(cep))
+				if(parseFloat(cep) >= 100 || parseFloat(cep) < 0 || !reg.test(cep) || reg2.test(cep))
 				{
 					$(currentField).val('');
 				}
@@ -620,24 +693,20 @@ function events()
     		}
 		});
 
-		$('.maskPrice').mask('ZZZZZZZZZZ', {
-		    placeholder: "0 руб",
+		$('.maskPrice').mask('0 000 000 000', {
+		    placeholder:"0 руб",
+		    reverse:true,
 			onKeyPress: function(cep, event, currentField, options){
-
-				var reg2 = new RegExp("[^\.\,0-9]+");
+				var reg2 = new RegExp("[^ \.\,0-9]+");
 				var reg = new RegExp("[0-9]{1,6}[(\.|\,)]*[0-9]{0,2}");
 
-				if(parseFloat(cep) < 0 || !reg.test(cep) || reg2.test(cep))
+				let val = $(currentField).val().replace(/ /g, '');
+				if(parseFloat(val) > 1000000000 || parseFloat(cep) < 0 || !reg.test(cep) || reg2.test(cep))
 				{
 					$(currentField).val('');
 				}
-			},
-			translation:{
-      			'Z': {
-        			pattern: /[\.\,0-9]*/
-      			}
-    		}
-		})
+			}
+		});
 
 		$('.maskDate').mask('ZZ-ZZ-ZZZZ', {
 		    placeholder: "01-01-2001",
@@ -661,31 +730,41 @@ function events()
 
 		var row_n = getRowNumber(this);
 
-		var roznica_new = $('input.roznica_new:eq('+row_n+')');
-		var roznica_old = $('input.roznica_old:eq('+row_n+')');
+		var roznica_new = $('input.roznica_new:eq('+row_n+')').val().replace(/ /g, '');;
+		var roznica_old = $('input.roznica_old:eq('+row_n+')').val().replace(/ /g, '');;
 
-		var on_invoice = $('input.on_invoice:eq('+row_n+')');
-		var off_invoice = $('input.off_invoice:eq('+row_n+')');
+		var on_invoice = $('input.on_invoice:eq('+row_n+')').val().replace(/ /g, '');;
+		var off_invoice = $('input.off_invoice:eq('+row_n+')').val().replace(/ /g, '');;
+
+		if(parseInt(roznica_new) > parseInt(roznica_old))
+		{
+			showMessage('error', false, 'Новая розничная цена не должна быть больше старой');
+		}
 
 		var itogo = 0;
-		if(roznica_new.val() == 0 || roznica_old.val() == 0)
+		// поле итого
+		if(roznica_new == 0 || roznica_old == 0)
 		{
-			if(off_invoice.val() != '' && on_invoice.val() != '')
+			if(off_invoice != '' && on_invoice != '')
 			{
-				itogo = (parseInt(off_invoice.val()) + parseInt(on_invoice.val()));
+				let sum = (parseInt(off_invoice) + parseInt(on_invoice));
+				if(sum < 100)
+					itogo = sum;
+				else
+					itogo = 0;
 			}
-			else if(off_invoice.val() != '')
+			else if(off_invoice != '')
 			{
-				itogo = off_invoice.val();
+				itogo = off_invoice;
 			}
-			else if(on_invoice.val() != '')
+			else if(on_invoice != '')
 			{
-				itogo = on_invoice.val();
+				itogo = on_invoice;
 			}
 		}
-		else if(roznica_new.val() > 0 && roznica_old.val() > 0)
+		else if(roznica_new > 0 && roznica_old > 0)
 		{
-			itogo = (1 - (parseInt(roznica_new.val())/parseInt(roznica_old.val())))*100;
+			itogo = (1 - (parseInt(roznica_new)/parseInt(roznica_old)))*100;
 			itogo = itogo.toFixed(1);
 
 // "расчетное поле
@@ -761,8 +840,14 @@ function events()
 		}
 	});
 
-	$("input.shops").autocomplete({
+	$("input.shopsTitles").autocomplete({
 		source: function( request, response ){
+
+			if(request.term.length > 100)
+			{
+				return;
+			}
+
 			var term = request.term;
 			if ( term in cache_avtocomplete_shops )
 			{
@@ -785,59 +870,29 @@ function events()
 function fillCategsSelect2Filter(id, data)
 {
 	var select = $(id);
-	select.find('option').each(function(index)
-	{
-		if(index != 0)
-		{
-			$(this).remove();
-		}
-	});
+	select.find('option:not(:eq(0))').remove();
 
 	if(id == '#tovGroup')
 	{
-		$('#tovTipIsdeliya option').each(function(index)
-		{
-			if(index != 0)
-			{
-				$(this).remove();
-			}
-		});
+		$('#tovTipIsdeliya option:not(:eq(0))').remove();
 		$('#tovTipIsdeliya').select2(select2Option).trigger('change');
 	}
 
 	if(id == '#tovGroup' || id == '#tovTipIsdeliya')
 	{
-		$('#tovVidIsdeliya option').each(function(index)
-		{
-			if(index != 0)
-			{
-				$(this).remove();
-			}
-		});
+		$('#tovVidIsdeliya option:not(:eq(0))').remove();
 		$('#tovVidIsdeliya').select2(select2Option).trigger('change');
 	}
 
 	if(id == '#oblast')
 	{
-		$('#city option').each(function(index)
-		{
-			if(index != 0)
-			{
-				$(this).remove();
-			}
-		});
+		$('#city option:not(:eq(0))').remove();
 		$('#city').select2(select2Option).trigger('change');
 	}
 
 	if(id == '#oblast' || id == '#city')
 	{
-		$('#shop option').each(function(index)
-		{
-			if(index != 0)
-			{
-				$(this).remove();
-			}
-		});
+		$('#shop option:not(:eq(0))').remove();
 		$('#shop').select2(select2Option).trigger('change');
 	}
 
@@ -904,8 +959,10 @@ function change_select2_cats(evt, this_el, params)
 			$.ajax({
 				url: "/sys/getSubCategs/"+$(this_el).val(),
 				dataType:'json',
+				error: function(data) {
+					fillCategsSelect2Filter(selects[ind+1], []);
+				},
 				success: function(data) {
-
 					cache[$(this_el).val()] = data;
 					fillCategsSelect2Filter(selects[ind+1], data);
 				}
@@ -938,4 +995,88 @@ function change_select2_cats(evt, this_el, params)
 	{
 		fillCategsSelect2Filter(selects[ind+1], cache[$(this_el).val()]);
 	}
+}
+function get_shop_list(ids)
+{
+	if($.isEmptyObject(cache_shops_dialog))
+	{
+		$.ajax({
+			url: "/sys/getShopsErarhi",
+			dataType:'json',
+			success: function(data){
+				cache_shops_dialog = data;
+				build_list(data, ids);
+			}
+		});
+	}
+	else
+	{
+		build_list(cache_shops_dialog, ids);
+	}
+}
+function build_list(cache_shops_dialog, ids)
+{
+	$('#shops_dialog').html('');
+	var ul = $('<ul>');
+	ul.addClass("tree");
+	$('#shops_dialog').append(ul);
+
+	var li = '';
+	for(ind in cache_shops_dialog)
+	{
+		var display = '';
+
+		var macreg = 'checked="checked"';
+		var lii = '';
+		for(inde in cache_shops_dialog[ind])
+		{
+			if(!cache_shops_dialog[ind][inde]['title'])
+				continue;
+
+			reg_ch = 'checked="checked"';
+			var liii = '';
+			for(index in cache_shops_dialog[ind][inde])
+			{
+				if(!cache_shops_dialog[ind][inde][index]['title'])
+					continue;
+
+				city_ch = 'checked="checked"';
+				var li4 = '';
+				for(indexx in cache_shops_dialog[ind][inde][index])
+				{
+					if(indexx == 'title')
+						continue;
+
+					ch = '';
+					if($.inArray(indexx, ids) >= 0)
+					{
+						ch = 'checked="checked"';
+						display = ' class="active" ';
+					}
+					else
+					{
+						city_ch = '';
+					}
+					li4 += '<li class="no_icon"><input type="checkbox" value="'+indexx+'" id="shop'+indexx+'" data-title="'+escape(cache_shops_dialog[ind][inde][index][indexx])+'" '+ch+'>'+
+						'<label for="shop'+indexx+'">Магазин '+cache_shops_dialog[ind][inde][index][indexx]+'</label></li>';
+				}
+				if(city_ch == '')
+					reg_ch = '';
+
+				liii += '<li '+display+'><input type="checkbox" '+city_ch+'>'+
+					'<label>'+cache_shops_dialog[ind][inde][index]['title']+'</label><ul>'+li4+'</ul></li>';
+			}
+
+			if(reg_ch == '')
+				macreg = '';
+
+			lii += '<li '+display+'><input type="checkbox" '+reg_ch+'>'+
+				'<label>'+cache_shops_dialog[ind][inde]['title']+'</label><ul>'+liii+'</ul></li>';
+		}
+
+		li += '<li '+display+'><input type="checkbox" '+macreg+'>'+
+			'<label>'+cache_shops_dialog[ind]['title']+'</label><ul>'+lii+'</ul></li>';
+	}
+	$('#shops_dialog > ul').append(li);
+	$('#shops_dialog').prepend($('<input style="margin:0 3px 8px 9px ;" type="checkbox" id="checkAllShop"><label style="margin:0 0 8px 0;" for="checkAllShop">Выбрать все магазины</label>'));
 }

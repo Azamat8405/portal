@@ -42,7 +42,7 @@
 			</div>
 
 			@if (Session::has('errors.form'))
-				<div class="err_dialog_messages">
+				<div class="error_dialog_messages">
 				@foreach (Session::get('errors.form') as $messages)
 					@foreach ($messages as $message)
 						<p>{!! $message !!}</p>
@@ -51,7 +51,7 @@
 				</div>
 			@endif
 			@if (Session::has('errors.file'))
-				<div class="err_dialog_messages">
+				<div class="error_dialog_messages">
 				@foreach (Session::get('errors.file') as $messages)
 					@foreach ($messages as $message)
 						<p>{!! $message !!}</p>
@@ -60,7 +60,7 @@
 				</div>
 			@endif
 			@if (Session::has('ok'))
-				<div class="ok_dialog_messages">
+				<div class="success_dialog_messages">
 					<p>{!! Session::get('ok') !!}</p>
 				</div>
 			@endif

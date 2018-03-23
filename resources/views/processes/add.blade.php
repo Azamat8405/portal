@@ -19,6 +19,7 @@
 			padding: 20px 0;
 			font-size:80%;
     		margin-top:300px;
+			min-height:150px;
 		}
 		.table_data td, .table_data th{
 			border:1px solid #ccc;
@@ -68,6 +69,19 @@
 		ul.tree li.active > ul{
 			display:block;
 		}
+		.file_hint{
+			position: absolute;
+			width: 400px;
+			height:auto;
+			max-height:200px;
+			overflow-x:overlay;
+			z-index:80;
+			background:#fff;
+			padding:7px;
+			text-align:left;
+			border:1px solid #c7c7c7;
+			line-height:14px;
+		}
 	</style>
 
 	<form class="addProcessForm" action="{{ route('processes.add') }}" method="post" enctype="multipart/form-data">
@@ -81,9 +95,9 @@
 						<div class="form-field-input">
 						    <div>
 								@if(Session::has('errors.form.0.process_type'))
-									<label style="color:red;">Тип акции</label>
+									<label class="error_input">Тип акции <sup>*</sup></label>
 								@else
-									<label>Тип акции</label>
+									<label>Тип акции <sup>*</sup></label>
 								@endif
 						    </div>
 					    	<div>
@@ -91,7 +105,6 @@
 					            	<option value="0"> --- </option>
 									@if($process_types)
 										@foreach($process_types as $type)
-
 											@if(old('process_type') == $type->id)
 												<option data-dedlain="{{$type->dedlain}}" value="{{$type->id}}" selected="selected">{{$type->title}}</option>
 											@else
@@ -118,9 +131,9 @@
 					    <div class="form-field-input">
 					        <div>
 					            @if(Session::has('errors.form.0.start_date'))
-									<label style="color:red;">Дата начала акции</label>
+									<label class="error_input">Дата начала акции <sup>*</sup></label>
 								@else
-									<label>Дата начала акции</label>
+									<label>Дата начала акции <sup>*</sup></label>
 								@endif
 					        </div>
 					        <div>
@@ -132,9 +145,9 @@
 					    <div class="form-field-input">
 						    <div>
 					            @if(Session::has('errors.form.0.end_date'))
-									<label style="color:red;">Дата окончания акции</label>
+									<label class="error_input">Дата окончания акции <sup>*</sup></label>
 								@else
-									<label>Дата окончания акции</label>
+									<label>Дата окончания акции <sup>*</sup></label>
 								@endif
 						    </div>
 					    	<div>
@@ -146,7 +159,7 @@
 				<div class="content-panel-inputs">
 					<input type="button" onclick="addRow();" value="Добавить строку">
 					<input type="button" onclick="delRows();" value="Удалить строки">
-					<input type="submit" onclick="submitForm(this);" value="Сохранить акцию">
+					<input type="submit" value="Сохранить акцию">
 				</div>
 			</div>
 
@@ -273,6 +286,23 @@
 						    </div>
 						</div>
 					</div>
+					<div class="form-field-cell">
+						<div class="form-field-input">
+						    <div>
+								<label>Магазины-исключения</label>
+						    </div>
+					    	<div>
+
+		   						<div class="field_input_file" style="width:180px;">
+									<input type="input" value="" class="shopsTitles" style="width:180px;"/>
+									<input type="hidden" value="" class="shops" id="shopsIskluch"/>
+									<div class="file" data-type="getShopsErarhi">...</div>
+								</div>
+
+						    </div>
+						</div>
+					</div>
+
 				</div>
 
 				<div class="form-fields-row">
@@ -285,7 +315,7 @@
 			</div>
 
 			@if (Session::has('errors.form'))
-				<div class="err_dialog_messages">
+				<div class="error_dialog_messages">
 				@foreach (Session::get('errors.form') as $messages)
 					@foreach ($messages as $message)
 						<p>{!! $message !!}</p>
@@ -294,7 +324,7 @@
 				</div>
 			@endif
 			@if (Session::has('errors.file'))
-				<div class="err_dialog_messages">
+				<div class="error_dialog_messages">
 				@foreach (Session::get('errors.file') as $messages)
 					@foreach ($messages as $message)
 						<p>{!! $message !!}</p>
@@ -303,7 +333,7 @@
 				</div>
 			@endif
 			@if (Session::has('ok'))
-				<div class="ok_dialog_messages">
+				<div class="success_dialog_messages">
 					<p>{!! Session::get('ok') !!}</p>
 				</div>
 			@endif
@@ -321,17 +351,17 @@
 					    <th width="20">
 					    	<input type="checkbox" id="delAll">
 					    </th>
-					    <th>Товар</th>
-					    <th>Магазин</th>
+					    <th>Товар <sup>*</sup></th>
+					    <th>Магазин <sup>*</sup></th>
 					    <th>Дистрибьютор</th>
-					    <th>Тип акции</th>
-					    <th>Размер скидки ON INVOICE (%)</th>
-					    <th>Процент компенсации OFF INVOICE (%)</th>
-					    <th>Итого скидка (%)</th>
-					    <th>Старая закупочная скидка (руб)</th>
-					    <th>Новая закупочная скидка (руб)</th>
-					    <th>Дата начала скидки ON INVOICE</th>
-					    <th>Дата окончания скидки ON INVOICE</th>
+					    <th>Тип акции <sup>*</sup></th>
+					    <th>Размер скидки ON INVOICE (%) <sup>*</sup></th>
+					    <th>Процент компенсации OFF INVOICE (%) <sup>*</sup></th>
+					    <th>Итого скидка (%) <sup>*</sup></th>
+					    <th>Старая закупочная скидка (руб) <sup>*</sup></th>
+					    <th>Новая закупочная скидка (руб) <sup>*</sup></th>
+					    <th>Дата начала скидки ON INVOICE <sup>*</sup></th>
+					    <th>Дата окончания скидки ON INVOICE <sup>*</sup></th>
 					    <th>Старая розничная цена (руб)</th>
 					    <th>Новая розничная цена (руб)</th>
 					    <th>Подписи, слоганы, расшифровки и пояснения к товарам в рекламе.</th>
@@ -363,8 +393,9 @@
 										<div class="error_message">{{Session::get('errors.form.'.$k.'.shops')}}</div>
 									@endif
 			   						<div class="field_input_file">
-										<input type="input" name="shopsTitles[]" value="{{old('shopsTitles.'.$k)}}" class="shops"/>
-										<input type="hidden" name="shops[]" value="{{old('shops.'.$k)}}"/>
+										<input type="input" name="shopsTitles[]" value="{{old('shopsTitles.'.$k)}}" class="shopsTitles"/>
+										<input type="hidden" name="shops[]" value="{{old('shops.'.$k)}}" class="shops"/>
+										<div class="file" data-type="getShopsErarhi">...</div>
 									</div>
 								</td>
 								<td>
@@ -491,9 +522,9 @@
 							</td>
 							<td>
 		   						<div class="field_input_file">
-									<input type="input" name="shopsTitles[]" value="" class="shops"/>
-									<input type="hidden" name="shops[]" value=""/>
-									<!-- <div class="file" data-type="getShopsErarhi">...</div> -->
+									<input type="input" name="shopsTitles[]" value="" class="shopsTitles"/>
+									<input type="hidden" name="shops[]" value="" class="shops"/>
+									<div class="file" data-type="getShopsErarhi">...</div>
 								</div>
 							</td>
 							<td>

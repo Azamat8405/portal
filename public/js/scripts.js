@@ -209,3 +209,36 @@ function left_menu_height()
 	$('nav').height(h);
 	$('nav .handrail > div').height(h);
 }
+function showMessage(type, source, message)
+{
+	if($('#'+type+'_dialog_messages').length == 0)
+	{
+		let div = $('<div id="">');
+		div.attr('id', type+'_dialog_messages');
+		$('body').append(div);
+	}
+
+	$('#'+type+'_dialog_messages').dialog({
+		autoOpen: true,
+		width:550,
+		title:'Внимание!',
+		classes: {
+			'ui-dialog-titlebar':type+'_dialog',
+		},
+		open:function()
+		{
+			let html = '';
+			if(source != '')
+			{
+				$(source).each(function(){
+					html += $(this).html()+"<br>";
+				});
+			}
+			if(message)
+			{
+				html += message;
+			}
+			$('#'+type+'_dialog_messages').html(html);
+		}
+	});
+}

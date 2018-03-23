@@ -56,11 +56,12 @@ class ProcessController extends Controller
 
 		if($proc_type)
 		{
-			$cur_date = mktime(0, 0, 0, date("n"), date("j"), date("Y"));
-			if($proc_type->dedlain + $cur_date > $start_date)
-			{
-				$this->validate_errors['form'][0]['start_date'] = 'Дата начала акции должна быть больше либо ровна '.strftime('%d-%m-%Y', $proc_type->dedlain + time());
-			}
+			// ПОКА убираем проверку
+			// $cur_date = mktime(0, 0, 0, date("n"), date("j"), date("Y"));
+			// if($proc_type->dedlain + $cur_date > $start_date)
+			// {
+			// 	$this->validate_errors['form'][0]['start_date'] = 'Дата начала акции должна быть больше либо равна '.strftime('%d-%m-%Y', $proc_type->dedlain + time());
+			// }
 		}
 		else
 		{
@@ -78,7 +79,7 @@ class ProcessController extends Controller
 
 		if(!$request::has('tovs'))
 		{
-			$this->validate_errors['form'][0]['tovs'] = 'Не указан доватор или указан не верно.';
+			$this->validate_errors['form'][0]['tovs'] = 'Не указан товар или указан не верно.';
 		}
 
 		// Если в шапке есть ошибки покаызваем их пока.
@@ -535,6 +536,11 @@ class ProcessController extends Controller
 				$this->validate_errors[$source][$v_err_count]['skidka_on_invoice'] = 'Не верное значение процента. Значение должно быть от 0 - 100.';
 			}
 		}
+		else
+		{
+			$this->validate_errors[$source][$v_err_count]['skidka_on_invoice'] = 'Не указана скидка ON INVOICE или указана неверно.';
+		}
+
 		// Процент компенсации OFF INVOICE 
 		if(isset($data['kompensaciya_off_invoice']))
 		{
@@ -542,6 +548,10 @@ class ProcessController extends Controller
 			{
 				$this->validate_errors[$source][$v_err_count]['kompensaciya_off_invoice'] = 'Не верное значение процента. Значение должно быть от 0 - 100.';
 			}
+		}
+		else
+		{
+				$this->validate_errors[$source][$v_err_count]['kompensaciya_off_invoice'] = 'Не указана компенсация OFF INVOICE или указана неверно.';
 		}
 
 		// Скидка ИТОГО  (%)
@@ -551,6 +561,10 @@ class ProcessController extends Controller
 			{
 				$this->validate_errors[$source][$v_err_count]['skidka_itogo'] = 'Не верное значение процента. Значение должно быть от 0 - 100.';
 			}
+		}
+		else
+		{
+			$this->validate_errors[$source][$v_err_count]['skidka_itogo'] = 'Не указана скидка итого или указана неверно.';
 		}
 
 		//Закупочная цена
@@ -569,19 +583,18 @@ class ProcessController extends Controller
 		}
 
 		// Розничная цена
-		if(trim($data['roznica_old']) == '' || !preg_match('/^[0-9\.\,\-]+$/', $data['roznica_old']))
+		if(trim($data['roznica_old']) != '' && !preg_match('/^[0-9\.\,\-]+$/', $data['roznica_old']))
 		{
 			$this->validate_errors[$source][$v_err_count]['roznica_old'] = 'Не указана старая розничная цена или указана неверно.';
 		}
-		if(trim($data['roznica_new']) == '' || !preg_match('/^[0-9\.\,\-]+$/', $data['roznica_new']))
+		if(trim($data['roznica_new']) != '' && !preg_match('/^[0-9\.\,\-]+$/', $data['roznica_new']))
 		{
 			$this->validate_errors[$source][$v_err_count]['roznica_new'] = 'Не указана новая розничная цена или указана неверно.';
 		}
-		if(intval($data['roznica_new']) >= intval($data['roznica_old']))
+		if($data['roznica_new'] != '' && $data['roznica_old'] != '' && intval($data['roznica_new']) >= intval($data['roznica_old']))
 		{
 			$this->validate_errors[$source][$v_err_count]['roznica_new'] = 'Новая розничная цена должны быть меньше старой розничной цены.';
 		}
-
 		// если предоставляется скидка он-инвойс,
 		if(trim($data['skidka_on_invoice']) != '')
 		{
@@ -652,13 +665,6 @@ class ProcessController extends Controller
 		{
 			return false;
 		}
-
-		//	TODO
-		//	if($data[17] <= 1 && $data[17] > 0)
-		//	$data[17] = $data[17]*100;
-
-		//	if($data[18] <= 1 && $data[18] > 0)
-		//	$data[18] = $data[18]*100;
 
 		return true;
 	}

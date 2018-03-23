@@ -123,7 +123,7 @@ nav{
 	position: fixed;
 	top:35px;
     left: 0;
-	z-index: 100;
+	z-index:1000;
 }
 nav ul li
 {
@@ -281,7 +281,7 @@ background: #ffc8c8;
 .success_dialog{
 background: #c8ffcc;
 }
-.err_dialog_messages, .ok_dialog_messages{
+.error_dialog_messages, .success_dialog_messages{
 display:none;
 }
 .error_message, .success_message{
@@ -289,6 +289,14 @@ padding:10px;
 line-height: 16px;
 width:100%;
 }
+.error_input{
+border:1px solid red !important;
+}
+label.error_input{
+	border:none !important;
+	color:red;
+}
+
 .error_message{
 background:#ffc8c8;
 border:1px solid #a54747;

@@ -9,8 +9,13 @@ class ProcessesTypesTableSeeder extends Seeder
 			'title' => 'Газета',
             'dedlain' => 3024000,
             'description' => 'Акция компании Дочки-сыночки. Проходит каждые 2 недели.'
-		]
-	];
+		],
+        [
+            'title' => 'Щедрые выходные',
+            'dedlain' => 3024000,
+            'description' => ''
+        ]
+    ];
 
     /**
      * Run the database seeds.
@@ -22,7 +27,7 @@ class ProcessesTypesTableSeeder extends Seeder
 		DB::table('process_types')->truncate();
     	foreach ($this->data as $value)
     	{
-			DB::table('process_types')->insert($value);
-    	}
+            DB::table('process_types')->insert($value);
+        }
     }
 }
