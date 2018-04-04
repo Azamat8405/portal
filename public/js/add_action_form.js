@@ -36,88 +36,111 @@ var select2OptionBrends = {
 				newData[ind] = {'id':data[ind].val, 'text':data[ind].label};
 			}
 			return {
-		        results:newData
-		    };
-	    }
+				results:newData
+			};
+		}
 	}
 };
 
 $(function(){
 
-	events();
+	$('#tabs').tabs();
+	$('body').on('mouseover', '.select2-results__options li', function(){
 
+
+		tmp = $(this).attr('id').split('-');
+		index = parseInt(tmp.length)-1;
+
+		var descr = $('.select option[value='+tmp[index]+']').data('descr');
+		if(typeof(descr) != 'undefined')
+		{
+			var d = $('<div />');
+			d.css('position', 'absolute');
+			d.addClass('type_descr');
+
+			d.css('top', $(this).offset().top);
+			d.css('left', $(this).offset().left-150);
+			d.css('width', '150');
+			d.css('height', 'auto');
+			d.css('min-height', '100');
+			d.css('background', '#fff');
+			d.css('padding', '7px');
+			d.css('z-index', '100');
+			d.css('font-size', '12px');
+			d.css('line-height', '14px');
+			d.css('border', '1px solid #ccc');
+			d.html(descr);
+
+			$('body').append(d);
+		}
+
+	});
+	$('body').on('mouseout', '.select2-results__options li', function(){
+		$('.type_descr').remove();
+	});
+
+	events();
 	$('.addProcessForm').keydown(function(e)
- 	{
-        if(e.keyCode == 13)
-        {
+	{
+		if(e.keyCode == 13)
+		{
 			e.preventDefault();
 			return false;
         }
 	});
 
-	if($('.error_dialog_messages').length > 0)
-	{
-		showMessage('error', '.error_dialog_messages');
-	}
-	if($('.success_dialog_messages').length > 0)
-	{
-		showMessage('success', '.success_dialog_messages');
-	}
-
 	$('.addProcessForm').submit(function(){
 		$('.skidka_itogo').prop('disabled', false);
 	});
 
-	var $header = null;
-	setTimeout(function(){
-		$header = $('#tableHeader');
-		var $thead = $('#tableTovs thead');
+	// var $header = null;
 
-		$header.css({
-		    'width':'230%',
-		    'display':'block',
-		    'position':'fixed',
-		    'background':'#fff',
-		    'overflow':'hidden',
-		    'z-index':'95',
-		});
-		$thead.find('th').each(function(index){
-			var $newdiv = $('<div />', {
-				style: 'width:'+ $(this).outerWidth() + 'px'
-	        });
-			$newdiv.css({
-				'display':'table-cell',
-			    'padding':'2px 10px',
-			    'border':'1px solid #ccc',
-			    'border-collapse':'collapse',
-				'border-right':'none',
-				'vertical-align': 'middle',
-				'line-height':'16px',
-				'text-align': 'center'
-			});
+	// setTimeout(function(){
 
-			if(index == 0)
-			{
-	        	$newdiv.html($(this).html());
-			}
-			else
-			{
-	        	$newdiv.text($(this).text());
-			}
-	        $header.append($newdiv);
-		});
-	}, 100);
+	// 	$parHeader = $('#parentTableHeader');
+	// 	$parHeader.css({
+	// 	    'width':'82%',
+	// 	    'display':'block',
+	// 	    'position':'fixed',
+	// 	    'overflow':'hidden',
+	// 		'z-index':'95',
+	// 	});
 
-	$('#tableHeader').on('click', '#delAll', function(){
-		if($(this).is(':checked'))
-		{
-			$('.deleteRow').prop('checked', true);
-		}
-		else
-		{
-			$('.deleteRow').prop('checked', false);
-		}	
-	})
+	// 	$header = $('#tableHeader');
+	// 	$header.css({
+	// 	    'background':'#fff',
+	// 		'width':'1000%',
+	// 		'position': 'relative',
+	// 	});
+
+	// 	var $thead = $('#tableTovs thead');
+	// 	$thead.find('th').each(function(index){
+
+	// 		var $newdiv = $('<div />', {
+	// 			style: 'width:'+ $(this).outerWidth() + 'px'
+	// 		});
+	// 		$newdiv.css({
+	// 			'display':'table-cell',
+	// 		    'padding':'2px 10px',
+	// 		    'border':'1px solid #ccc',
+	// 		    'border-collapse':'collapse',
+	// 			'border-right':'none',
+	// 			'vertical-align': 'middle',
+	// 			'line-height':'16px',
+	// 			'text-align': 'center'
+	// 		});
+
+	// 		if(index == 0)
+	// 		{
+	//         	$newdiv.html($(this).html());
+	// 		}
+	// 		else
+	// 		{
+	//         	$newdiv.text($(this).text());
+	// 		}
+	//         $header.append($newdiv);
+	// 	});
+	// }, 100);
 
 	$.each(selects_cats, function(index, value){
 		if(selects_cats[index] == '#tovBrendSelect')
@@ -142,30 +165,62 @@ $(function(){
 
 	$.each(selectsBrens, function(index, value){
 
+		$(value).change(function(){
+
+			if($('#division').val() == 0 && 
+				$('#oblast').val() == 0 &&
+				$('#city').val() == 0 &&
+				$('#shop').val() == 0)
+			{
+				$('#shopsIskluchTitle').prop('disabled', false);
+				$('#shopsIskluchTitle').parents('.form-field-input').removeClass('disabledField');
+			}
+			else if($(this).val() != '')
+			{
+				$('#shopsIskluch').val('');
+				$('#shopsIskluchTitle').prop('disabled', true);
+				$('#shopsIskluchTitle').parents('.form-field-input').addClass('disabledField');
+			}
+		});
+
 		$(value).select2(select2Option);
 		$(value).on('change.select2', function(e){
-
 			var params = [];
 			params['id'] = selectsBrens[index];
 			change_select2_cats(e, this, params);
 		});
 	});
 
-	var $viewport = $('.table_data'); 
-	$viewport.scroll(function(){
+	// $(window).scroll(function(){
 
-		if(!$header)
-			return;
-		$header.css({
-			left: $('#tableTovs').offset().left
-		});
-	});
+	// 	$('#tableHeader').css({
+	// 		top:($(window).scrollTop()*-1)
+	// 	});
 
-	$(window).resize(function(){
-		$header.css({
-			left: $('#tableTovs').offset().left
-		});
-	});
+	// 	$('#parentTableHeader').css({
+	// 		top:$('#parentTableHeader').offset().top + ( $(window).scrollTop()*-1)
+	// 	});
+	// });
+
+	// var $viewport = $('.table_data_block');
+	// $viewport.scroll(function(){
+
+	// 	if(!$header)
+	// 		return;
+
+	// 	$header.css({
+	// 		left: ($('#tableTovs').offset().left - $('#offset').offset().left)
+	// 	});
+	// });
+
+	// resizeTable();
+	// $(window).resize(function(){
+	// 	resizeTable();
+	// 	$header.css({
+	// 		left: ($('#tableTovs').offset().left - $('#offset').offset().left)
+	// 	});
+	// });
+
 	$('#start_date').mask('ZZ-ZZ-ZZZZ', {
 	    placeholder: "00-00-0000",
 		translation:{
@@ -186,7 +241,7 @@ $(function(){
 	function tmp2(val)
 	{
 		var cur_date = new Date();
-		var dateObj = $.datepicker.parseDate( "dd-mm-yy", val);
+		var dateObj = $.datepicker.parseDate( "dd-mm-y", val);
 		dateObj.setTime(dateObj.getTime() + 86400000);
 
 		to.datepicker( "option", "minDate",  dateObj);
@@ -195,18 +250,25 @@ $(function(){
 
 	if($.fn.datepicker)
 	{
-		var from = $('#start_date').datepicker({
-			dateFormat: "dd-mm-yy"
-		}).change(function() {
+		var cur_d = new Date();
+		var start = new Date(cur_d.getTime() + 86400000);
+		var end = new Date(start + 86400000);
 
+		var from = $('#start_date').datepicker({
+			dateFormat: "dd-mm-y",
+			minDate: start,
+		}).change(function() {
 			$(this).parents('.form-field-input').find('label').removeClass('error_input');
 			tmp2(this.value);
+			prepareDate(this);
 		});
+
 		var to = $('#end_date').datepicker({
-			minDate: new Date(),
-			dateFormat: "dd-mm-yy"
+			minDate: end,
+			dateFormat: "dd-mm-y"
 		}).change(function(){
 			$(this).parents('.form-field-input').find('label').removeClass('error_input');
+			prepareDate(this);
 		});
 	}
 
@@ -281,7 +343,13 @@ $(function(){
 	});
 
 	$('div').on('click', '.field_input_file > .file', function(){
+
 		var el = this;
+
+		if($(el).parents('.disabledField').length > 0)
+		{
+			return;
+		}
 
 		if($(this).data('type') == 'getShopsErarhi')
 		{
@@ -312,6 +380,8 @@ $(function(){
 
 						$(el).parents('.field_input_file').find('input.shops').val(ids.join());
 						$(el).parents('.field_input_file').find('input.shopsTitles').val(titles.join(';  '));
+						$(el).parents('.field_input_file').find('input.chShop').val(titles.join(';  '));
+						$(el).parents('.field_input_file').find('input.shopsTitles').trigger('change');
 
 						$("#shops_dialog").dialog("close");
 				    }
@@ -355,6 +425,7 @@ $(function(){
 
 						$('input.distr:eq('+row_n+')').val(ids.join());
 						$('input.distrTitles:eq('+row_n+')').val(titles.join(';  '));
+						$('input.chDistr:eq('+row_n+')').val(titles.join(';  '));
 
 						$("#contragent_dialog").dialog("close");
 					}
@@ -400,16 +471,16 @@ $(function(){
 			arr.tovTipIsdeliya = $('#tovTipIsdeliya').val();
 		}
 
-		if($('#tovVidIsdeliya').val() == 0)
-		{
-			$('#select2-tovVidIsdeliya-container').parents('.select2-selection').addClass('error_input');
-			err = true;
-		}
-		else
-		{
+		// if($('#tovVidIsdeliya').val() == 0)
+		// {
+		// 	$('#select2-tovVidIsdeliya-container').parents('.select2-selection').addClass('error_input');
+		// 	err = true;
+		// }
+		// else
+		// {
 			$('#select2-tovVidIsdeliya-container').parents('.select2-selection').removeClass('error_input');
 			arr.tovVidIsdeliya = $('#tovVidIsdeliya').val();
-		}
+		// }
 
 		if($('#tovBrendSelect').val() == 0)
 		{
@@ -422,15 +493,24 @@ $(function(){
 			arr.tovBrend = $('#tovBrendSelect').val();
 		}
 
-		arr.shopsIskluch = $('#shopsIskluch').val();
 		arr.division = $('#division').val();
 		arr.oblast = $('#oblast').val();
 		arr.city = $('#city').val();
 		arr.shop = $('#shop').val();
+		arr.shopsIskluch = $('#shopsIskluch').val();
+
+		// if(arr.shop == 0 && arr.city == 0 && arr.oblast == 0 && arr.division == 0 && arr.shopsIskluch == 0)
+		// {
+		// 	$('#shopsIskluchTitle').addClass('error_input');
+		// 	err = true;
+		// }
+		// else
+		// {
+		// 	$('#shopsIskluchTitle').removeClass('error_input');
+		// }
 
 		if(!err)
 			getTovsToFillTable(arr, 0);
-
 	});
 });
 
@@ -457,12 +537,15 @@ function getTovsToFillTable(arr, page)
 
 			for(ind in data.items)
 			{
-				if($('.tovs[value='+data.items[ind].c+']').length == 0)
+				if($('.kodTov[value='+data.items[ind].c+']').length == 0)
 				{
 					addRow(data.items[ind], data.shop);
 				}
 			}
+
 			delRows(true);
+			events();
+			$(window).trigger('resize');
 		}
 	});
 }
@@ -531,38 +614,55 @@ function escape(string) {
     });
 };
 
+function addEmptyRow()
+{
+	addRow();
+	events();
+	$(window).trigger('resize');
+}
+
 function addRow(itemsToFill, shopsToFill, tr)
 {
-	if($('.select').selectmenu().length)
-	{
-		$('.select').selectmenu("destroy");
-	}
+	$('.select').each(function(){
+		if($(this).hasClass("select2-hidden-accessible"))
+		{
+			$(this).select2('destroy');
+			$(this).removeAttr('data-select2-id').find('option').removeAttr('data-select2-id');
+		}
+	});
 
 	$('.start_on_invoice_date, .end_on_invoice_date').removeClass("hasDatepicker")
 	$('.start_on_invoice_date, .end_on_invoice_date').datepicker("destroy");
-
 	if(!tr)
 	{
-		var t = $('.table_data table tr:eq(1)').html();
-		var tr = $('<tr>');
-		tr.append(t);
+		tr = $('.table_data_block table tr:eq(1)').clone();
 	}
 	else
 	{
 		tr = $(tr);
 	}
 
-	let newRowNumber = ($('.table_data table tr').length - 1)
+	$('.select').each(function(){
 
-	tr.find('input,textarea,select').val('');
+		if($(this).val() == 0)
+		{
+			$(this).val("0").trigger("change");
+		}
+	});
+
+	let newRowNumber = ($('.table_data_block table tr').length - 1);
+	tr.find('input,textarea').val('');
 	tr.find('.error_message').remove();
 	tr.find('.start_on_invoice_date, .end_on_invoice_date ').removeAttr('id');
 	tr.find('input.row_number').val(newRowNumber);
 
 	if(itemsToFill)
 	{
-		tr.find('input.tovs').val(itemsToFill['c']);
-		tr.find('input.tovsTitles').val(itemsToFill['n']+' ('+itemsToFill['c']+')');
+		tr.find('input.kodTov').val(itemsToFill['c']);
+		tr.find('input.chKod').val(itemsToFill['c']);
+
+		tr.find('input.tovsTitles').val( itemsToFill['n'] );
+		tr.find('.chTitle').val( itemsToFill['n'] );
 	}
 	if(shopsToFill)
 	{
@@ -575,37 +675,60 @@ function addRow(itemsToFill, shopsToFill, tr)
 
 		tr.find('input.shops').val( ids.join() );
 		tr.find('input.shopsTitles').val( ttls.join(';  ') );
+		tr.find('input.chShop').val( ttls.join(';  ') );
 	}
 
-	$('.table_data table tbody').append(tr);
-	events();
-	$(window).trigger('resize');
+	$('.table_data_block table tbody').append(tr);
 }
 
 function delRows(allEmpty)
 {
+	$('.select').each(function(){
+		if($(this).hasClass("select2-hidden-accessible"))
+		{
+			$(this).select2('destroy');
+			$(this).removeAttr('data-select2-id').find('option').removeAttr('data-select2-id');
+		}
+	});
+
 	if($('.deleteRow:checked').length > 0 && confirm('Вы хотите удалить выбранные строки?') || allEmpty )
 	{
 		if(allEmpty)
 		{
-			$('#tableTovs input.tovs[value=""]').parents('tr').remove();
+			$('#tableTovs input.kodTov').each(function(){
+
+				if($(this).val() == '')
+				{
+					$(this).parents('tr').remove();
+				}
+			});
 		}
 		else
 		{
 			if($('#tableTovs input.row_number').length > 1)
 			{
 				let addEmptyTr = null;
+
 				if($('.deleteRow:checked').length == $('.deleteRow').length)
 				{
-					addEmptyTr = $('.deleteRow').parents('tr').get(0);
+					addEmptyTr = $('.deleteRow').parents('tr:eq(0)').clone();
 				}
 				$('.deleteRow:checked').parents('tr').remove();
 
 				if(addEmptyTr)
 				{
-					$('.table_data table tbody').append(addEmptyTr);
 					addRow(false, false, addEmptyTr);
+
+					events();
+					$(window).trigger('resize');
 				}
+			}
+			else if($('#tableTovs input.row_number').length == 1)
+			{
+				$('#tableTovs input[type=text], #tableTovs input[type=hidden], #tableTovs select, #tableTovs textarea').val('');
+
+				$('.select').select2(select2Option);
+				$('.select').val("0").trigger("change");
 			}
 		}
 
@@ -619,8 +742,8 @@ function delRows(allEmpty)
 
 function events()
 {
-	$('.shopsTitles, .tovsTitles, .distrTitles, .maskProcent, .maskPrice, .maskDate').off('change');
-	$('.shopsTitles, .tovsTitles, .distrTitles, .maskProcent, .maskPrice, .maskDate').on('change', function()
+	$('.shopsTitles, .tovsTitles, .distrTitles, .maskProcent, .maskPrice, .maskDate, .kodTov, .select').off('change');
+	$('.shopsTitles, .tovsTitles, .distrTitles, .maskProcent, .maskPrice, .maskDate, .kodTov, .select').on('change', function()
 	{
 		$(this).parents('td').find('.error_message').remove();
 	});
@@ -645,30 +768,66 @@ function events()
 		$('.distr:eq(' + getRowNumber(this) + ')').val(copied);
 	});
 
-	$('.field_input_file > .file[data-type=getShopsErarhi]').off( "mouseenter mouseleave" );
-	$('.field_input_file > .file[data-type=getShopsErarhi]').hover(function(e){
-			var row_n = getRowNumber(this);
-			let tmp = $(this).parents('.field_input_file').find('.shopsTitles').val();
-			if(tmp == '')
+
+	$('.field_input_file > .file, .field_input_file > .shopsTitles, .field_input_file > .distrTitles').off("mouseenter mouseleave");
+	$('.field_input_file > .file, .field_input_file > .shopsTitles, .field_input_file > .distrTitles').hover(function(e){
+
+			if($('body').find('> div.file_hint').length > 0)
 			{
+				$('body').find('> div.file_hint').remove();
+			}
+
+			var row_n = getRowNumber(this);
+
+			if($(this).hasClass('file'))
+			{
+				if($(this).parents('.field_input_file').find('.shopsTitles').length > 0)
+				{
+					$(this).parents('.field_input_file').find('.shopsTitles').trigger('mouseenter');
+				}
+				else if($(this).parents('.field_input_file').find('.distrTitles').length > 0)
+				{
+					$(this).parents('.field_input_file').find('.distrTitles').trigger('mouseenter');
+				}
 				return;
 			}
 
+			var tmp = $(this).parents('.field_input_file').find('.shopsTitles').val();
+			if(!tmp || tmp == '')
+			{
+				tmp = $(this).parents('.field_input_file').find('.distrTitles').val();
+				if(!tmp || tmp == '')
+				{
+					return;
+				}
+			}
 			var d = $(this).find('> div');
 			if(d.length == 0)
 			{
 				var d = $('<div />');
 				d.addClass('file_hint');
 			}
-			$(this).append(d);
 
 			tmp = tmp.split('; ');
 			d.html(tmp.join('<br>'));
+			d.css('top', $(this).offset().top+23);
+			d.css('left', $(this).offset().left);
+			d.css('z-index', 100);
 			d.show();
+			d.hover(function(){
+				$('body').find('> div.file_hint').show();
+				$('body').find('> div.file_hint').addClass('nodel');
+			}, function(){
+				$('body').find('> div.file_hint').remove();
+			});
+			$('body').append(d);
 		},
 		function()
 		{
-			$(this).find('> div').hide();
+			if($('body').find('> div.file_hint.nodel').length == 0)
+			{
+				$('body').find('> div.file_hint').hide();
+			}
 		}
 	);
 
@@ -693,19 +852,49 @@ function events()
     		}
 		});
 
-		$('.maskPrice').mask('0 000 000 000', {
-		    placeholder:"0 руб",
-		    reverse:true,
-			onKeyPress: function(cep, event, currentField, options){
-				var reg2 = new RegExp("[^ \.\,0-9]+");
-				var reg = new RegExp("[0-9]{1,6}[(\.|\,)]*[0-9]{0,2}");
+		$('.maskPrice').on('keyup', function(e){
 
-				let val = $(currentField).val().replace(/ /g, '');
-				if(parseFloat(val) > 1000000000 || parseFloat(cep) < 0 || !reg.test(cep) || reg2.test(cep))
-				{
-					$(currentField).val('');
-				}
+			var str = $(this).val();
+			var reg = /[^\.\,0-9]+/g;
+
+			if( reg.test(str) )
+			{
+				str = str.replace(reg, '');
 			}
+
+			var result = '';
+			str = str.replace(/[\.\,]+/g, '.');
+			
+			var point_ind = str.indexOf('.');
+			if(point_ind > 0)
+			{
+				var result_st = str.slice(0, point_ind)
+				var result_end = str.slice(point_ind);
+			}
+			else
+			{
+				var result_st = str;
+				var result_end = '';
+			}
+
+			var arr = result_st.split('');
+			arr.reverse();
+
+			$.each(arr, function(index){
+
+				if(index%3 == 0)
+				{
+					result = this+' '+result;
+				}
+				else
+				{
+					result = this + result;
+				}
+			});
+
+			result += result_end;
+			result = result.replace(/[ ]*\.[ ]*/g, '.').trim();
+			$(this).val(result);
 		});
 
 		$('.maskDate').mask('ZZ-ZZ-ZZZZ', {
@@ -720,10 +909,10 @@ function events()
 			},
 			translation:{
       			'Z': {
-        			pattern: /[0-9]/
+					pattern: /[0-9]/
       			}
-    		}
-		})
+			}
+		});
 	}
 
 	$('.on_invoice, .off_invoice, .roznica_new, .roznica_old').on('change', function(){
@@ -771,8 +960,13 @@ function events()
 // если РЦ старая/новая не заполнено, то (Размер скидки он-инвойс + Размер скидки офф-инвойс)
 // если РЦ старая/новая заполнено, то (1 - РЦ новая цена / РЦ старая цена)
 // проверка:  или пусто или % (значение от 0 до 1 включительно)"
+
 		}
 		$('input.skidka_itogo:eq('+row_n+')').val(itogo);
+
+		setTimeout(function (){
+			illumination($('input.skidka_itogo:eq('+row_n+')'), 0);
+		}, 300);
 	});
 
 	if($.fn.datepicker)
@@ -780,26 +974,32 @@ function events()
 		//Даты ON INVOICE в табличной части
 		$('.start_on_invoice_date').datepicker({
 			minDate: new Date(),
-			dateFormat: "dd-mm-yy"
+			dateFormat: "dd-mm-y"
 		})
 		.change(function() {
 
-			var dateObj = $.datepicker.parseDate( "dd-mm-yy", this.value);
+			var dateObj = $.datepicker.parseDate( "dd-mm-y", this.value);
 			dateObj.setTime(dateObj.getTime() + 86400000);
 
 			var row_n = getRowNumber(this);
 			var end_date = $('input[name^=end_date_on_invoice]:eq('+row_n+')');
 			end_date.datepicker( "option", "minDate",  dateObj);
+
+			prepareDate(this);
         });
 
 		$('.end_on_invoice_date').datepicker({
 			minDate: new Date(),
-			dateFormat: "dd-mm-yy"
+			dateFormat: "dd-mm-y"
+		})
+		.change(function() {
+			prepareDate(this);
 		});
 	}
 
-	//TODO удалить модель selectmenu
-	$('.select').selectmenu();
+	$('.select').select2(select2Option).change(function(){
+		$('.type_descr').remove();
+	});
 
 	$("input.distrTitles").autocomplete({
 		source: function( request, response ){
@@ -815,8 +1015,93 @@ function events()
 			});
 		},
 		minLength: 2,
+		change:function()
+		{
+			var n = getRowNumber(this);
+			if($(this).val() != $("input.chDistr:eq("+n+")").val())
+			{
+				$(this).val($("input.chDistr:eq("+n+")").val());
+			}
+			$("input.distrTitles:eq("+n+")").trigger('change');
+		},
 		select: function(event, ui) {
-			$('input.distr').val(ui.item.val);
+
+			var n = getRowNumber(this);
+
+			$('input.distr:eq('+n+')').val(ui.item.val);
+			$('input.chDistr:eq('+n+')').val(ui.item.label);
+		}
+	});
+
+	$("input.tovsTitles").hover(function(){
+
+			if($(this).val() == '')
+				return;
+
+			if($('div.tov_hint').length > 0)
+			{
+				$('div.tov_hint').html($(this).val());
+				$('div.tov_hint').show();
+			}
+			else
+			{
+				var d = $('<div />');
+				d.addClass('tov_hint');
+				d.css('position', 'absolute');
+				d.css('background', '#fff');
+				d.css('width', '550px');
+				d.css('padding', '5px');
+				d.css('z-index', '100');
+				d.css('border', '1px solid #ccc');
+				d.css('min-height', '27px');
+				d.css('height', 'auto');
+				d.css('top', $(this).offset().top + $(this).outerHeight());
+				d.css('left', $(this).offset().left);
+				d.on('click', function(){
+					$('.tov_hint').hide();
+				});
+				d.html($(this).val());
+				$(this).before(d);
+			}
+		},
+		function(){
+			$('.tov_hint').hide();
+		});
+
+	$('input.kodTov').autocomplete({
+		source: function( request, response ){
+			var term = request.term;
+			request.kod = true;
+
+			if ( term in cache_avtocomplete_tovs )
+			{
+				response( cache_avtocomplete_tovs[term]);
+				return;
+			}
+			$.getJSON( "/sys/getTovarForAvtoComplete", request, function( data, status, xhr ) {
+				cache_avtocomplete_tovs[term] = data;
+				response(data);
+			});
+		},
+		minLength:2,
+		change:function()
+		{
+			var n = getRowNumber(this);
+			if($(this).val() != $("input.chKod:eq("+n+")").val())
+			{
+				$(this).val($("input.chKod:eq("+n+")").val());
+			}
+			$("input.tovsTitles:eq("+n+")").trigger('change');
+		},
+		select: function( event, ui )
+		{
+			var n = getRowNumber(this);
+
+			$(this).val(ui.item.value);
+
+			$('input.chKod:eq('+n+')').val(ui.item.value);
+			$('.tovsTitles:eq('+n+')').val(ui.item.val);
+			$('.chTitle:eq('+n+')').val(ui.item.val);
 		}
 	});
 
@@ -834,9 +1119,22 @@ function events()
 			});
 		},
 		minLength: 2,
+		change:function()
+		{
+			var n = getRowNumber(this);
+			if($(this).val() != $("input.chTitle:eq("+n+")").val())
+			{
+				$(this).val($("input.chTitle:eq("+n+")").val());
+			}
+			$("input.kodTov:eq("+n+")").trigger('change');
+		},
 		select: function( event, ui )
 		{
-			$(this).parents().find('.tovs').val(ui.item.val);
+			var n = getRowNumber(this);
+
+			$("input.chTitle:eq("+n+")").val(ui.item.label);
+			$('.kodTov:eq('+n+')').val(ui.item.val);
+			$('input.chKod:eq('+n+')').val(ui.item.val);
 		}
 	});
 
@@ -862,7 +1160,19 @@ function events()
 		minLength: 2,
 		select: function( event, ui )
 		{
-			$(this).next().val(ui.item.val);
+			var n = getRowNumber(this);
+
+			$("#tableTovs input.shops:eq("+n+")").val(ui.item.value);
+			$("#tableTovs input.chShop:eq("+n+")").val(ui.item.value);
+			$("#tableTovs input.shops:eq("+n+")").val(ui.item.val);
+		},
+		change: function( event, ui )
+		{
+			var n = getRowNumber(this);
+			if($(this).val() != $("#tableTovs input.chShop:eq("+n+")").val())
+			{
+				$(this).val($("#tableTovs input.chShop:eq("+n+")").val());
+			}
 		}
 	});
 }
@@ -876,21 +1186,27 @@ function fillCategsSelect2Filter(id, data)
 	{
 		$('#tovTipIsdeliya option:not(:eq(0))').remove();
 		$('#tovTipIsdeliya').select2(select2Option).trigger('change');
+
+		$('#tovBrendSelect option:not(:eq(0))').remove();
+		$('#tovBrendSelect').select2(select2Option).trigger('change');
 	}
 
 	if(id == '#tovGroup' || id == '#tovTipIsdeliya')
 	{
 		$('#tovVidIsdeliya option:not(:eq(0))').remove();
 		$('#tovVidIsdeliya').select2(select2Option).trigger('change');
+
+		$('#tovBrendSelect option:not(:eq(0))').remove();
+		$('#tovBrendSelect').select2(select2Option).trigger('change');
 	}
 
-	if(id == '#oblast')
+	if(id == '#oblast' || id == '#division')
 	{
 		$('#city option:not(:eq(0))').remove();
 		$('#city').select2(select2Option).trigger('change');
 	}
 
-	if(id == '#oblast' || id == '#city')
+	if(id == '#oblast' || id == '#city' || id == '#division')
 	{
 		$('#shop option:not(:eq(0))').remove();
 		$('#shop').select2(select2Option).trigger('change');
@@ -943,18 +1259,19 @@ function change_select2_cats(evt, this_el, params)
 
 	if(!cache[$(this_el).val()] || $.isEmptyObject(cache[$(this_el).val()]))
 	{
-		if(params['id'] == '#tovVidIsdeliya')
+		if(params['id'] == '#tovVidIsdeliya' || params['id'] == '#tovTipIsdeliya')
 		{
 			$.ajax({
 				url: "/sys/getBrendsForCategs/"+$(this_el).val(),
 				dataType:'json',
 				success: function(data){
 					cache[$(this_el).val()] = data;
-					fillCategsSelect2Filter(selects[ind+1], data);
+					fillCategsSelect2Filter(selects[4], data);
 				}
 			});
 		}
-		else if($.inArray(params['id'], selects_cats) >= 0 && params['id'] != '#tovBrendSelect')
+
+		if($.inArray(params['id'], selects_cats) >= 0 && params['id'] != '#tovBrendSelect')
 		{
 			$.ajax({
 				url: "/sys/getSubCategs/"+$(this_el).val(),
@@ -984,6 +1301,9 @@ function change_select2_cats(evt, this_el, params)
 			$.ajax({
 				url: "/sys/getSubRegions/"+$(this_el).val(),
 				dataType:'json',
+				error: function(data) {
+					fillCategsSelect2Filter(selectsBrens[ind+1], []);
+				},
 				success: function(data){
 					cache_shops_regions[$(this_el).val()] = data;
 					fillCategsSelect2Filter(selectsBrens[ind+1], data);
@@ -1079,4 +1399,35 @@ function build_list(cache_shops_dialog, ids)
 	}
 	$('#shops_dialog > ul').append(li);
 	$('#shops_dialog').prepend($('<input style="margin:0 3px 8px 9px ;" type="checkbox" id="checkAllShop"><label style="margin:0 0 8px 0;" for="checkAllShop">Выбрать все магазины</label>'));
+}
+
+function prepareDate(el)
+{
+	var tmp = el.value.split('-');
+	if(tmp[2] && tmp[2].length == 2)
+	{
+		tmp[2] = '20'+tmp[2];
+	}
+	el.value = tmp.join('-');
+}
+
+function illumination(el, times)
+{
+	if(times > 7)
+	{
+		$(el).css('background', '#fff');
+		return;
+	}
+
+	if($(el).css('background-color') == 'rgb(255, 255, 255)')
+	{
+		$(el).css('background-color', '#fdf5ce');
+	}
+	else
+	{
+		$(el).css('background-color', '#fff');
+	}
+
+	times++;
+	setTimeout(function(){illumination(el, times)}, 200);
 }

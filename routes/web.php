@@ -43,12 +43,14 @@ Route::group(['middleware' => 'auth'], function () {
 		// Route::get('/sys/fillTov2Categs', 		'SystemController@fillTov2CategsTable');
 		Route::get('/sys/fillRegionsTable', 	'SystemController@fillRegionsTable');
 	
-
 		Route::get('/test', 'TestController@index');
 	});
 
-	Route::get('/ucenka/list',			'UcenkaController@list')->name('ucenka.list');
-	Route::get('/ucenka/add',			'UcenkaController@add')->name('ucenka.add');
+	Route::get('/ucenka/list',					'UcenkaController@list')->name('ucenka.list');
+	Route::get('/ucenka/add',					'UcenkaController@add')->name('ucenka.add');
+	Route::post('/ucenka/addSubmit',			'UcenkaController@addSubmit')->name('ucenka.addSubmit');
+
+	Route::get('/tovs/ajaxGetTovForAvtocomplete', 	'TovController@ajaxGetTovForAvtocomplete');
 
 });
 Auth::routes();

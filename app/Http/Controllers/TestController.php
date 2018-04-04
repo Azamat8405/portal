@@ -3,19 +3,47 @@
 namespace App\Http\Controllers;
 
 use DB;
-
 use Excel;
+use PHPExcel;
+use PHPExcel_IOFactory;
+use PHPExcel_Shared_Date;
+use PHPExcel_Writer_Excel5;
+use App\Shop;
 use Illuminate\Http\Request;
-
 use App\ProcessType;
 
 class TestController extends Controller
 {
     public function index(Request $request)
     {
+        $phpExcel = PHPExcel_IOFactory::createReader('Excel2007');
+        $phpExcel = $phpExcel->load( public_path().'/upload/action_upload_form.xlsx' );
+        $phpExcel->setActiveSheetIndex(1); // Делаем активной 2 страницу
+        $sheet = $phpExcel->getActiveSheet();
 
+        if(strtolower($sheet->getTitle()) == 'data')
+        {
+            $sheet->setCellValue('A1', 'Магазины');
+            $sheet->setCellValue('B1', 'Контрагенты');
+
+            $shops = Shop::all();
+            $i = 1;
+            foreach($shops as $key => $value)
+            {
+                $i++;
+                $sheet->setCellValue('A'.$i, $value->title);
+            }
+            for($j = ++$i; $j <= 1000 ; $j++)
+            {
+                $sheet->setCellValue('A'.$j, '');
+            }
+        }
+
+        $writer = PHPExcel_IOFactory::createWriter($phpExcel, "Excel2007");
+        $writer->save(public_path().'/upload/action_upload_form.xlsx');
 
 exit();
+
 
         $result = [];
         $tovs = DB::table('tov_categs')->get();

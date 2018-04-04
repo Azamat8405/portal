@@ -37,7 +37,7 @@
 
 <!--
 
-                <table class="tbl">
+                <table class="">
                     <tr>
                         <th>
                             Название поля

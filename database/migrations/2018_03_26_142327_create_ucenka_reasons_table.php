@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateDocumentsTable extends Migration
+class CreateUcenkaReasonsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,15 +13,10 @@ class CreateDocumentsTable extends Migration
      */
     public function up()
     {
-        Schema::create('documents', function (Blueprint $table) {
+        Schema::create('ucenka_reasons', function (Blueprint $table) {
             $table->increments('id');
 
             $table->string('title');
-
-            $table->integer('step_id')->unsigned()->nullable();
-            $table->integer('process_type_id')->unsigned()->nullable();
-            $table->integer('process_id')->unsigned()->nullable();
-
             $table->timestamps();
         });
     }
@@ -33,6 +28,6 @@ class CreateDocumentsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('documents');
+        Schema::dropIfExists('ucenka_reasons');
     }
 }

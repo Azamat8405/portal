@@ -24,8 +24,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')
-        //          ->hourly();
+        $schedule->call(function () {
+
+debug_output('5555555777');
+
+        })->everyMinute();
+
     }
 
     /**
@@ -38,5 +42,26 @@ class Kernel extends ConsoleKernel
         $this->load(__DIR__.'/Commands');
 
         require base_path('routes/console.php');
+    }
+}
+
+
+function debug_output($debug_var, $mode = 'w+', $file = '')
+{
+    if(empty($file))
+    {
+        $file = /*$_SERVER['DOCUMENT_ROOT'].*/'C:\WebDev\xampp\htdocs\portal.ru\portal\public\debug_output.txt';
+    }
+
+    $fp = @fopen($file, $mode);
+    if ($fp)
+    {
+        // получаем значение переменной в виде строки
+        if($mode == 'a+')
+        {
+            @fwrite($fp, "\r\n");
+        }
+        @fwrite($fp, print_r($debug_var, true));
+        @fclose($fp);
     }
 }

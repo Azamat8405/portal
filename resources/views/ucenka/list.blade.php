@@ -66,7 +66,7 @@
 			@endif
 		</div>
 
-		<div class="table_data">
+		<div class="table_data_block">
 			<div id="shops_dialog"></div>
 			<div id="tovs_dialog"></div>
 			<div id="contragent_dialog"></div>

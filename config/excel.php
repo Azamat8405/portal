@@ -203,7 +203,7 @@ return array(
         | Pre-calculate formulas during export
         |--------------------------------------------------------------------------
         */
-        'calculate'                   => false,
+        'calculate'                   => true,
 
         /*
         |--------------------------------------------------------------------------
@@ -450,7 +450,7 @@ return array(
         |
         */
 
-        'calculate'               => false,
+        'calculate'               => true,
 
         /*
         |--------------------------------------------------------------------------
@@ -492,7 +492,7 @@ return array(
             | Enable/disable date formatting
             |--------------------------------------------------------------------------
             */
-            'enabled' => true,
+            'enabled' => false,
 
             /*
             |--------------------------------------------------------------------------
@@ -502,14 +502,14 @@ return array(
             | If set to false, a carbon object will return
             |
             */
-            'format'  => 'd.m.Y',
+            'format'  => false,//'d.m.Y'
 
             /*
             |--------------------------------------------------------------------------
             | Date columns
             |--------------------------------------------------------------------------
             */
-            'columns' => ['data_nachala_aktsii', 'data_okonchaniya_aktsii']
+            'columns' => []//'data_nachala_aktsii', 'data_okonchaniya_aktsii'
         ],
 
         /*

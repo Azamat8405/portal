@@ -4,7 +4,6 @@
 
     <form>
         <div class="content-panel">
-
             <div class="content-panel__info">
                 <div>Название: Акция 3+2</div>
                 <div>ID: 1257</div>
@@ -25,11 +24,9 @@
                     <input type="submit" name="" value="удалить">
                     <input type="submit" name="" value="Создать">
                 </div>
-sssssssssssssssss
 
-                <div id="table_data" class="table_data"></div>
 
-                <!-- <table class="tbl">
+                <!-- <table class="">
                     <tr>
                         <th>
                             Название поля
