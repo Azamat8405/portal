@@ -18,9 +18,10 @@ Route::group(['middleware' => 'auth'], function () {
 	/*Для админов*/
 	Route::group(['middleware' => 'admin'], function () {
 
-		Route::get('/processes', 		'ProcessController@list')->name('processes');
-		Route::get('/processes/add', 	'ProcessController@showAddFrom')->name('processes.add');
-		Route::post('/processes/add',	'ProcessController@add');
+		Route::get('/processes', 						'ProcessController@list')->name('processes');
+		Route::get('/processes/add', 					'ProcessController@showAddFrom')->name('processes.add');
+		Route::post('/processes/add',					'ProcessController@add');
+		Route::post('/processes/prepareDataFromFile',	'ProcessController@prepareDataFromFile');
 
 		Route::get('/sys/getContragentsForAvtocomplete', 	'SystemController@ajaxGetContragentsAvtocomplete');
 		Route::get('/sys/getContragentsErarhi',				'SystemController@ajaxGetContragentsErarhi');

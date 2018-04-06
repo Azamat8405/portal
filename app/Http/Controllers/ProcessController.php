@@ -71,6 +71,7 @@ class ProcessController extends Controller
 			$this->validate_errors['form'][0]['process_type'] = 'Нет Акций указанного типа';
 		}
 
+		$end_date = '';
 		if($proc_type)
 		{
 			$end_date = strtotime(Request::input('end_date'));
@@ -88,11 +89,10 @@ class ProcessController extends Controller
 		// Если в шапке есть ошибки покаызваем их пока.
 		if(!empty($this->validate_errors['form']))
 		{
-			return redirect()->back()
-				->with('errors', $this->validate_errors)
-				->withInput();
+			// return redirect()->back()
+			// 	->with('errors', $this->validate_errors)
+			// 	->withInput();
 		}
-
 		$dataToInsert = [];
 
 		// Проверка полей формы
@@ -111,7 +111,7 @@ class ProcessController extends Controller
 			}
 
 			$dataToInsert[$key]['distr'] = $request::input('distr')[$key] ?? null;
-			$dataToInsert[$key]['type'] = $request::input('types')[$key] ?? null;
+			$dataToInsert[$key]['type'] = $request::input('type')[$key] ?? null;
 			$dataToInsert[$key]['skidka_on_invoice'] = $request::input('skidka_on_invoice')[$key] ?? null;
 			$dataToInsert[$key]['kompensaciya_off_invoice'] = $request::input('kompensaciya_off_invoice')[$key] ?? null;
 			$dataToInsert[$key]['skidka_itogo'] = $request::input('skidka_itogo')[$key] ?? null;
@@ -144,7 +144,6 @@ class ProcessController extends Controller
 				while (File::exists($new_path.$new_name) && $r <= 10);
 
 				// Компируем файл на постоянное место хранения и сразу читаем файл
-
 				if(!File::exists($new_path.$new_name))
 				{
 					$move = Request::file('file')->move($new_path, $new_name);
@@ -153,7 +152,6 @@ class ProcessController extends Controller
 					$excel = PHPExcel_IOFactory::load($move); // подключить Excel-файл
 					$excel->setActiveSheetIndex(0); // получить данные из указанного листа
 					$sheet = $excel->getActiveSheet();
-
 					$i = 0;
 					// формирование html-кода с данными
 					foreach ($sheet->getRowIterator() as $row_num => $row)
@@ -178,77 +176,59 @@ class ProcessController extends Controller
 								case 'B': //Дата окончания акции
 									$dataToInsert[$row_num]['end_date'] = $this->parseDateFromExcelToInt($cell);
 									break;
-								case 'C': //Товарная категория
-									break;
-								case 'D': //Товарная группа
-									break;
-								case 'E': //Тип издения
-									break;
-								case 'F': //Вид изделия
-									break;
-								case 'G': //Бренд
+								case 'C': //Бренд
 									$dataToInsert[$row_num]['brend'] = $cell->getCalculatedValue();
 									break;
-								case 'H': //Девизион
-									break;
-								case 'I': //Область
-									break;
-								case 'J': //Город
-									break;
-								case 'K': //Магазин
+								case 'D'://Магазины-исключения
 									$v = $cell->getCalculatedValue();
-									$dataToInsert[$row_num]['shops'] = explode(',', $v) ?? null;
+									$dataToInsert[$row_num]['shops_exception'] = explode(';', $v) ?? null;
 									break;
-								case 'L': //Магазины-исключения
-									$v = $cell->getCalculatedValue();
-									$dataToInsert[$row_num]['shops_exception'] = explode(',', $v) ?? null;
-									break;
-								case 'M': // Дистрибьютор(Плательщик)
+								case 'E':  // Дистрибьютор(Плательщик)
 									$dataToInsert[$row_num]['distr'] = $cell->getCalculatedValue();
 									break;
-								case 'N': // наименование
+								case 'F':	//наименование
 									$dataToInsert[$row_num]['tovsTitles'] = $cell->getCalculatedValue();
 									break;
-								case 'O': // код ДиС
+								case 'G':	//код ДиС
 									$dataToInsert[$row_num]['kodTov'] = $cell->getCalculatedValue();
 									break;
-								case 'P': // Артикул (ШК)
+								case 'H': // Артикул (ШК)
 									$dataToInsert[$row_num]['articule_sk'] = $cell->getCalculatedValue();
 									break;
-								case 'Q': //Тип Акции (скидка, механика, подарок)
+								case 'I': //Тип Акции (скидка, механика, подарок)
 									$dataToInsert[$row_num]['type'] = $cell->getCalculatedValue();
 									break;
-								case 'R': // Размер скидки ON INVOICE 
+								case 'J': // Размер скидки ON INVOICE 
 									$dataToInsert[$row_num]['skidka_on_invoice'] = $cell->getCalculatedValue();
 									break;
-								case 'S': 
+								case 'K': //
 									$dataToInsert[$row_num]['kompensaciya_off_invoice'] = $cell->getCalculatedValue();
 									break;
-								case 'T': 
+								case 'L': //Итого
 									$dataToInsert[$row_num]['skidka_itogo'] = $cell->getCalculatedValue();
 									break;
-								case 'U': //Закупочная цена (руб)
+								case 'M': //Закупочная цена (руб)
 									$dataToInsert[$row_num]['zakup_old'] = $cell->getCalculatedValue();
 									break;
-								case 'V':
+								case 'N':
 									$dataToInsert[$row_num]['zakup_new'] = $cell->getCalculatedValue();
 									break;
-								case 'W': //Период действия акционной цены ON INVOICE
+								case 'O':  //Период действия акционной цены ON INVOICE
 									$dataToInsert[$row_num]['start_date_on_invoice'] = $this->parseDateFromExcelToInt($cell);
 									break;
-								case 'X': 
+								case 'P':
 									$dataToInsert[$row_num]['end_date_on_invoice'] = $this->parseDateFromExcelToInt($cell);
 									break;
-								case 'Y': //Розничная Цена
+								case 'Q': //Розничная Цена
 									$dataToInsert[$row_num]['roznica_old'] = $cell->getCalculatedValue();
 									break;
-								case 'Z':
+								case 'R': 
 									$dataToInsert[$row_num]['roznica_new'] = $cell->getCalculatedValue();
 									break;
-								case 'AA':
+								case 'S': 
 									$dataToInsert[$row_num]['descr'] = $cell->getCalculatedValue();
 									break;
-								case 'AB':
+								case 'T': 
 									$dataToInsert[$row_num]['marks'] = $cell->getCalculatedValue();
 									break;
 							}
@@ -262,6 +242,11 @@ class ProcessController extends Controller
 				}
 			}
 		}
+
+// print_r($dataToInsert);
+// echo '____';
+// print_r($this->validate_errors);
+// exit('ok');
 
 		if($err || !empty($this->validate_errors['form']) || !empty($this->validate_errors['file']))
 		{
@@ -421,7 +406,6 @@ class ProcessController extends Controller
 			}
 		}
 
-
 		if($source == 'form')
 		{
 			if(isset($data['shops']))
@@ -439,48 +423,63 @@ class ProcessController extends Controller
 							break;
 						}
 					}
+
 					if(!$exist)
 					{
 						$this->validate_errors[$source][$row_num]['shops'] = 'Указанный магазин не найден "'.$value.'"';
 					}
 				}
-				$data['shops'] = $tmp;
 			}
 			else
 			{
 				$this->validate_errors[$source][$row_num]['shops'] = 'Не указаны магазины для товара';
 			}
 		}
-		else if($source == 'file')
+		elseif($source == 'file')
 		{
+			//	магазины исключения отбрасываем все остальные магазины добавляем
+			$tmp = [];
+			$tmpTitles = [];
+			$tmp_arr = [];
 
-		}
-
-		//проверка магазинов исключений
-		if(isset($data['shops_exception']))
-		{
-			foreach ($data['shops_exception'] as $value)
+			if(isset($data['shops_exception']))
 			{
-				if(trim($value) == '')
+				foreach ($data['shops_exception'] as $value)
 				{
-					continue;
-				}
-
-				$exist = false;
-				foreach ($this->cache_shops as $val)
-				{
-					if(in_array(Shop::prepareShopName($value), $val))
+					$exist = false;
+					foreach ($this->cache_shops as $val)
 					{
-						$exist = true;
-						break;
+						$value = Shop::prepareShopName($value);
+						if(in_array($value, $val))
+						{
+							$tmp_arr[] = $value;
+							$exist = true;
+							break;
+						}
+					}
+					if(!$exist)
+					{
+						$this->validate_errors[$source][$row_num]['shops'] = 'Указанный магазин-исключение не найден "'.$value.'"';
 					}
 				}
+			}
 
-				if(!$exist)
+			if(count($tmp_arr) > 0)
+			{
+				foreach ($this->cache_shops as $val)
 				{
-					$this->validate_errors[$source][$row_num]['shops_exception'] = 'Указанные магазины-исключения не найдены "'.$value.'"';
+					if(in_array($val, $tmp_arr))
+					{
+						continue;
+					}
+
+					$tmp[] = $val['code'];
+					$tmpTitles[] = $val['title'];
 				}
 			}
+
+			$data['shops'] = $tmp;
+			$data['shopsTitles'] = $tmpTitles;
 		}
 
 		if($source == 'form' && isset($data['distr']) && trim($data['distr']) != '')
@@ -505,6 +504,28 @@ class ProcessController extends Controller
 		// 	$this->validate_errors[$source][$row_num]['distr'] = 'Не указан поставщик для товара';
 		// }
 
+		if($source == 'file' && isset($data['distrTitles']) && trim($data['distrTitles']) != '')
+		{
+			$postavshik = DB::connection('sqlsrv_imported_data')->select('
+				SELECT TOP 2 [Наименование], [Код], [ИНН]
+				FROM [Imported_Data].[dbo].[Действующие_Поставщики]
+				WHERE 
+					(
+						[Наименование] LIKE \''.$data['distrTitles'].'\'
+						OR
+						[Код] LIKE \''.$data['distrTitles'].'\'
+					)');
+			$tmp = count($postavshik);
+			if($tmp > 1 || $tmp == 0)
+			{
+				$this->validate_errors[$source][$row_num]['distr'] = 'Не удалось определить поставщика(Дистрибьютора) указан "'.$data['distrTitles'].'"';
+			}
+			else
+			{
+				$data['distr'] = $postavshik[0]->{'Код'};
+			}
+		}
+
 		if(isset($data['kodTov']) && trim($data['kodTov']) != '')
 		{
 			$tmp = DB::connection('sqlsrv_imported_data')->select('select [ArtName], [BrandName], [ArtArticle]
@@ -513,17 +534,18 @@ class ProcessController extends Controller
 			if(!$tmp)
 			{
 				$searched = false;
-				$tmp = DB::connection('sqlsrv_imported_data')->select('select [ArtName], [BrandName], [ArtArticle], [ArtCode]
+				$tmp = DB::connection('sqlsrv_imported_data')->select('SELECT [ArtName], [BrandName], [ArtArticle], [ArtCode]
 					FROM [Imported_Data].[dbo].[Assortment] 
 					WHERE ArtCode LIKE \'%'.$data['kodTov'].'\' ');
 				if($tmp)
 				{
-					foreach ($tmp as $key => $value)
+					foreach($tmp as $key => $value)
 					{
 						$t_ = str_replace($data['kodTov'], '', $value->ArtCode);
                 		if(preg_match('/^[0]+$/', $t_))
 						{
 							$searched = true;
+							$data['tovsTitles'] = $value->ArtName;
 						}
 					}
 
@@ -537,6 +559,10 @@ class ProcessController extends Controller
 					$this->validate_errors[$source][$row_num]['kodTov'] = 'Не найден товар с указанным кодом "'.$data['kodTov'].'"';
 				}
 			}
+			else
+			{
+				$data['tovsTitles'] = $tmp[0]->ArtName;
+			}
 		}
 		else
 		{
@@ -545,7 +571,7 @@ class ProcessController extends Controller
 
 		if(isset($data['tovsTitles']) &&  trim($data['tovsTitles']) != '')
 		{
-			$tmp = DB::connection('sqlsrv_imported_data')->select('select [ArtName], [BrandName], [ArtArticle]
+			$tmp = DB::connection('sqlsrv_imported_data')->select('select [ArtName], [BrandName], [ArtArticle], [ArtCode]
 				FROM [Imported_Data].[dbo].[Assortment]
 				WHERE ArtName = ? ', [$data['tovsTitles']]);
 			if(!$tmp)
@@ -554,6 +580,11 @@ class ProcessController extends Controller
 			}
 			else
 			{
+				if(!isset($data['kodTov']) || trim($data['kodTov']) == '')
+				{
+					$data['kodTov'] = $tmp[0]->{'ArtCode'};
+				}
+
 				// Если данные из файла то должен быть передан параметр $data['brend']. Нужно проверить правильность заполнения бренда
 				// if(isset($data['brend']))
 				// {
@@ -582,7 +613,7 @@ class ProcessController extends Controller
 			}
 			else
 			{
-				$tmp = explode(',', $data['type']);
+				$tmp = explode(';', $data['type']);
 				$data['type'] = [];
 
 				foreach($tmp as $val_)
@@ -746,6 +777,159 @@ class ProcessController extends Controller
 		return true;
 	}
 
+	public function prepareDataFromFile(Request $request)
+	{
+		$returnData = [];
+		$returnData['errors'] = [];
+		$returnData['data'] = [];
+
+		if(Request::hasFile('file'))
+		{
+			$start_date = Request::input('start_date');
+			if(trim($start_date) == '')
+			{
+				//TODO ошибка
+			}
+			$end_date = Request::input('end_date');
+
+			$validator = Validator::make(Request::all(), ['file' => 'mimes:xlsx,xls']);
+			if(!$validator->fails())
+			{
+				$dataToInsert = [];
+				$new_path = public_path().'/upload/processes/'.Auth::id();
+
+				// создаем имя файла. На всякий случай ограничиваем до 10 раз
+				$r = 0;
+				do {
+					$new_name = '/'.Auth::id().'gazeta'.microtime(true).'.'.Request::file('file')->getClientOriginalExtension();
+					$r++;
+				}
+				while (File::exists($new_path.$new_name) && $r <= 10);
+
+				// Компируем файл на постоянное место хранения и сразу читаем файл
+				if(!File::exists($new_path.$new_name))
+				{
+					$move = Request::file('file')->move($new_path, $new_name);
+
+					$excel = PHPExcel_IOFactory::load($move); // подключить Excel-файл
+					$excel->setActiveSheetIndex(0); // получить данные из указанного листа
+					$sheet = $excel->getActiveSheet();
+					$i = 0;
+
+					foreach ($sheet->getRowIterator() as $row_num => $row)
+					{
+						$i++;
+						//	Первые две строки - заголовки, пропускаем.
+						if($i <= 2)
+							continue;
+
+						if(trim($sheet->getCell('F'.$row_num)->getValue()) == '' AND
+							trim($sheet->getCell('G'.$row_num)->getValue()) == '')
+						{
+							continue;
+						}
+
+						$returnData['data'][$row_num] = [];
+						$cellIterator = $row->getCellIterator();
+						$cellIterator->setIterateOnlyExistingCells(false);
+						$dataToInsert[$row_num] = [];
+
+						foreach ($cellIterator as $key => $cell)
+						{
+							switch($key)
+							{
+								case 'A': //Дата начала акции
+									$dataToInsert[$row_num]['start_date'] = $this->parseDateFromExcelToInt($cell);
+									break;
+								case 'B': //Дата окончания акции
+									$dataToInsert[$row_num]['end_date'] = $this->parseDateFromExcelToInt($cell);
+									break;
+								case 'C': //Бренд
+									$dataToInsert[$row_num]['brend'] = $cell->getCalculatedValue();
+									break;
+								case 'D'://Магазины-исключения
+									$v = $cell->getCalculatedValue();
+									$dataToInsert[$row_num]['shops_exception'] = explode(';', $v) ?? null;
+									break;
+								case 'E':  // Дистрибьютор(Плательщик)
+									$dataToInsert[$row_num]['distrTitles'] = $cell->getCalculatedValue();
+									break;
+								case 'F':	//наименование
+									$dataToInsert[$row_num]['tovsTitles'] = $cell->getCalculatedValue();
+									break;
+								case 'G':	//код ДиС
+									$dataToInsert[$row_num]['kodTov'] = $cell->getCalculatedValue();
+									break;
+								case 'H': // Артикул (ШК)
+									$dataToInsert[$row_num]['articule_sk'] = $cell->getCalculatedValue();
+									break;
+								case 'I': //Тип Акции (скидка, механика, подарок)
+									$dataToInsert[$row_num]['type'] = $cell->getCalculatedValue();
+									break;
+								case 'J': // Размер скидки ON INVOICE 
+									$dataToInsert[$row_num]['skidka_on_invoice'] = $cell->getCalculatedValue();
+									break;
+								case 'K': //
+									$dataToInsert[$row_num]['kompensaciya_off_invoice'] = $cell->getCalculatedValue();
+									break;
+								case 'L': //Итого
+									$dataToInsert[$row_num]['skidka_itogo'] = $cell->getCalculatedValue();
+									break;
+								case 'M': //Закупочная цена (руб)
+									$dataToInsert[$row_num]['zakup_old'] = $cell->getCalculatedValue();
+									break;
+								case 'N':
+									$dataToInsert[$row_num]['zakup_new'] = $cell->getCalculatedValue();
+									break;
+								case 'O':  //Период действия акционной цены ON INVOICE
+									$dataToInsert[$row_num]['start_date_on_invoice'] = $this->parseDateFromExcelToInt($cell);
+									break;
+								case 'P':
+									$dataToInsert[$row_num]['end_date_on_invoice'] = $this->parseDateFromExcelToInt($cell);
+									break;
+								case 'Q': //Розничная Цена
+									$dataToInsert[$row_num]['roznica_old'] = $cell->getCalculatedValue();
+									break;
+								case 'R':
+									//TODO дробная часть куда девается
+									$dataToInsert[$row_num]['roznica_new'] = $cell->getCalculatedValue();
+									break;
+								case 'S': 
+									$dataToInsert[$row_num]['descr'] = $cell->getCalculatedValue();
+									break;
+								case 'T': 
+									$dataToInsert[$row_num]['marks'] = $cell->getCalculatedValue();
+									break;
+							}
+						}
+
+						if(!$this->validateData($dataToInsert[$row_num], 'file', $start_date, $end_date, $row_num))
+						{
+							$err = true;
+						}
+					}
+				}
+				else
+				{
+					$returnData['errors'][] = 'Не удалось обработать файл';
+				}
+			}
+			else
+			{
+				$returnData['errors'][] = 'Ошибка загрузки файла';
+			}
+		}
+		else
+		{
+			$returnData['errors'][] = 'Не удалось загрузить файл';
+		}
+
+		$returnData['data'] = $dataToInsert;
+		$returnData['errors'] = array_merge($returnData['errors'], $this->validate_errors['file']);
+
+		echo json_encode($returnData);
+	}
+
 	/**
 	* $start_date - из шапки из формы
 	* $proc_type_dedlain - дедлайн выбранногопроцесса
@@ -834,7 +1018,7 @@ class ProcessController extends Controller
 
 		if($v > 0)
 		{
-			return date('d-m-Y', $v);
+			return date('d-m-Y', intval($v));
 		}
 		else
 		{

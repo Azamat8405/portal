@@ -1,5 +1,4 @@
 var $header = null;
-
 $(function(){
 
 	setTimeout(function(){
@@ -49,13 +48,11 @@ $(function(){
 		});
 	}, 100);
 
-
-	var $viewport = $('.table_data_block');
+	var $viewport = $(window);
 	$viewport.scroll(function(){
 
 		if(!$header)
 			return;
-
 		$header.css({
 			left: ($('#tableTovs').offset().left - $('#offset').offset().left)
 		});
@@ -67,16 +64,6 @@ $(function(){
 		resizeTable();
 		$header.css({
 			left: ($('#tableTovs').offset().left - $('#offset').offset().left)
-		});
-	});
-	$(window).scroll(function(){
-
-		$('#tableHeader').css({
-			top:($(window).scrollTop()*-1)
-		});
-
-		$('#parentTableHeader').css({
-			top:$('#parentTableHeader').offset().top + ( $(window).scrollTop()*-1)
 		});
 	});
 });

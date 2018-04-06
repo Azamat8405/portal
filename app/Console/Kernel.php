@@ -26,10 +26,9 @@ class Kernel extends ConsoleKernel
     {
         $schedule->call(function () {
 
-debug_output('5555555777');
+//          debug_output('5555555777');
 
         })->everyMinute();
-
     }
 
     /**
@@ -46,6 +45,8 @@ debug_output('5555555777');
 }
 
 
+
+
 function debug_output($debug_var, $mode = 'w+', $file = '')
 {
     if(empty($file))
@@ -54,7 +55,7 @@ function debug_output($debug_var, $mode = 'w+', $file = '')
     }
 
     $fp = @fopen($file, $mode);
-    if ($fp)
+    if($fp)
     {
         // получаем значение переменной в виде строки
         if($mode == 'a+')

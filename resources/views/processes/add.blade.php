@@ -4,6 +4,7 @@
 	<style type="text/css">
 		.div_table{
 			display:table;
+			width:620px;
 		}
 		.div_table .left, .div_table .right{
 			display: table-cell;
@@ -14,7 +15,6 @@
 		#contragent_dialog{
 			display:none;
 		}
-
 		input.maskProcent, input.maskPrice, input.maskDate{
 			text-align: center;
 		}
@@ -74,9 +74,9 @@
 						<div class="form-field-input">
 						    <div>
 								@if(Session::has('errors.form.0.process_type'))
-									<label class="error_input">Тип акции <sup>*</sup></label>
+									<label class="error_input">Тип <sup>*</sup></label>
 								@else
-									<label>Тип акции <sup>*</sup></label>
+									<label>Тип <sup>*</sup></label>
 								@endif
 						    </div>
 					    	<div>
@@ -135,13 +135,15 @@
 					</div>
 				</div>
 				<div class="content-panel-inputs">
+					<input type="submit" value="Сохранить акцию">
 					<input type="button" onclick="addEmptyRow();" value="Добавить строку">
 					<input type="button" onclick="delRows();" value="Удалить строки">
-					<input type="submit" value="Сохранить акцию">
+					<input type="button" onclick="showPanel('#fillTablePanel');" value="Заполнить/добавить товары">
+					<input type="button" onclick="showPanel('#importTablePanel');" value="Импорт">
 				</div>
 			</div>
 
-			<div class="content-panel-block">
+			<div class="content-panel-block hideBlock" id="fillTablePanel" style="display:none;">
 				<div class="form-fields-row">
 					<div class="form-field-cell">
 						<div class="form-field-input">
@@ -288,6 +290,29 @@
 					</div>
 				</div>
 			</div>
+			<div class="content-panel-block hideBlock" id="importTablePanel" style="display:none;">
+
+				<div class="form-fields-row">
+					<div class="form-field-cell">
+						<div class="form-field-input">
+				 			<div class="div_table">
+						        <div class="left">
+
+						            <input id="file" type="file" class="" name="file" value="{{ old('file') }}" autofocus accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
+						        </div>
+						        <div class="right">
+						            <label>Загрузите файл в формате xsl/xslx со <a style="text-decoration:underline;" 
+						            	href="/upload/action_upload_form.xlsx">следующей структурой</a>
+						            </label>
+						        </div>
+						    </div>
+						</div>
+						<div class="content-panel-inputs">
+							<input type="submit" id="fillTableFromFile" value="Загрузить">
+						</div>
+					</div>
+				</div>
+			</div>
 
 			@if (Session::has('errors.form'))
 				<div class="error_dialog_messages">
@@ -316,277 +341,284 @@
 			@endif
 		</div>
 
-		<div id="tabs">
-            <ul>
-                <li><a href="#tabs-1">В ручную</a></li>
-                <li><a href="#tabs-2">Из файла</a></li>
-            </ul>
-			<div id="tabs-1">
- 
-				 <div class="table_data_block">
-					<div id="shops_dialog"></div>
-					<div id="tovs_dialog"></div>
-					<div id="contragent_dialog"></div>
+		<div class="content_body">
+			<div class="table_data_block">
+				<div id="shops_dialog"></div>
+				<div id="tovs_dialog"></div>
+				<div id="contragent_dialog"></div>
 
-					<div id="parentTableHeader">
-						<div id="offset"></div>
-						<div id="tableHeader"></div>
-					</div>
-					<table id="tableTovs">
-						<thead>
-							<tr>
-							    <th width="20">
-							    	<input type="checkbox" id="delAll">
-							    </th>
-							    <th>Товар <sup>*</sup></th>
-							    <th>Код товара <sup>*</sup></th>
-							    <th>Магазин <sup>*</sup></th>
-							    <th>Дистрибьютор</th>
-							    <th>Тип акции <sup>*</sup></th>
-								<th>Размер скидки ON INVOICE (%)</th>
-							    <th>Процент компенсации OFF INVOICE (%)</th>
-							    <th>Итого скидка (%) <sup>*</sup></th>
-							    <th>Старая розничная цена (руб)</th>
-							    <th>Новая розничная цена (руб)</th>
-							    <th>Старая закупочная скидка (руб)</th>
-							    <th>Новая закупочная скидка (руб)</th>
-							    <th>Дата начала скидки ON INVOICE</th>
-							    <th>Дата окончания скидки ON INVOICE</th>
-							    <th>Подписи, слоганы, расшифровки и пояснения к товарам в рекламе.</th>
-							    <th>Пометки к товарам: Хит, Новинка, Суперцена, Выгода 0000 рублей...</th>
-							</tr>
-						</thead>
-						</tbody>
+				<div id="parentTableHeader">
+					<div id="offset"></div>
+					<div id="tableHeader"></div>
+				</div>
 
-							@if(old('kodTov'))
-								@foreach(old('kodTov') as $k => $v)
-									<tr>
-										<td>
-											<input type="checkbox" class="deleteRow">
-										</td>
-										<td>
-											@if(Session::has('errors.form.'.$k.'.tovsTitles'))
-												<div class="error_message">{{Session::get('errors.form.'.$k.'.tovsTitles')}}</div>
-											@endif
+				<table id="tableTovs">
+					<thead>
+						<tr>
+						    <th width="20">
+						    	<input type="checkbox" id="delAll">
+						    </th>
+						    <th>Товар <sup>*</sup></th>
+						    <th>Код товара <sup>*</sup></th>
+						    <th>Магазин <sup>*</sup></th>
+						    <th>Дистрибьютор</th>
+						    <th>Тип акции <sup>*</sup></th>
+							<th>Размер скидки ON INVOICE (%)</th>
+						    <th>Процент компенсации OFF INVOICE (%)</th>
+						    <th>Итого скидка (%) <sup>*</sup></th>
+						    <th>Старая розничная цена (руб)</th>
+						    <th>Новая розничная цена (руб)</th>
+						    <th>Старая закупочная скидка (руб)</th>
+						    <th>Новая закупочная скидка (руб)</th>
+						    <th>Дата начала скидки ON INVOICE</th>
+						    <th>Дата окончания скидки ON INVOICE</th>
+						    <th>Подписи, слоганы, расшифровки и пояснения к товарам в рекламе.</th>
+						    <th>Пометки к товарам: Хит, Новинка, Суперцена, Выгода 0000 рублей...</th>
+						</tr>
+					</thead>
+					</tbody>
 
-											<input type="hidden" value="{{old('tovsTitles.'.$k)}}" class="chTitle"/>
-											<input type="text" value="{{old('tovsTitles.'.$k)}}" name="tovsTitles[]" class="tovsTitles"  style="width:255px;" />
-											<input type="hidden" class="row_number" value="{{$k}}">
-										</td>
-										<td>
-											@if(Session::has('errors.form.'.$k.'.kodTov'))
-												<div class="error_message">{{Session::get('errors.form.'.$k.'.kodTov')}}</div>
-											@endif
-											<input type="hidden" value="{{old('kodTov.'.$k)}}" class="chKod"/>
-											<input type="text" name="kodTov[]" value="{{old('kodTov.'.$k)}}" class="kodTov"/>
-										</td>
-										<td>
-											@if(Session::has('errors.form.'.$k.'.shops'))
-												<div class="error_message">{{Session::get('errors.form.'.$k.'.shops')}}</div>
-											@endif
-					   						<div class="field_input_file">
+						@php
+							$tovList = [];
+							if(old('kodTov'))
+							{
+								foreach(old('kodTov') as $k => $v)
+								{
+									$tovList[$k]['kodTov'] 					= $v;
+									$tovList[$k]['tovsTitles'] 				= old('tovsTitles.'.$k);
+									$tovList[$k]['shops'] 					= old('shops.'.$k);
+									$tovList[$k]['shopsTitles'] 			= old('shopsTitles.'.$k);
+									$tovList[$k]['distr'] 					= old('distr.'.$k);
+									$tovList[$k]['distrTitles'] 			= old('distrTitles.'.$k);
+									$tovList[$k]['type'] 					= old('type.'.$k);
+									$tovList[$k]['skidka_on_invoice'] 		= old('skidka_on_invoice.'.$k);
+									$tovList[$k]['kompensaciya_off_invoice']= old('kompensaciya_off_invoice.'.$k);
+									$tovList[$k]['skidka_itogo'] 			= old('skidka_itogo.'.$k);
+									$tovList[$k]['roznica_old'] 			= old('roznica_old.'.$k);
+									$tovList[$k]['roznica_new'] 			= old('roznica_new.'.$k);
+									$tovList[$k]['zakup_old'] 				= old('zakup_old.'.$k);
+									$tovList[$k]['zakup_new'] 				= old('zakup_new.'.$k);
+									$tovList[$k]['start_date_on_invoice'] 	= old('start_date_on_invoice.'.$k);
+									$tovList[$k]['end_date_on_invoice'] 	= old('end_date_on_invoice.'.$k);
+									$tovList[$k]['descr'] 					= old('descr.'.$k);
+									$tovList[$k]['marks'] 					= old('marks.'.$k);
+								}
+							}
+						@endphp
 
-												<input type="hidden" value="{{old('shopsTitles.'.$k)}}" class="chShop"/>
-												<input type="text" name="shopsTitles[]" value="{{old('shopsTitles.'.$k)}}" class="shopsTitles"/>
-
-												<input type="hidden" name="shops[]" value="{{old('shops.'.$k)}}" class="shops"/>
-												<div class="file" data-type="getShopsErarhi">...</div>
-											</div>
-										</td>
-										<td>
-											@if(Session::has('errors.form.'.$k.'.distr'))
-												<div class="error_message">{{Session::get('errors.form.'.$k.'.distr')}}</div>
-											@endif
-					   						<div class="field_input_file">
-												<input type="hidden" class="chDistr" value=""/>
-												<input type="text" name="distrTitles[]" class="distrTitles" value="{{old('distrTitles.'.$k)}}" />
-												<input type="hidden" name="distr[]" class="distr" value="{{old('distr.'.$k)}}"/>
-												<div class="file" data-type="getContagentsErarhi">...</div>
-											</div>
-										</td>
-										<td>
-											@if(Session::has('errors.form.'.$k.'.type'))
-												<div class="error_message">{{Session::get('errors.form.'.$k.'.type')}}</div>
-											@endif
-
-											<select name="types[]" class="select" style="border:1px solid red;">
-												<option value="0"> Не выбрано </option>
-												@foreach ($action_types as $type)
-
-													@if(old('types.'.$k) == $type->id)
-														<option data-descr="{{$type->description}}" value="{{$type->id}}" selected="selected">{{$type->title}}</option>
-													@else
-														<option data-descr="{{$type->description}}" value="{{$type->id}}">{{$type->title}}</option>
-													@endif
-												@endforeach
-											</select>
-										</td>
-										<td>
-											@if(Session::has('errors.form.'.$k.'.skidka_on_invoice'))
-												<div class="error_message">{{Session::get('errors.form.'.$k.'.skidka_on_invoice')}}</div>
-											@endif
-											<input type="text" autocomplete="off" value="{{old('skidka_on_invoice.'.$k)}}"
-												class="maskProcent on_invoice" name="skidka_on_invoice[]">
-										</td>
-										<td>
-											@if(Session::has('errors.form.'.$k.'.kompensaciya_off_invoice'))
-												<div class="error_message">{{Session::get('errors.form.'.$k.'.kompensaciya_off_invoice')}}</div>
-											@endif
-											<input type="text" autocomplete="off" value="{{old('kompensaciya_off_invoice.'.$k)}}"
-												class="maskProcent off_invoice" name="kompensaciya_off_invoice[]">
-										</td>
-										<td>
-											@if(Session::has('errors.form.'.$k.'.skidka_itogo'))
-												<div class="error_message">{{Session::get('errors.form.'.$k.'.skidka_itogo')}}</div>
-											@endif
-											<input type="text" autocomplete="off" value="{{old('skidka_itogo.'.$k)}}"
-												class="maskProcent skidka_itogo" name="skidka_itogo[]">
-										</td>
-										<td>
-											@if(Session::has('errors.form.'.$k.'.roznica_old'))
-												<div class="error_message">{{Session::get('errors.form.'.$k.'.roznica_old')}}</div>
-											@endif
-											<input type="text" class="maskPrice roznica_old" autocomplete="off" value="{{old('roznica_old.'.$k)}}"
-												name="roznica_old[]">
-										</td>
-										<td>
-											@if(Session::has('errors.form.'.$k.'.roznica_new'))
-												<div class="error_message">{{Session::get('errors.form.'.$k.'.roznica_new')}}</div>
-											@endif
-											<input type="text" class="maskPrice roznica_new" autocomplete="off" value="{{old('roznica_new.'.$k)}}"
-												name="roznica_new[]">
-										</td>
-										<td>
-											@if(Session::has('errors.form.'.$k.'.zakup_old'))
-												<div class="error_message">{{Session::get('errors.form.'.$k.'.zakup_old')}}</div>
-											@endif
-											<input type="text" autocomplete="off" value="{{old('zakup_old.'.$k)}}"
-												class="maskPrice" name="zakup_old[]">
-										</td>
-										<td>
-											@if(Session::has('errors.form.'.$k.'.zakup_new'))
-												<div class="error_message">{{Session::get('errors.form.'.$k.'.zakup_new')}}</div>
-											@endif
-											<input type="text" autocomplete="off" value="{{old('zakup_new.'.$k)}}"
-												class="maskPrice" name="zakup_new[]">
-										</td>
-										<td>
-											@if(Session::has('errors.form.'.$k.'.start_date_on_invoice'))
-												<div class="error_message">{{Session::get('errors.form.'.$k.'.start_date_on_invoice')}}</div>
-											@endif
-											<input class="start_on_invoice_date maskDate" autocomplete="off" value="{{old('start_date_on_invoice.'.$k)}}"
-												name="start_date_on_invoice[]">
-										</td>
-										<td>
-											@if(Session::has('errors.form.'.$k.'.end_date_on_invoice'))
-												<div class="error_message">{{Session::get('errors.form.'.$k.'.end_date_on_invoice')}}</div>
-											@endif
-											<input type="text" class="end_on_invoice_date maskDate" autocomplete="off" value="{{old('end_date_on_invoice.'.$k)}}"
-												name="end_date_on_invoice[]">
-										</td>
-
-										<td>
-											<textarea name="descr[]">{{old('descr.'.$k)}}</textarea>
-										</td>
-										<td>
-											<textarea name="marks[]">{{old('marks.'.$k)}}</textarea>
-										</td>
-									</tr>
-
-								@endforeach
-							@else
+						@if(count($tovList) > 0)
+							@foreach($tovList as $k => $v)
 								<tr>
 									<td>
+
 										<input type="checkbox" class="deleteRow">
 									</td>
 									<td>
-										<input type="hidden" value="" class="chTitle"/>
-										<input type="text" name="tovsTitles[]" style="width:255px;" class="tovsTitles"/>
-										<input type="hidden" class="row_number" value="0">
+										@if(Session::has('errors.form.'.$k.'.tovsTitles'))
+											<div class="error_message">{{Session::get('errors.form.'.$k.'.tovsTitles')}}</div>
+										@endif
+										<input type="hidden" value="{{$v['tovsTitles']}}" class="chTitle"/>
+										<input type="text" value="{{$v['tovsTitles']}}" name="tovsTitles[]" class="tovsTitles" 
+											style="width:255px;" />
+										<input type="hidden" class="row_number" value="{{$k}}">
 									</td>
 									<td>
-										<input type="hidden" value="" class="chKod"/>
-										<input type="text" name="kodTov[]" value="" class="kodTov"/>
+										@if(Session::has('errors.form.'.$k.'.kodTov'))
+											<div class="error_message">{{Session::get('errors.form.'.$k.'.kodTov')}}</div>
+										@endif
+
+										<input type="hidden" value="{{$v['kodTov']}}" class="chKod"/>
+										<input type="text" name="kodTov[]" value="{{$v['kodTov']}}" class="kodTov"/>
 									</td>
 									<td>
+										@if(Session::has('errors.form.'.$k.'.shops'))
+											<div class="error_message">{{Session::get('errors.form.'.$k.'.shops')}}</div>
+										@endif
 				   						<div class="field_input_file">
-											<input type="hidden" value="" class="chShop"/>
-											<input type="text" name="shopsTitles[]" value="" class="shopsTitles"/>
-											<input type="hidden" name="shops[]" value="" class="shops"/>
+																					
+											<input type="hidden" value="{{$v['shopsTitles']}}" class="chShop"/>
+											<input type="text" name="shopsTitles[]" value="{{$v['shopsTitles']}}" class="shopsTitles"/>
+
+											<input type="hidden" name="shops[]" value="{{$v['shops']}}" class="shops"/>
 											<div class="file" data-type="getShopsErarhi">...</div>
 										</div>
 									</td>
 									<td>
+										@if(Session::has('errors.form.'.$k.'.distr'))
+											<div class="error_message">{{Session::get('errors.form.'.$k.'.distr')}}</div>
+										@endif
 				   						<div class="field_input_file">
 											<input type="hidden" class="chDistr" value=""/>
-											<input type="text" name="distrTitles[]" class="distrTitles" value=""/>
-											<input type="hidden" name="distr[]" class="distr" value=""/>
+
+											<input type="text" name="distrTitles[]" class="distrTitles" value="{{$v['distrTitles']}}" />
+											<input type="hidden" name="distr[]" class="distr" value="{{$v['distr']}}"/>
 											<div class="file" data-type="getContagentsErarhi">...</div>
 										</div>
 									</td>
 									<td>
-										<select name="types[]" class="select">
+										@if(Session::has('errors.form.'.$k.'.type'))
+											<div class="error_message">{{Session::get('errors.form.'.$k.'.type')}}</div>
+										@endif
+
+										<select name="type[]" class="select" style="border:1px solid red;">
 											<option value="0"> Не выбрано </option>
 											@foreach ($action_types as $type)
-												<option data-descr="{{$type->description}}" value="{{$type->id}}">{{$type->title}}</option>
+
+												@if($v['type'] == $type->id)
+													<option data-descr="{{$type->description}}" value="{{$type->id}}" selected="selected">{{$type->title}}</option>
+												@else
+													<option data-descr="{{$type->description}}" value="{{$type->id}}">{{$type->title}}</option>
+												@endif
 											@endforeach
 										</select>
 									</td>
 									<td>
-										<input type="text" autocomplete="off" class="maskProcent on_invoice" name="skidka_on_invoice[]">
+										@if(Session::has('errors.form.'.$k.'.skidka_on_invoice'))
+											<div class="error_message">{{Session::get('errors.form.'.$k.'.skidka_on_invoice')}}</div>
+										@endif
+										<input type="text" autocomplete="off" value="{{$v['skidka_on_invoice']}}"
+											class="maskProcent on_invoice" name="skidka_on_invoice[]">
 									</td>
 									<td>
-										<input type="text" autocomplete="off" class="maskProcent off_invoice" name="kompensaciya_off_invoice[]">
+										@if(Session::has('errors.form.'.$k.'.kompensaciya_off_invoice'))
+											<div class="error_message">{{Session::get('errors.form.'.$k.'.kompensaciya_off_invoice')}}</div>
+										@endif
+										<input type="text" autocomplete="off" value="{{$v['kompensaciya_off_invoice']}}"
+											class="maskProcent off_invoice" name="kompensaciya_off_invoice[]">
 									</td>
 									<td>
-										<input type="text" autocomplete="off" class="maskProcent skidka_itogo" name="skidka_itogo[]">
+										@if(Session::has('errors.form.'.$k.'.skidka_itogo'))
+											<div class="error_message">{{Session::get('errors.form.'.$k.'.skidka_itogo')}}</div>
+										@endif
+										<input type="text" autocomplete="off" value="{{$v['skidka_itogo']}}"
+											class="maskProcent skidka_itogo" name="skidka_itogo[]">
 									</td>
 									<td>
-										<input type="text" class="maskPrice roznica_old" autocomplete="off" name="roznica_old[]">
+										@if(Session::has('errors.form.'.$k.'.roznica_old'))
+											<div class="error_message">{{Session::get('errors.form.'.$k.'.roznica_old')}}</div>
+										@endif
+										<input type="text" class="maskPrice roznica_old" autocomplete="off" value="{{$v['roznica_old']}}"
+											name="roznica_old[]">
 									</td>
 									<td>
-										<input type="text" class="maskPrice roznica_new" autocomplete="off" name="roznica_new[]">
+										@if(Session::has('errors.form.'.$k.'.roznica_new'))
+											<div class="error_message">{{Session::get('errors.form.'.$k.'.roznica_new')}}</div>
+										@endif
+										<input type="text" class="maskPrice roznica_new" autocomplete="off" value="{{$v['roznica_new']}}"
+											name="roznica_new[]">
 									</td>
 									<td>
-										<input type="text" autocomplete="off" class="maskPrice" name="zakup_old[]">
+										@if(Session::has('errors.form.'.$k.'.zakup_old'))
+											<div class="error_message">{{Session::get('errors.form.'.$k.'.zakup_old')}}</div>
+										@endif
+										<input type="text" autocomplete="off" value="{{$v['zakup_old']}}" class="maskPrice zakup_old" name="zakup_old[]">
 									</td>
 									<td>
-										<input type="text" autocomplete="off" class="maskPrice" name="zakup_new[]">
+										@if(Session::has('errors.form.'.$k.'.zakup_new'))
+											<div class="error_message">{{Session::get('errors.form.'.$k.'.zakup_new')}}</div>
+										@endif
+										<input type="text" autocomplete="off" value="{{$v['zakup_new']}}" class="maskPrice zakup_new" name="zakup_new[]">
 									</td>
 									<td>
-										<input type="text" class="start_on_invoice_date maskDate" autocomplete="off" name="start_date_on_invoice[]">
+										@if(Session::has('errors.form.'.$k.'.start_date_on_invoice'))
+											<div class="error_message">{{Session::get('errors.form.'.$k.'.start_date_on_invoice')}}</div>
+										@endif
+										<input class="start_on_invoice_date maskDate" autocomplete="off" value="{{$v['start_date_on_invoice']}}"
+											name="start_date_on_invoice[]">
 									</td>
 									<td>
-										<input type="text" class="end_on_invoice_date maskDate" autocomplete="off" name="end_date_on_invoice[]">
+										@if(Session::has('errors.form.'.$k.'.end_date_on_invoice'))
+											<div class="error_message">{{Session::get('errors.form.'.$k.'.end_date_on_invoice')}}</div>
+										@endif
+										<input type="text" class="end_on_invoice_date maskDate" autocomplete="off" value="{{$v['end_date_on_invoice']}}"
+											name="end_date_on_invoice[]">
 									</td>
 									<td>
-										<textarea name="descr[]"></textarea>
+										<textarea name="descr[]" class="descr">{{$v['descr']}}</textarea>
 									</td>
 									<td>
-										<textarea name="marks[]"></textarea>
+										<textarea name="marks[]" class="marks">{{$v['marks']}}</textarea>
 									</td>
 								</tr>
-							@endif
+							@endforeach
+						@else
 
+							<tr>
+								<td>
+									<input type="checkbox" class="deleteRow">
+								</td>
+								<td>
+									<input type="hidden" value="" class="chTitle"/>
+									<input type="text" name="tovsTitles[]" style="width:255px;" class="tovsTitles"/>
+									<input type="hidden" class="row_number" value="0">
+								</td>
+								<td>
+									<input type="hidden" value="" class="chKod"/>
+									<input type="text" name="kodTov[]" value="" class="kodTov"/>
+								</td>
+								<td>
+			   						<div class="field_input_file">
+										<input type="hidden" value="" class="chShop"/>
+										<input type="text" name="shopsTitles[]" value="" class="shopsTitles"/>
+										<input type="hidden" name="shops[]" value="" class="shops"/>
+										<div class="file" data-type="getShopsErarhi">...</div>
+									</div>
+								</td>
+								<td>
+			   						<div class="field_input_file">
+										<input type="hidden" class="chDistr" value=""/>
+										<input type="text" name="distrTitles[]" class="distrTitles" value=""/>
+										<input type="hidden" name="distr[]" class="distr" value=""/>
+										<div class="file" data-type="getContagentsErarhi">...</div>
+									</div>
+								</td>
+								<td>
+									<select name="type[]" class="select">
+										<option value="0"> Не выбрано </option>
+										@foreach ($action_types as $type)
+											<option data-descr="{{$type->description}}" value="{{$type->id}}">{{$type->title}}</option>
+										@endforeach
+									</select>
+								</td>
+								<td>
+									<input type="text" autocomplete="off" class="maskProcent on_invoice" name="skidka_on_invoice[]">
+								</td>
+								<td>
+									<input type="text" autocomplete="off" class="maskProcent off_invoice" name="kompensaciya_off_invoice[]">
+								</td>
+								<td>
+									<input type="text" autocomplete="off" class="maskProcent skidka_itogo" name="skidka_itogo[]">
+								</td>
+								<td>
+									<input type="text" class="maskPrice roznica_old" autocomplete="off" name="roznica_old[]">
+								</td>
+								<td>
+									<input type="text" class="maskPrice roznica_new" autocomplete="off" name="roznica_new[]">
+								</td>
+								<td>
+									<input type="text" autocomplete="off" class="maskPrice zakup_old" name="zakup_old[]">
+								</td>
+								<td>
+									<input type="text" autocomplete="off" class="maskPrice zakup_new" name="zakup_new[]">
+								</td>
+								<td>
+									<input type="text" class="start_on_invoice_date maskDate" autocomplete="off" name="start_date_on_invoice[]">
+								</td>
+								<td>
+									<input type="text" class="end_on_invoice_date maskDate" autocomplete="off" name="end_date_on_invoice[]">
+								</td>
+								<td>
+									<textarea name="descr[]"></textarea>
+								</td>
+								<td>
+									<textarea name="marks[]"></textarea>
+								</td>
+							</tr>
+						@endif
 
-						</tbody>
-					</table>
-				</div>
-            </div>
-            <div id="tabs-2">
-				<div class="form-field-input">
-		 			<div class="div_table">
-				        <div class="left">
-				            <input id="file" type="file" class="" name="file" value="{{ old('file') }}" autofocus accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
-				        </div>
-				        <div class="right">
-				            <label>Загрузите файл в формате xsl/xslx со <a style="text-decoration:underline;" 
-				            	href="/upload/action_upload_form.xlsx">следующей структурой</a>
-				            </label>
-				        </div>
-				    </div>
-				</div>
-            </div>
+					</tbody>
+				</table>
+			</div>
 		</div>
 	</form>
 @endsection

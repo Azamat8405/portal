@@ -58,11 +58,11 @@
 
 		<div id="tabs">
             <ul>
-                <li><a href="#tabs-1">В ручную</a></li>
+                <li><a href="#tabs-1">Вручную</a></li>
                 <li><a href="#tabs-2">Из файла</a></li>
             </ul>
-			<div id="tabs-1">
 
+			<div id="tabs-1">
 				<div class="table_data_block">
 					<div id="parentTableHeader">
 						<div id="offset"></div>

@@ -76,7 +76,7 @@ a{
 
 h1, h2, h3{
 font-weight:bold;
-margin: 10px 5px;
+margin:5px;
 font-size: 1.1em;
 }
 
@@ -127,11 +127,12 @@ form.reg_form .form-field-submit{
 
 nav{
 	float:left;
-	width:15%;
+	width:10%;
 	background: #f7f2dc;
 	position: fixed;
 	top:35px;
     left: 0;
+    overflow: hidden;
 	z-index:1000;
 }
 nav ul li
@@ -170,23 +171,22 @@ nav .handrail{
 }
 nav .handrail > div{
 position: absolute;
-right: -9px;
-width: 9px;
-height: 500px;
-top: 0;
-background: #fff;
+right:0;
+width:10px;
+height:500px;
+top:0;
+background:#fff;
 }
 nav .handrail > div:hover{
 background: #d8d1bc;
-cursor:pointer;
+cursor:e-resize;
 }
-
 section.content
 {
-	width:85%;
+	width:90%;
 	box-sizing:border-box;
-	padding:10px;
-    margin: 21px 0 0 15%;
+	padding:2px;
+    margin: 21px 0 0 10%;
 }
 section.header{
 	height:35px;
@@ -319,8 +319,6 @@ padding:0;
 font-size:80%;
 margin-top:0;
 min-height:150px;
-overflow-x:auto;
-overflow-y:auto;
 }
 .table_data_block td, .table_data_block th{
 border:1px solid #ccc;
@@ -338,11 +336,13 @@ min-width:10px;
 .table_data_block input[type=text]{
 width: 95%;
 }
-
 #tableTovs{
 min-width:100%;
 }
 #tableTovs div.field_input_file,
 #tableTovs div.field_input_file input{
 width:255px;
+}
+.content_body{
+margin-top:155px;
 }

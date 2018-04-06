@@ -47,7 +47,6 @@ $(function(){
 	$('#tabs').tabs();
 	$('body').on('mouseover', '.select2-results__options li', function(){
 
-
 		tmp = $(this).attr('id').split('-');
 		index = parseInt(tmp.length)-1;
 
@@ -434,6 +433,57 @@ $(function(){
 		}
 	});
 
+	$('#fillTableFromFile').click(function(e){
+		e.preventDefault();
+
+		var formData = new FormData();
+		jQuery.each($('input[type=file]')[0].files, function(i, file) {
+			formData.append('file', file);
+		});
+		formData.append('start_date', $('#start_date').val());
+		formData.append('end_date', $('#end_date').val());
+
+		//	отправляем через ajax
+		$.ajaxSetup({
+			headers: {
+				'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+			}
+		});
+		$.ajax({
+			url:"/processes/prepareDataFromFile",
+			type:"post",
+			dataType:"json",
+			cache:false,
+			contentType:false,
+			processData:false,
+			data:formData,//указываем что отправляем
+			success:function(data)
+			{
+				for(ind in data['data'])
+				{
+					addRow(data['data'][ind]);
+				}
+				delRows(true);
+				events();
+				$(window).trigger('resize');
+
+				if(data['errors'])
+				{
+					var str = '';
+					for(ind in data['errors'])
+					{
+						for(index in data['errors'][ind])
+						{
+							str += data['errors'][ind][index] + '<br>';
+						}
+					}
+					showMessage('error', false, str);
+				}
+				$('.hideBlock').hide();
+			}
+		});
+	});
+
 	$('#fillTable').click(function(){
 		var err = false;
 		var arr = {};
@@ -511,8 +561,18 @@ $(function(){
 
 		if(!err)
 			getTovsToFillTable(arr, 0);
+
+		$('.hideBlock').hide();
 	});
 });
+
+function showPanel(selector)
+{
+	$('.hideBlock').not(selector).hide();
+	$(selector).toggle();
+}
+
+
 
 function getTovsToFillTable(arr, page)
 {
@@ -539,7 +599,11 @@ function getTovsToFillTable(arr, page)
 			{
 				if($('.kodTov[value='+data.items[ind].c+']').length == 0)
 				{
-					addRow(data.items[ind], data.shop);
+					dataToFill = [];
+					dataToFill['itemsToFill'] = data.items[ind];
+					dataToFill['shopsToFill'] = data.shop;
+
+					addRow(dataToFill);
 				}
 			}
 
@@ -621,7 +685,7 @@ function addEmptyRow()
 	$(window).trigger('resize');
 }
 
-function addRow(itemsToFill, shopsToFill, tr)
+function addRow(dataToFill, tr)
 {
 	$('.select').each(function(){
 		if($(this).hasClass("select2-hidden-accessible"))
@@ -656,26 +720,131 @@ function addRow(itemsToFill, shopsToFill, tr)
 	tr.find('.start_on_invoice_date, .end_on_invoice_date ').removeAttr('id');
 	tr.find('input.row_number').val(newRowNumber);
 
-	if(itemsToFill)
-	{
-		tr.find('input.kodTov').val(itemsToFill['c']);
-		tr.find('input.chKod').val(itemsToFill['c']);
 
-		tr.find('input.tovsTitles').val( itemsToFill['n'] );
-		tr.find('.chTitle').val( itemsToFill['n'] );
+
+
+
+
+	if(dataToFill['itemsToFill'])
+	{
+		tr.find('input.kodTov').val(dataToFill['itemsToFill']['c']);
+		tr.find('input.chKod').val(dataToFill['itemsToFill']['c']);
+		tr.find('input.tovsTitles').val( dataToFill['itemsToFill']['n'] );
+		tr.find('.chTitle').val( dataToFill['itemsToFill']['n'] );
 	}
-	if(shopsToFill)
+	if(dataToFill['shopsToFill'])
 	{
 		var ids = [], ttls = [];
-		for(ind in shopsToFill)
+		for(ind in dataToFill['shopsToFill'])
 		{
-			ids.push(shopsToFill[ind].id);
-			ttls.push(shopsToFill[ind].title);
+			ids.push(dataToFill['shopsToFill'][ind].id);
+			ttls.push(dataToFill['shopsToFill'][ind].title);
 		}
 
 		tr.find('input.shops').val( ids.join() );
-		tr.find('input.shopsTitles').val( ttls.join(';  ') );
-		tr.find('input.chShop').val( ttls.join(';  ') );
+		tr.find('input.shopsTitles').val( ttls.join(';') );
+		tr.find('input.chShop').val( ttls.join(';') );
+	}
+
+
+
+
+
+	if(dataToFill['shops'])
+	{
+		var ids = [];
+		for(ind in dataToFill['shops'])
+		{
+			ids.push(dataToFill['shops'][ind]);
+		}
+		tr.find('input.shops').val( ids.join(';') );
+	}
+
+	if(dataToFill['shopsTitles'])
+	{
+		var ttls = [];
+		for(ind in dataToFill['shopsTitles'])
+		{
+			ttls.push(dataToFill['shopsTitles'][ind]);
+		}
+		tmp = ttls.join(';  ')
+		tr.find('input.shopsTitles').val( tmp );
+		tr.find('input.chShop').val( tmp );
+	}
+
+	if(dataToFill['kodTov'])
+	{
+		tr.find('input.kodTov').val( dataToFill['kodTov']);
+		tr.find('input.chKod').val(dataToFill['kodTov']);
+	}
+
+	if(dataToFill['tovsTitles'])
+	{
+		tr.find('input.tovsTitles').val( dataToFill['tovsTitles'] );
+		tr.find('input.chTitle').val( dataToFill['tovsTitles'] );
+	}
+
+	if(dataToFill['distrTitles'])
+	{
+		tr.find('input.distrTitles').val( dataToFill['distrTitles'] );
+		tr.find('input.distr').val( dataToFill['distr'] );
+		tr.find('input.chDistr').val( dataToFill['distrTitles'] );
+	}
+	if(dataToFill['skidka_on_invoice'])
+	{
+		tr.find('input.on_invoice').val( dataToFill['skidka_on_invoice'] );
+	}
+	if(dataToFill['kompensaciya_off_invoice'])
+	{
+		tr.find('input.off_invoice').val( dataToFill['kompensaciya_off_invoice'] );
+	}
+	if(dataToFill['skidka_itogo'])
+	{
+		tr.find('input.skidka_itogo').val( dataToFill['skidka_itogo'] );
+	}
+	if(dataToFill['roznica_old'])
+	{
+		tr.find('input.roznica_old').val( dataToFill['roznica_old'] );
+	}
+	if(dataToFill['roznica_new'])
+	{
+		tr.find('input.roznica_new').val( dataToFill['roznica_new'] );
+	}
+	if(dataToFill['zakup_old'])
+	{
+		tr.find('input.zakup_old').val( dataToFill['zakup_old'] );
+	}
+	if(dataToFill['zakup_new'])
+	{
+		tr.find('input.zakup_new').val( dataToFill['zakup_new'] );
+	}
+	if(dataToFill['start_date_on_invoice'])
+	{
+		tr.find('input.start_on_invoice_date').val( dataToFill['start_date_on_invoice'] );
+	}
+	if(dataToFill['end_date_on_invoice'])
+	{
+		tr.find('input.end_on_invoice_date').val( dataToFill['end_date_on_invoice'] );
+	}
+	if(dataToFill['start_date_on_invoice'])
+	{
+		tr.find('input.start_on_invoice_date').val( dataToFill['start_date_on_invoice'] );
+	}
+	if(dataToFill['end_date_on_invoice'])
+	{
+		tr.find('input.end_on_invoice_date').val( dataToFill['end_date_on_invoice'] );
+	}
+	if(dataToFill['descr'])
+	{
+		tr.find('.descr').val( dataToFill['descr'] );
+	}
+	if(dataToFill['marks'])
+	{
+		tr.find('.marks').val( dataToFill['marks'] );
+	}
+	if(dataToFill['type'])
+	{
+		tr.find('.select').val(dataToFill['type'][0]).trigger("change");
 	}
 
 	$('.table_data_block table tbody').append(tr);
@@ -717,7 +886,7 @@ function delRows(allEmpty)
 
 				if(addEmptyTr)
 				{
-					addRow(false, false, addEmptyTr);
+					addRow(false, addEmptyTr);
 
 					events();
 					$(window).trigger('resize');
@@ -767,7 +936,6 @@ function events()
 		let copied = $('.distr:eq(' + copied_shops_index + ')').val();
 		$('.distr:eq(' + getRowNumber(this) + ')').val(copied);
 	});
-
 
 	$('.field_input_file > .file, .field_input_file > .shopsTitles, .field_input_file > .distrTitles').off("mouseenter mouseleave");
 	$('.field_input_file > .file, .field_input_file > .shopsTitles, .field_input_file > .distrTitles').hover(function(e){
