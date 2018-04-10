@@ -54,11 +54,26 @@ $(function(){
 	});
 	$(document).click(function(e) {
 
-		if ($(event.target).closest('ul.auth').length)
-			return;
+		var ret = false;
+		if (!$(event.target).closest('ul.auth').length && $('ul.auth ul').is(':visible'))
+		{
+			$('ul.auth ul').hide();
+			e.stopPropagation();
+			ret = true;
+		}
 
-		$('ul.auth ul').hide();
-		e.stopPropagation();
+		if (!$(event.target).closest('.hideBlock').length &&
+			!$(event.target).closest('.content-panel-inputs').length &&
+			!$(event.target).closest('.ui-dialog').length &&
+			$('.hideBlock').is(':visible'))
+		{
+			$('.hideBlock').hide();
+			e.stopPropagation();
+			ret = true;
+		}
+
+		if(ret)
+			return;
 	});
 
 	$('ul.auth > li').click(function(e){

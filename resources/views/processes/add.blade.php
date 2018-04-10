@@ -63,7 +63,6 @@
 			margin-top:335px;
 		}
 	</style>
-
 	<form class="addProcessForm" action="{{ route('processes.add') }}" method="post" enctype="multipart/form-data">
 		@csrf
 		<div class="content-panel">
@@ -95,6 +94,7 @@
 						    </div>
 						</div>
 					</div>
+
 					<div class="form-field-cell">
 					    <div class="form-field-input">
 					        <div>
@@ -102,9 +102,10 @@
 					        </div>
 					        <div>
 					            <input name="process_title" type="text" value="{{ old('process_title') }}">
-					        </div>
+							</div>
 						</div>
 					</div>
+
 					<div class="form-field-cell">
 					    <div class="form-field-input">
 					        <div>

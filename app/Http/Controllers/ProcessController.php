@@ -165,7 +165,6 @@ class ProcessController extends Controller
 						$cellIterator->setIterateOnlyExistingCells(false);
 
 						$dataToInsert[$row_num] = [];
-
 						foreach ($cellIterator as $key => $cell)
 						{
 							switch($key)
@@ -181,7 +180,14 @@ class ProcessController extends Controller
 									break;
 								case 'D'://Магазины-исключения
 									$v = $cell->getCalculatedValue();
-									$dataToInsert[$row_num]['shops_exception'] = explode(';', $v) ?? null;
+									if(trim($v) != '')
+									{
+										$dataToInsert[$row_num]['shops_exception'] = explode(';', $v) ?? null;
+									}
+									else
+									{
+										$dataToInsert[$row_num]['shops_exception'] = [];
+									}
 									break;
 								case 'E':  // Дистрибьютор(Плательщик)
 									$dataToInsert[$row_num]['distr'] = $cell->getCalculatedValue();
@@ -390,12 +396,12 @@ class ProcessController extends Controller
 		{
 			$this->validate_errors[$source] = [];
 		}
-
 		// Проверяем список магазинов,
 		// Кешируем список магазинов ($this->cache_shops), чтоб каждый раз за ними не ходить.
 		if(empty($this->cache_shops))
 		{
-			$tmp = Shop::all();
+
+			$tmp = Shop::orderBy('title')->get();
 			foreach ($tmp as $key => $value)
 			{
 				$value->title = Shop::prepareShopName($value->title);
@@ -444,6 +450,7 @@ class ProcessController extends Controller
 
 			if(isset($data['shops_exception']))
 			{
+				//смотрим есть ли такие магазины вообще?
 				foreach ($data['shops_exception'] as $value)
 				{
 					$exist = false;
@@ -464,20 +471,20 @@ class ProcessController extends Controller
 				}
 			}
 
-			if(count($tmp_arr) > 0)
+			$c_tmp = count($tmp_arr);
+			// убираем магазины-исключения из списка
+			foreach ($this->cache_shops as $val)
 			{
-				foreach ($this->cache_shops as $val)
+				if($c_tmp > 0)
 				{
-					if(in_array($val, $tmp_arr))
+					if(in_array($val['title'], $tmp_arr))
 					{
 						continue;
 					}
-
-					$tmp[] = $val['code'];
-					$tmpTitles[] = $val['title'];
 				}
+				$tmp[] = $val['code'];
+				$tmpTitles[] = $val['title'];
 			}
-
 			$data['shops'] = $tmp;
 			$data['shopsTitles'] = $tmpTitles;
 		}
@@ -634,6 +641,7 @@ class ProcessController extends Controller
 		{
 			$this->validate_errors[$source][$row_num]['type'] = 'Не указан тип акции для товара';
 		}
+
 		// Размер скидки ON INVOICE
 		if(isset($data['skidka_on_invoice']) && trim($data['skidka_on_invoice']) != '')
 		{
@@ -849,7 +857,14 @@ class ProcessController extends Controller
 									break;
 								case 'D'://Магазины-исключения
 									$v = $cell->getCalculatedValue();
-									$dataToInsert[$row_num]['shops_exception'] = explode(';', $v) ?? null;
+									if(trim($v) != '')
+									{
+										$dataToInsert[$row_num]['shops_exception'] = explode(';', $v) ?? null;
+									}
+									else
+									{
+										$dataToInsert[$row_num]['shops_exception'] = [];
+									}
 									break;
 								case 'E':  // Дистрибьютор(Плательщик)
 									$dataToInsert[$row_num]['distrTitles'] = $cell->getCalculatedValue();
@@ -902,7 +917,6 @@ class ProcessController extends Controller
 									break;
 							}
 						}
-
 						if(!$this->validateData($dataToInsert[$row_num], 'file', $start_date, $end_date, $row_num))
 						{
 							$err = true;
@@ -911,21 +925,21 @@ class ProcessController extends Controller
 				}
 				else
 				{
-					$returnData['errors'][] = 'Не удалось обработать файл';
+					$returnData['errors'][0] = 'Не удалось обработать файл';
 				}
 			}
 			else
 			{
-				$returnData['errors'][] = 'Ошибка загрузки файла';
+				$returnData['errors'][0] = 'Ошибка загрузки файла';
 			}
 		}
 		else
 		{
-			$returnData['errors'][] = 'Не удалось загрузить файл';
+			$returnData['errors'][0] = 'Не удалось загрузить файл';
 		}
 
 		$returnData['data'] = $dataToInsert;
-		$returnData['errors'] = array_merge($returnData['errors'], $this->validate_errors['file']);
+		$returnData['errors'] = (($returnData['errors'] ?? []) + ($this->validate_errors['file'] ?? []));
 
 		echo json_encode($returnData);
 	}
@@ -940,17 +954,17 @@ class ProcessController extends Controller
 		$valid = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $value);
         if($valid)
         {
-			$valid = ($start_date <= strtotime($value));
-        }
-        return $valid;
+			$valid = (strtotime($start_date) <= strtotime($value));
+		}
+		return $valid;
 	}
 
 	private function validateDataEndProcessDate($value, $end_date)
 	{
-        $valid = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $value);
-        if($valid)
+		$valid = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $value);
+		if($valid)
         {
-			$valid = ($end_date >= strtotime($value));
+			$valid = (strtotime($end_date) >= strtotime($value));
         }
         return $valid;
 	}
@@ -1007,7 +1021,7 @@ class ProcessController extends Controller
 	 		try{
 		 		if (PHPExcel_Shared_Date::isDateTime($cell))
 				{
-					$v = PHPExcel_Shared_Date::ExcelToPHP($cell->getValue());
+					$v = PHPExcel_Shared_Date::ExcelToPHP($cell->getCalculatedValue());
 				}
 	 		}
 	 		catch(Exception $e)

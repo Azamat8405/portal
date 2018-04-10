@@ -46,6 +46,9 @@ $(function(){
 			}
 	        $header.append($newdiv);
 		});
+		$header.css({
+				left: ($('#tableTovs').offset().left - $('#offset').offset().left)
+			});
 	}, 100);
 
 	var $viewport = $(window);
@@ -53,23 +56,26 @@ $(function(){
 
 		if(!$header)
 			return;
-		$header.css({
-			left: ($('#tableTovs').offset().left - $('#offset').offset().left)
-		});
+
+		resizeTable();
 	});
 
 	resizeTable();
 	$(window).resize(function(){
 
 		resizeTable();
-		$header.css({
-			left: ($('#tableTovs').offset().left - $('#offset').offset().left)
-		});
 	});
 });
 
 function resizeTable()
 {
+	if($header)
+	{
+		$header.css({
+			left: ($('#tableTovs').offset().left - $('#offset').offset().left)
+		});
+	}
+
 	$table = $('.table_data_block');
 	$table.css({
 		'height': ($(window).height() - $table.offset().top - 10)

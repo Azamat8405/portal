@@ -56,109 +56,100 @@
 			@endif
 		</div>
 
-		<div id="tabs">
-            <ul>
-                <li><a href="#tabs-1">Вручную</a></li>
-                <li><a href="#tabs-2">Из файла</a></li>
-            </ul>
-
-			<div id="tabs-1">
-				<div class="table_data_block">
-					<div id="parentTableHeader">
-						<div id="offset"></div>
-						<div id="tableHeader"></div>
-					</div>
-					<table id="tableTovs" class="table_data">
-						<thead>
-							<tr>
-							    <th width="20">
-									<input type="checkbox" id="delAll">
-							    </th>
-							    <th>Код номенклатуры</th>
-							    <th>Наименование товара</th>
-							    <th>Срок годности</th>
-							    <th>Причина</th>
-							    <th>Остаток</th>
-							</tr>
-						</thead>
-						</tbody>
-
-							@if(old('kodNomenkatur'))
-								@foreach(old('kodNomenkatur') as $k => $v)
-									<tr class="row_number" data-row-number="{{$k}}">
-										<td>
-											<input type="checkbox" class="deleteRow">
-										</td>
-										<td>
-											@if(Session::has('errors.form.'.$k.'.kodNomenkatur'))
-												<div class="error_message">{{Session::get('errors.form.'.$k.'.kodNomenkatur')}}</div>
-											@endif
-											<input type="text" autocomplete="off" value="{{old('kodNomenkatur.'.$k)}}" name="kodNomenkatur[]"
-												class="kodNomenkatur">
-										</td>
-
-										<td>
-											@if(Session::has('errors.form.'.$k.'.tovName'))
-												<div class="error_message">{{Session::get('errors.form.'.$k.'.tovName')}}</div>
-											@endif
-											<input type="text" autocomplete="off" value="{{old('tovName.'.$k)}}" name="tovName[]" class="tovName">
-										</td>
-										<td>
-											@if(Session::has('errors.form.'.$k.'.srok_godnosti'))
-												<div class="error_message">{{Session::get('errors.form.'.$k.'.srok_godnosti')}}</div>
-											@endif
-							            	<input id="srok_godnosti" type="text" class="date" autocomplete="off" name="srok_godnosti[]" value="{{ old('srok_godnosti.'.$k) }}">
-										</td>
-
-										<td>
-											<select name="reasons[]" class="select">
-												<option value="0"> Не выбрано </option>
-												@foreach ($reasons as $reason)
-													@if(old('reasons') == $reason->id)
-														<option value="{{$reason->id}}" selected="selected">{{$reason->title}}</option>
-													@else
-														<option value="{{$reason->id}}">{{$reason->title}}</option>
-													@endif
-
-												@endforeach
-											</select>
-										</td>
-										<td>
-							            	<input id="ostatok" type="text" autocomplete="off" name="ostatok[]" value="{{ old('ostatok.'.$k) }}">
-										</td>
-									</tr>
-								@endforeach
-							@else
-								<tr class="row_number" data-row-number="0">
+		<div class="content_body">
+			<div class="table_data_block">
+				<div id="parentTableHeader">
+					<div id="offset"></div>
+					<div id="tableHeader"></div>
+				</div>
+				<table id="tableTovs" class="table_data">
+					<thead>
+						<tr>
+						    <th width="20">
+								<input type="checkbox" id="delAll">
+						    </th>
+						    <th>Код номенклатуры</th>
+						    <th>Наименование товара</th>
+						    <th>Срок годности</th>
+						    <th>Причина</th>
+						    <th>Остаток</th>
+						</tr>
+					</thead>
+					</tbody>
+						@if(old('kodNomenkatur'))
+							@foreach(old('kodNomenkatur') as $k => $v)
+								<tr class="row_number" data-row-number="{{$k}}">
 									<td>
 										<input type="checkbox" class="deleteRow">
 									</td>
 									<td>
-										<input type="text" autocomplete="off" class="kodNomenkatur" name="kodNomenkatur[]">
+										@if(Session::has('errors.form.'.$k.'.kodNomenkatur'))
+											<div class="error_message">{{Session::get('errors.form.'.$k.'.kodNomenkatur')}}</div>
+										@endif
+										<input type="text" autocomplete="off" value="{{old('kodNomenkatur.'.$k)}}" name="kodNomenkatur[]"
+											class="kodNomenkatur">
 									</td>
 									<td>
-										<input type="text" autocomplete="off" value="" name="tovName[]" class="tovName">
+										@if(Session::has('errors.form.'.$k.'.tovName'))
+											<div class="error_message">{{Session::get('errors.form.'.$k.'.tovName')}}</div>
+										@endif
+										<input type="text" autocomplete="off" value="{{old('tovName.'.$k)}}" name="tovName[]" class="tovName">
 									</td>
 									<td>
-						            	<input id="srok_godnosti" type="text" class="date" autocomplete="off" name="srok_godnosti[]" value="">
+										@if(Session::has('errors.form.'.$k.'.srok_godnosti'))
+											<div class="error_message">{{Session::get('errors.form.'.$k.'.srok_godnosti')}}</div>
+										@endif
+						            	<input id="srok_godnosti" type="text" class="date" autocomplete="off" name="srok_godnosti[]" value="{{ old('srok_godnosti.'.$k) }}">
 									</td>
+
 									<td>
-										<select name="types[]" class="select">
+										<select name="reasons[]" class="select">
 											<option value="0"> Не выбрано </option>
 											@foreach ($reasons as $reason)
-												<option value="{{$reason->id}}">{{$reason->title}}</option>
+												@if(old('reasons') == $reason->id)
+													<option value="{{$reason->id}}" selected="selected">{{$reason->title}}</option>
+												@else
+													<option value="{{$reason->id}}">{{$reason->title}}</option>
+												@endif
+
 											@endforeach
 										</select>
-
 									</td>
 									<td>
-						            	<input id="ostatok" type="text" autocomplete="off" name="ostatok[]" value="">
+						            	<input id="ostatok" type="text" autocomplete="off" name="ostatok[]" value="{{ old('ostatok.'.$k) }}">
 									</td>
 								</tr>
-							@endif
-						</tbody>
-					</table>
-				</div>
+							@endforeach
+						@else
+							<tr class="row_number" data-row-number="0">
+								<td>
+									<input type="checkbox" class="deleteRow">
+								</td>
+								<td>
+									<input type="text" autocomplete="off" value="" name="kodNomenkatur[]" class="kodNomenkatur">
+								</td>
+								<td>
+									<input type="text" autocomplete="off" value="" name="tovName[]" class="tovName">
+								</td>
+								<td>
+					            	<input type="text" autocomplete="off" value="" name="srok_godnosti[]" class="date" id="srok_godnosti">
+								</td>
+								<td>
+									<select name="reasons[]" class="select">
+										<option value="0"> Не выбрано </option>
+										@foreach ($reasons as $reason)
+											<option value="{{$reason->id}}">{{$reason->title}}</option>
+										@endforeach
+									</select>
+
+								</td>
+								<td>
+					            	<input type="text" autocomplete="off" value="" name="ostatok[]" id="ostatok">
+								</td>
+							</tr>
+						@endif
+					</tbody>
+				</table>
 			</div>
 		</div>
 	</form>

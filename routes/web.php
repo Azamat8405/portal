@@ -50,6 +50,7 @@ Route::group(['middleware' => 'auth'], function () {
 	Route::get('/ucenka/list',					'UcenkaController@list')->name('ucenka.list');
 	Route::get('/ucenka/add',					'UcenkaController@add')->name('ucenka.add');
 	Route::post('/ucenka/addSubmit',			'UcenkaController@addSubmit')->name('ucenka.addSubmit');
+	Route::get('/ucenka/full/{appId}',			'UcenkaController@full')->name('ucenka.full');
 
 	Route::get('/tovs/ajaxGetTovForAvtocomplete', 	'TovController@ajaxGetTovForAvtocomplete');
 

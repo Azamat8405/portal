@@ -20,10 +20,12 @@ class CreateUcenkaAppTovsTable extends Migration
             $table->string('nomenklatury_title');
             $table->string('srok_godnosty');
 
-            $table->integer('reason_id')->unsigned();
+            $table->integer('ucenka_reason_id')->unsigned();
             $table->integer('ostatok')->unsigned();
 
-            $table->integer('user_id')->unsigned()->nullable()->comment('Согласовать из users');
+            $table->integer('ucenka_app_id')->unsigned();
+
+            $table->integer('user_id')->unsigned()->nullable()->comment('Согласователь из users');
             $table->integer('agreement_date')->unsigned()->nullable();
             $table->integer('skidka')->unsigned()->nullable();
 
