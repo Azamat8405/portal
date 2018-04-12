@@ -91,6 +91,10 @@ return [
     'uploaded'             => 'Поле :attribute не удалось загрузить.',
     'url'                  => 'Формат поля :attribute не корректный.',
 
+
+    'procent' => 'Некорректное значение процента.',
+    'date2' => 'Некорректное значение даты :attribute.',
+
     /*
     |--------------------------------------------------------------------------
     | Custom Validation Language Lines
@@ -105,7 +109,7 @@ return [
     'custom' => [
         'attribute-name' => [
             'rule-name' => 'custom-message',
-        ],
+        ]
     ],
 
     /*
@@ -119,6 +123,9 @@ return [
     |
     */
 
-    'attributes' => [],
+    'attributes' => [
+        'date2' => 'дата два',
+        'date3' => 'дата три',
+    ],
 
 ];

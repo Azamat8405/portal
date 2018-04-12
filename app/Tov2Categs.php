@@ -12,6 +12,6 @@ class Tov2Categs extends Model
 
 	public function getDateFormat()
     {
-        return 'Y-m-d\TH:i:s';
-    }
+		return 'Y-m-d\TH:i:s';
+	}
 }

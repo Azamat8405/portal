@@ -14,42 +14,23 @@ class UcenkaController extends Controller
 {
 	public function list()
 	{
-		$apps = UcenkaApp::paginate(5);
 
-		// foreach ($apps as $key => $value)
-		// {
-		// 	echo $value->app_tovs()->count().'___';
-		// }
-
-//		foreach($apps as $k => $v)
-//		{
-// 			if($v->app_tovs()->count() > 0)
-// 			{
-// 				foreach($v->app_tovs()->get() as $k_tov => $v_tov)
-// 				{
-// 					foreach($v_tov->ucenka_reason()->get() as $k_v => $v_v)
-// 					{
-// print_r( $v_v->id );
-// 					}
-// 				}
-// 			}
-//		}
-
-// exit();
-
+		$apps = UcenkaApp::paginate(15);
 		return view('ucenka/list', 
- 			[
- 				'apps' => $apps,
- 				'reasons' => UcenkaReason::all(),
- 				'shops' => Shop::all()->sortBy('title')
- 			]);
+			[
+				'apps' => $apps,
+				'reasons' => UcenkaReason::all(),
+				'shops' => Shop::all()->sortBy('title')
+			]);
 	}
 
 	public function full()
 	{
 
 
-		exit('1');
+
+
+		return view('ucenka/full');
 	}
 
 	public function add()

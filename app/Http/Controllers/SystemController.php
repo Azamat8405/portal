@@ -242,9 +242,9 @@ class SystemController extends Controller
 					(sm.StoreActStartDate != \'1753-01-01 00:00:00.000\') AND
 					(sm.StoreActEndDate = \'1753-01-01 00:00:00.000\') AND
 					sm.StoreName NOT LIKE \'%(закрыт)%\'
-				ORDER BY sr.StoreCity DESC
-					,sr.StoreRegion DESC 
-					,sr.StoreMacroRegion DESC');
+				ORDER BY sr.StoreMacroRegion ASC
+					,sr.StoreRegion ASC
+					,sr.StoreCity ASC');
 		if($shops)
 		{
 			$result = [];
@@ -1049,7 +1049,9 @@ class SystemController extends Controller
 		 	WHERE c.[id] = ? AND
 					c.[left] < c2.[left] AND
 					c.[right] > c2.[right] AND 
-					c2.[level] = c.[level]+1', [ $categId ]);
+					c2.[level] = c.[level]+1
+			ORDER BY c2.[title] DESC', [ $categId ]);
+
 		if($sub_categs)
 			echo json_encode($sub_categs);
 	}

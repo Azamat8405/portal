@@ -24,11 +24,15 @@ $(function(){
 
 	if($('.error_dialog_messages').length > 0)
 	{
-		showMessage('error', '.error_dialog_messages');
+		setTimeout(function(){
+			// showMessage('error', '.error_dialog_messages');
+		}, 1000);
 	}
 	if($('.success_dialog_messages').length > 0)
 	{
-		showMessage('success', '.success_dialog_messages');
+		setTimeout(function(){
+			// showMessage('success', '.success_dialog_messages');
+		}, 1000);
 	}
 
 	left_menu_height();
@@ -122,8 +126,17 @@ function left_menu_height()
 	$('nav').height(h);
 	$('nav .handrail > div').height(h);
 }
-function showMessage(type, source, message)
+function showMessage(type, source, message, params)
 {
+	if(!params)
+	{
+		params = {};
+	}
+	if(!params.width)
+	{
+		params.width = 650;
+	}
+
 	if($('#'+type+'_dialog_messages').length == 0)
 	{
 		let div = $('<div id="">');
@@ -133,7 +146,7 @@ function showMessage(type, source, message)
 
 	$('#'+type+'_dialog_messages').dialog({
 		autoOpen: true,
-		width:650,
+		width:params.width,
 		title:'Внимание!',
 		classes: {
 			'ui-dialog-titlebar':type+'_dialog',
@@ -201,4 +214,14 @@ function resizeMenu(el)
 		$('.content').width( $(window).width() - nav_w );
 		$('.content').css('margin-left', nav_w);
 	}
+}
+
+function show_load()
+{
+	$('body').append('<img class="load_img" src="/img/load75x75.gif" style="z-index:1000;width:40px;position:fixed;top:250px;left:49%;">');
+}
+
+function hide_load()
+{
+	$('.load_img').remove();
 }

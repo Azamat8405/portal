@@ -62,8 +62,10 @@
 		#tabs{
 			margin-top:335px;
 		}
+
 	</style>
 	<form class="addProcessForm" action="{{ route('processes.add') }}" method="post" enctype="multipart/form-data">
+
 		@csrf
 		<div class="content-panel">
 			<div class="content-panel-block">
@@ -317,13 +319,18 @@
 
 			@if (Session::has('errors.form'))
 				<div class="error_dialog_messages">
-				@foreach (Session::get('errors.form') as $messages)
+				@foreach (Session::get('errors.form') as $key => $messages)
+					@php
+						$key++;
+					@endphp
+					<br><b>В строке "{{$key}}" обнаружены следующие ошибки:</b> <br>
 					@foreach ($messages as $message)
 						<p>{!! $message !!}</p>
 					@endforeach
 				@endforeach
 				</div>
 			@endif
+
 			@if (Session::has('errors.file'))
 				<div class="error_dialog_messages">
 				@foreach (Session::get('errors.file') as $key => $messages)
@@ -341,14 +348,14 @@
 				</div>
 			@endif
 		</div>
-
 		<div class="content_body">
+
 			<div class="table_data_block">
 				<div id="shops_dialog"></div>
 				<div id="tovs_dialog"></div>
 				<div id="contragent_dialog"></div>
 
-				<div id="parentTableHeader">
+ 				<div id="parentTableHeader">
 					<div id="offset"></div>
 					<div id="tableHeader"></div>
 				</div>
@@ -369,8 +376,8 @@
 						    <th>Итого скидка (%) <sup>*</sup></th>
 						    <th>Старая розничная цена (руб)</th>
 						    <th>Новая розничная цена (руб)</th>
-						    <th>Старая закупочная скидка (руб)</th>
-						    <th>Новая закупочная скидка (руб)</th>
+						    <th>Старая закупочная цена (руб)</th>
+						    <th>Новая закупочная цена (руб)</th>
 						    <th>Дата начала скидки ON INVOICE</th>
 						    <th>Дата окончания скидки ON INVOICE</th>
 						    <th>Подписи, слоганы, расшифровки и пояснения к товарам в рекламе.</th>
@@ -466,9 +473,18 @@
 											@foreach ($action_types as $type)
 
 												@if($v['type'] == $type->id)
-													<option data-descr="{{$type->description}}" value="{{$type->id}}" selected="selected">{{$type->title}}</option>
+													<option data-descr="{{$type->description}}"
+														onmouseover="showHint({{$type->id}}, '{{$type->description}}')"
+														value="{{$type->id}}" 
+														selected="selected">
+															{{$type->title}}
+													</option>
 												@else
-													<option data-descr="{{$type->description}}" value="{{$type->id}}">{{$type->title}}</option>
+													<option 
+														onmouseover="showHint({{$type->id}}, '{{$type->description}}')"
+														value="{{$type->id}}">
+															{{$type->title}}
+													</option>
 												@endif
 											@endforeach
 										</select>
@@ -577,7 +593,11 @@
 									<select name="type[]" class="select">
 										<option value="0"> Не выбрано </option>
 										@foreach ($action_types as $type)
-											<option data-descr="{{$type->description}}" value="{{$type->id}}">{{$type->title}}</option>
+											<option
+												onmouseover="showHint({{$type->id}}, '{{$type->description}}')"
+												value="{{$type->id}}">
+													{{$type->title}}
+											</option>
 										@endforeach
 									</select>
 								</td>
@@ -619,20 +639,26 @@
 
 					</tbody>
 				</table>
+
+
 			</div>
 		</div>
 	</form>
+
 @endsection
 
 @section('addition_js')
+
 	<script src="{{ asset('js/jquery.mask.min.js') }}"></script>
 	<script src="{{ asset('js/select2.full.min.js') }}"></script>
 	<script src="{{ asset('js/select2.full.min.ru.js') }}"></script>
 	<script src="{{ asset('js/tableFixHeader.js') }}"></script>
 	<script src="{{ asset('js/add_action_form.js') }}"></script>
+
 @endsection
 
 @section('addition_css')
 	<link href="{{ asset('css/select2.min.css') }}" rel="stylesheet">
 	<link href="{{ asset('css/select2.change.css') }}" rel="stylesheet">
+
 @endsection

@@ -82,3 +82,40 @@ function resizeTable()
 	});
 	$('#parentTableHeader').width($table.width());
 }
+
+// setTimeout(function(){
+// 	var css = [];
+// 	var $tbody = $('#tableTovs tbody');
+// 	$tbody.find('td').each(function(index){
+
+// 		if(index > 2)
+// 		{
+// 			return;
+// 		}
+// 		css[index] = {
+// 			'position':'fixed',
+// 			'height':$(this).css('height'),
+// 			'width':$(this).css('width'),
+// 			'z-index': 500,
+// 			'background': '#fff',
+// 			'left':$(this).offset().left
+// 		};
+// 		// $(this).css();
+// 	});
+// 	$tbody.find('td').each(function(index){
+
+// 		// $('#tableTovs thead th:eq('+index+')').css('min-width', css[index].width);
+// 	console.log(css[index]);
+
+// 		$(this).css(
+// 			css[index]
+// 		);
+// 	});
+// }, 300);
+
+// : ;
+// : 48px;
+// : 41px;
+// top: 226px;
+// z-index: 500;
+// background: #fff;

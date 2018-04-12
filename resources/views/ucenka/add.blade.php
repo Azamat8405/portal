@@ -34,6 +34,7 @@
 						</div>
 					</div>
 				</div>
+
 				<div class="content-panel-inputs">
 					<input type="submit" value="Подать заявку">
 
@@ -58,11 +59,12 @@
 
 		<div class="content_body">
 			<div class="table_data_block">
+
 				<div id="parentTableHeader">
 					<div id="offset"></div>
 					<div id="tableHeader"></div>
 				</div>
-				<table id="tableTovs" class="table_data">
+    			<table id="tableTovs" class="table_data">
 					<thead>
 						<tr>
 						    <th width="20">
@@ -150,6 +152,7 @@
 						@endif
 					</tbody>
 				</table>
+
 			</div>
 		</div>
 	</form>

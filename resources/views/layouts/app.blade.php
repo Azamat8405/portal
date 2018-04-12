@@ -99,27 +99,15 @@
                     <ul>
                         <li><a href="{{ route('processes') }}">Акции</a></li>
 
+                        @php
+                        if(Gate::allows('ucenka-read') || Gate::allows('ucenka-create') || Gate::allows('admin'))
+                        {
+                        @endphp
+                            <li><a href="{{ route('ucenka.list') }}">Уценка</a></li>
+                        @php
+                        }
+                        @endphp
 
-@php
-if(Gate::allows('ucenka-read') || Gate::allows('ucenka-create'))
-{
-@endphp
-    <li><a href="{{ route('ucenka.list') }}">Уценка</a></li>
-@php
-}
-@endphp
-
-<!--
-
-                            <li><a href="">Участники</a>
-
-                            <ul>
-                                <li><a href="">Иванов И.И</a></li>
-                                <li><a href="">Петров П.П.</a></li>
-                                <li><a href="">Сидоров С.С</a></li>
-                            </ul>
-                        </li>
--->
 
                     </ul>
                 </nav>
