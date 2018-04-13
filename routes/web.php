@@ -20,8 +20,17 @@ Route::group(['middleware' => 'auth'], function () {
 
 		Route::get('/processes', 						'ProcessController@list')->name('processes');
 		Route::get('/processes/add', 					'ProcessController@showAddFrom')->name('processes.add');
+		Route::get('/processes/edit/{id}',				'ProcessController@edit');
+		Route::get('/processes/ajaxJsonList',			'ProcessController@ajaxJsonList');
+		Route::get('/processes/ajaxGetTovList/{procId}','ProcessController@ajaxGetTovList');
 		Route::post('/processes/add',					'ProcessController@add');
 		Route::post('/processes/prepareDataFromFile',	'ProcessController@prepareDataFromFile');
+
+
+
+
+		
+
 
 		Route::get('/sys/getContragentsForAvtocomplete', 	'SystemController@ajaxGetContragentsAvtocomplete');
 		Route::get('/sys/getContragentsErarhi',				'SystemController@ajaxGetContragentsErarhi');

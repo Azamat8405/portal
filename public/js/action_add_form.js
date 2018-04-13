@@ -186,7 +186,7 @@ $(function(){
 
 
 	// выбор чекбоксов во всплывающем окне выбора
-	$('#shops_dialog, #tovs_dialog').on('click', 'input[type=checkbox]', function(e){
+	$('#shops_dialog').on('click', 'input[type=checkbox]', function(e){
 		e.stopPropagation();
 
 		if($(this).is(':checked'))
@@ -211,8 +211,7 @@ $(function(){
 	});
 
 	//открываем/скрываем разделы(папки) в окне выбора
-	$('#shops_dialog, #tovs_dialog').on('click', ' ul li', function(e){
-	// $('#shops_dialog, #tovs_dialog').on('click', ' ul li label', function(e){
+	$('#shops_dialog').on('click', ' ul li', function(e){
 
 		if($(this).find(' > ul').length > 0)
 		{
@@ -250,8 +249,8 @@ $(function(){
 				width:500,
 				modal:true,
 				position:{
-					my:"top",
-					at:"top",
+					my:"top+5%",
+					at:"top+5%",
 					of:window
 				},
 				maxHeight:$(window).height()-50,
@@ -282,12 +281,11 @@ $(function(){
 				title: "Выбор контрагента",
 				closeOnEscape:true,
 				width:400,
+				modal:true,
 				position:{
- 					using:function(t,y){
-						var el = $(y.element.element).find('> div').get(0);
-						$(el).parents().css('top', 60);
-						$(el).parents().css('left', '35%');
-					}
+					my:"top+5%",
+					at:"top+5%",
+					of:window
 				},
 				maxHeight:$(window).height()-50,
 				close:function(){
@@ -515,9 +513,11 @@ $(function(){
 	});
 });
 
-function showPanel(selector)
+function showPanel(btn, selector)
 {
 	$('.hideBlock').not(selector).hide();
+
+	$(selector).css('top', $(btn).offset().top + $(btn).outerHeight()+7);
 	$(selector).toggle();
 }
 

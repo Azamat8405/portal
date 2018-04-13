@@ -11,6 +11,11 @@ class Process extends Model
 		return $this->belongsTo('App\ProcessType');
     }
 
+	public function processTovs()
+    {
+		return $this->hasMany('App\DocumentActionFirstData');
+    }
+
 	public function getStartDateAttribute($value)
     {
 		return date('d.m.Y', $value);

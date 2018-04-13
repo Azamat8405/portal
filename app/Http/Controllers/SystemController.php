@@ -244,7 +244,9 @@ class SystemController extends Controller
 					sm.StoreName NOT LIKE \'%(закрыт)%\'
 				ORDER BY sr.StoreMacroRegion ASC
 					,sr.StoreRegion ASC
-					,sr.StoreCity ASC');
+					,sr.StoreCity ASC
+					,sm.StoreName ASC');
+
 		if($shops)
 		{
 			$result = [];
@@ -1034,7 +1036,9 @@ class SystemController extends Controller
 		 	WHERE c.[id] = ? AND
 					c.[left] < c2.[left] AND
 					c.[right] > c2.[right] AND 
-					c2.[level] = c.[level]+1', [ $regionId ]);
+					c2.[level] = c.[level]+1
+			ORDER BY c2.[title] DESC', [ $regionId ]);
+
 		if($sub_regions)
 			echo json_encode($sub_regions);
 	}

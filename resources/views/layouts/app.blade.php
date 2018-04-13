@@ -1,35 +1,4 @@
 <!DOCTYPE html>
-
-{{--
-1) Разделы номенклатуры. Откуда берем? из таблицы [Assortment_Hierarchy]?
-
-    - что делаем с разделами указанными через слеш? это вложенные разделы? т.е. уровень вложенности может быть  более 4 уровней?
-    - есть разделы в которых на всех 4 уровнях указано одно и тоже 
-    (ПОДМЕННЫЙ ФОНД  ПОДМЕННЫЙ ФОНД  ПОДМЕННЫЙ ФОНД  ПОДМЕННЫЙ ФОНД)
-
-    -IDArt - это уникальный ИД в 1с?
-
-2) Сами товары номенклатуры? Где берем? Таблица?
-
-3) Бренды из 1с? Какая таблица? Плоская таблица? Без иерархии?
-
-4) Дистрибьютеры? Где берем?
-
-5) 'код ДиС' - что это
-
-6) 'Артикул ШК' - Это артикал товра? ШК это что?
-
-7) Это всегда число? В процентах?
-
-    on_invoice
-    off_invoice
-    skidka_itogo
-
-    old_zakup_price - всегда рубли?
-    new_zakup_price - всегда рубли?
-
---}}
-
 <html lang="{{ app()->getLocale() }}">
     <head>
         <title>{{ config('app.name', 'Портал') }}</title>
@@ -45,18 +14,10 @@
         <link href="{{ asset('css/jquery-ui.min.css') }}" rel="stylesheet">
         <link href="{{ asset('css/jquery-ui.min.change.css') }}" rel="stylesheet">
 
-        @guest
-        @else
-
-{{--
-            <link rel="stylesheet" type="text/css" href="{{ asset('css/handsontable.full.min.css') }}">
---}}
-        @endguest
-
-        @yield('addition_css')
-
         <link href="{{ asset('css/panel.css') }}" rel="stylesheet">
         <link href="{{ asset('css/style.css') }}" rel="stylesheet">
+
+        @yield('addition_css')
     </head>
     <body>
         <div class="wrapper">
@@ -121,16 +82,8 @@
         <script src="{{ asset('js/jquery-3.3.1.min.js') }}"></script>
         <script src="{{ asset('js/jquery.mousewheel.min.js') }}"></script>
         <script src="{{ asset('js/jquery-ui.min.js') }}"></script>
-
-        @guest
-        @else
-{{--
-            <script src="{{ asset('js/handsontable.full.min.js') }}"></script>
---}}
-        @endguest
+        <script src="{{ asset('js/scripts.js') }}"></script>
 
         @yield('addition_js')
-
-        <script src="{{ asset('js/scripts.js') }}"></script>
     </body>
 </html>

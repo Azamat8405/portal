@@ -2,6 +2,8 @@
 
 @section('content')
 
+		<table id="list"><tr><td></td></tr></table> 
+		<div id="pager"></div> 
 
 
 @endsection
@@ -12,14 +14,9 @@
 		<script src="{{ asset('js/jquery.jqGrid.min.js') }}"></script>
 		<link href="{{ asset('css/ui.jqgrid.css') }}" rel="stylesheet">
 
-		<table id="list"><tr><td></td></tr></table> 
-		<div id="pager"></div> 
-
 		<script>
 
 			$(function () {
-
-
 				jQuery("#list").jqGrid({
 					datatype: "local",
 					height:250,
@@ -52,8 +49,6 @@
 					jQuery("#list").jqGrid('addRowData',i+1,mydata[i]);
 				}
 				jQuery("#list").jqGrid('addRowData',100,{});
-
-
 			});
 		</script>
 	</div>

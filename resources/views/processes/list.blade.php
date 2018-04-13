@@ -1,239 +1,33 @@
 @extends('layouts.app')
 
 @section('content')
-    <form>
-        <div class="content-panel">
-            <div class="content-panel__info">
-                <div>Название: Акция 3+2</div>
-                <div>ID: 1257</div>
-            </div>
-        </div>
-
-        <div id="tabs">
-            <ul>
-                <li><a href="#tabs-1">Данные</a></li>
-                <li><a href="#tabs-2">Прогноз</a></li>
-                <li><a href="#tabs-3">Заказ</a></li>
-            </ul>
-            <div id="tabs-1">
-
-                <div class="panel">
-                    <input type="submit" name="" value="Сохранить">
-                    <input type="submit" name="" value="Изменить">
-                    <input type="submit" name="" value="удалить">
-                    <input type="button" onclick="window.location.href='/processes/add'" name="" value="Создать">
+    <div class="content-panel">
+        <div class="content-panel-block">
+            <h2>Список акций</h2>
+            <div class="form-fields-row">
+                <div class="form-field-cell">
+                    <div class="form-field-input">
+                        <input type="button" onclick="window.location.href='/processes/add'" name="" value="Добавить акцию">
+                    </div>
                 </div>
-                <div id="table_data" class="table_data"></div>
-
-                <ul>
-                    @foreach ($processes as $process)
-                        <li>
-                            [{{$process->id}}] ({{$process->processType->title}}) - {{$process->title}} - 
-                            {{$process->start_date}} - {{$process->end_date}}
-                        </li>
-
-                    @endforeach
-                </ul>
-
-<!--
-
-                <table class="">
-                    <tr>
-                        <th>
-                            Название поля
-                        </th>
-                        <th>
-                            Название поля
-                        </th>
-                        <th>
-                            Название поля
-                        </th>
-                        <th>
-                            Название поля
-                        </th>
-                        <th>
-                            Название поля
-                        </th>
-                        <th>
-                            Название поля
-                        </th>
-                        <th>
-                            Название поля
-                        </th>
-                        <th>
-                            sdfgdsfg
-                        </th>
-                        <th>
-                            dfgsdfg
-                        </th>
-                        <th>sdfgdsfg
-                            
-                        </th>
-                        <th>
-                            dfgsdfg
-                        </th>
-                        <th>
-                            dfsadf
-                        </th>
-                        <th>
-                            dfsgsdfg
-                        </th>
-                        <th>
-                            dfsgsdfg
-                        </th>
-                        <th>
-                            dfsgsdfg
-                        </th>
-                        <th>
-                            dfsgsdfg
-                        </th>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="tbl__show-val">1</div>
-                            <input tabindex="1" class="tbl__edit-val" type="text" name="" value="1">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">1</div>
-                            <input tabindex="2" class="tbl__edit-val" type="text" name="" value="1">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">1</div>
-                            <input tabindex="3" class="tbl__edit-val" type="text" name="" value="1">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">1</div>
-                            <input class="tbl__edit-val" type="text" name="" value="1">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">1</div>
-                            <input class="tbl__edit-val" type="text" name="" value="1">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">1</div>
-                            <input class="tbl__edit-val" type="text" name="" value="1">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">1</div>
-                            <input class="tbl__edit-val" type="text" name="" value="1">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">1</div>
-                            <input class="tbl__edit-val" type="text" name="" value="1">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">1</div>
-                            <input class="tbl__edit-val" type="text" name="" value="1">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">sdfsdf</div>
-                            <input class="tbl__edit-val" type="text" name="" value="sfdsdfsdf">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">sdfsdf</div>
-                            <input class="tbl__edit-val" type="text" name="" value="sfdsdfsdf">
-                        </td>
-
-                        <td>
-                            <div class="tbl__show-val">sdfsdf</div>
-                            <input class="tbl__edit-val" type="text" name="" value="sfdsdfsdf">
-                        </td>
-
-                        <td>
-                            <div class="tbl__show-val">sdfsdf</div>
-                            <input class="tbl__edit-val" type="text" name="" value="sfdsdfsdf">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">sdfsdf</div>
-                            <input class="tbl__edit-val" type="text" name="" value="sfdsdfsdf">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">sdfsdf</div>
-                            <input class="tbl__edit-val" type="text" name="" value="sfdsdfsdf">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">sdfsdf</div>
-                            <input class="tbl__edit-val" type="text" name="" value="sfdsdfsdf">
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="tbl__show-val">1</div>
-                            <input tabindex="1" class="tbl__edit-val" type="text" name="" value="1">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">1</div>
-                            <input tabindex="2" class="tbl__edit-val" type="text" name="" value="1">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">1</div>
-                            <input tabindex="3" class="tbl__edit-val" type="text" name="" value="1">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">1</div>
-                            <input class="tbl__edit-val" type="text" name="" value="1">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">1</div>
-                            <input class="tbl__edit-val" type="text" name="" value="1">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">1</div>
-                            <input class="tbl__edit-val" type="text" name="" value="1">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">1</div>
-                            <input class="tbl__edit-val" type="text" name="" value="1">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">1</div>
-                            <input class="tbl__edit-val" type="text" name="" value="1">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">1</div>
-                            <input class="tbl__edit-val" type="text" name="" value="1">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">sdfsdf</div>
-                            <input class="tbl__edit-val" type="text" name="" value="sfdsdfsdf">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">sdfsdf</div>
-                            <input class="tbl__edit-val" type="text" name="" value="sfdsdfsdf">
-                        </td>
-
-                        <td>
-                            <div class="tbl__show-val">sdfsdf</div>
-                            <input class="tbl__edit-val" type="text" name="" value="sfdsdfsdf">
-                        </td>
-
-                        <td>
-                            <div class="tbl__show-val">sdfsdf</div>
-                            <input class="tbl__edit-val" type="text" name="" value="sfdsdfsdf">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">sdfsdf</div>
-                            <input class="tbl__edit-val" type="text" name="" value="sfdsdfsdf">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">sdfsdf</div>
-                            <input class="tbl__edit-val" type="text" name="" value="sfdsdfsdf">
-                        </td>
-                        <td>
-                            <div class="tbl__show-val">sdfsdf</div>
-                            <input class="tbl__edit-val" type="text" name="" value="sfdsdfsdf">
-                        </td>
-                    </tr>
-                </table> -->
-
-            </div>
-            <div id="tabs-2">
-                tab 2
-            </div>
-            <div id="tabs-3">
-                tab 3
             </div>
         </div>
-    </form>
+    </div>
 
+    <div class="content_body">
+        <table id="jqGridList"><tr><td></td></tr></table> 
+        <div id="jqGridpager"></div> 
+    </div>
+
+@endsection
+
+@section('addition_js')
+    <script src="{{ asset('js/jquery.jqGrid.min.js') }}"></script>
+    <script src="{{ asset('js/grid.locale-ru.js') }}"></script>
+    <script src="{{ asset('js/action_list.js') }}"></script>
+    <script src="{{ asset('js/jquery.jqGrid.after.js') }}"></script>
+@endsection
+
+@section('addition_css')
+    <link href="{{ asset('css/ui.jqgrid.css') }}" rel="stylesheet">
 @endsection

@@ -135,7 +135,7 @@ nav{
 	top:35px;
     left: 0;
     overflow: hidden;
-	z-index:1000;
+	z-index:99;
 }
 nav ul li
 {
@@ -187,8 +187,8 @@ section.content
 {
 	width:90%;
 	box-sizing:border-box;
-	padding:2px;
-    margin: 21px 0 0 10%;
+	padding:0 2px;
+    margin:35px 0 0 10%;
 }
 section.header{
 	height:35px;
@@ -198,7 +198,7 @@ section.header{
 	padding:5px;
     position:fixed;
     top:0;
-	z-index:101;
+	z-index:99;
 }
 section.header h1{
 	margin:5px;
@@ -329,7 +329,6 @@ padding: 2px 10px;
 vertical-align: middle;
 line-height: 16px;
 min-width:180px;
-
 }
 .table_data_block th{
     height: 50px;
@@ -348,8 +347,4 @@ min-width:100%;
 #tableTovs div.field_input_file,
 #tableTovs div.field_input_file input{
 width:255px;
-}
-
-.content_body{
-margin-top:150px;
 }

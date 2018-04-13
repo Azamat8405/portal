@@ -9,7 +9,7 @@ $(function(){
 		    'display':'block',
 		    'position':'fixed',
 		    'overflow':'hidden',
-			'z-index':'95',
+			'z-index':'90',
 		});
 
 		$header = $('#tableHeader');

@@ -1,148 +1,63 @@
+
 @extends('layouts.app')
 
 @section('content')
-	<style type="text/css">
-		.div_table{
-			display:table;
-			width:620px;
-		}
-		.div_table .left, .div_table .right{
-			display: table-cell;
-		}
-		.div_table .right{
-			padding: 0 0 0 10px;
-		}
-		#contragent_dialog{
-			display:none;
-		}
-		input.maskProcent, input.maskPrice, input.maskDate{
-			text-align: center;
-		}
-		textarea
-		{
-			border: 1px solid #ccc;
-			background: #f5f5f5;
-			border-radius:4px;
-		}
-		ul.tree{
-			margin:5px;
-		}
-		ul.tree ul{
-			margin:0px;
-			display:none;
-		}
-		ul.tree li{
-			padding:2px;
-			padding: 2px 2px 2px 20px;
-			background:url(/img/folder_plus.png) no-repeat 5px 5px;
-		}
-		ul.tree li.active
-		{
-			background:url(/img/folder_minus.png) no-repeat 5px 5px;
-		}
-		ul.tree li.no_icon{
-			background:none;
-		}
-		ul.tree li.active > ul{
-			display:block;
-		}
-		.file_hint{
-			position: absolute;
-			width: 400px;
-			height:auto;
-			max-height:200px;
-			overflow-x:overlay;
-			z-index:80;
-			background:#fff;
-			padding:7px;
-			text-align:left;
-			border:1px solid #c7c7c7;
-			line-height:14px;
-		}
-		#tabs{
-			margin-top:335px;
-		}
 
+	<style>
+		.form-field-cell {
+		    width:20%;
+		}
 	</style>
-	<form class="addProcessForm" action="{{ route('processes.add') }}" method="post" enctype="multipart/form-data">
 
+	<script>
+		var prId = {{$process->id}};
+	</script>
+
+	<form class="addProcessForm" action="{{ route('processes.add') }}" method="post" enctype="multipart/form-data">
 		@csrf
 		<div class="content-panel">
 			<div class="content-panel-block">
-				<h2>Добавление акции</h2>
+				<h2>Редактирование акции</h2>
+
+				<div class="form-fields-row">
+					<div class="form-field-cell">
+					    <div class="form-field-input">
+					        <div>
+					            <label>Наименование</label>: "{{$process->title}}"
+					        </div>
+						</div>
+					</div>
+					<div class="form-field-cell">
+					    <div class="form-field-input">
+					        <div>
+					            <label>Дата начала акции</label>: "{{$process->start_date}}"
+							</div>
+						</div>
+					</div>
+				</div>
 				<div class="form-fields-row">
 					<div class="form-field-cell">
 						<div class="form-field-input">
 						    <div>
-								@if(Session::has('errors.form.0.process_type'))
-									<label class="error_input">Тип <sup>*</sup></label>
-								@else
-									<label>Тип <sup>*</sup></label>
-								@endif
-						    </div>
-					    	<div>
-					            <select name="process_type" id="process_type" class="select_chosen">
-					            	<option value="0"> Не выбрано </option>
-									@if($process_types)
-										@foreach($process_types as $type)
-											@if(old('process_type') == $type->id)
-												<option data-dedlain="{{$type->dedlain}}" value="{{$type->id}}" selected="selected">{{$type->title}}</option>
-											@else
-												<option data-dedlain="{{$type->dedlain}}" value="{{$type->id}}">{{$type->title}}</option>
-											@endif
-										@endforeach
-									@endif
-					            </select>
+								<label>Тип</label>: "{{$process->processType->title}}"
 						    </div>
 						</div>
 					</div>
-
 					<div class="form-field-cell">
 					    <div class="form-field-input">
 					        <div>
-					            <label>Наименование</label>
-					        </div>
-					        <div>
-					            <input name="process_title" type="text" value="{{ old('process_title') }}">
+					            <label>Дата окончания акции</label>: "{{$process->end_date}}"
 							</div>
 						</div>
 					</div>
-
-					<div class="form-field-cell">
-					    <div class="form-field-input">
-					        <div>
-					            @if(Session::has('errors.form.0.start_date'))
-									<label class="error_input">Дата начала акции <sup>*</sup></label>
-								@else
-									<label>Дата начала акции <sup>*</sup></label>
-								@endif
-					        </div>
-					        <div>
-					            <input id="start_date" type="text" autocomplete="off" name="start_date" value="{{ old('start_date') }}">
-					        </div>
-						</div>
-					</div>
-					<div class="form-field-cell">
-					    <div class="form-field-input">
-						    <div>
-					            @if(Session::has('errors.form.0.end_date'))
-									<label class="error_input">Дата окончания акции <sup>*</sup></label>
-								@else
-									<label>Дата окончания акции <sup>*</sup></label>
-								@endif
-						    </div>
-					    	<div>
-								<input id="end_date" type="text" autocomplete="off" name="end_date" value="{{ old('end_date') }}">
-						    </div>
-						</div>
-					</div>
 				</div>
+
 				<div class="content-panel-inputs">
 					<input type="submit" value="Сохранить акцию">
 					<input type="button" onclick="addEmptyRow();" value="Добавить строку">
 					<input type="button" onclick="delRows();" value="Удалить строки">
-					<input type="button" onclick="showPanel(this, '#fillTablePanel');" value="Заполнить/добавить товары">
-					<input type="button" onclick="showPanel(this, '#importTablePanel');" value="Импорт">
+					<input type="button" onclick="showPanel('#fillTablePanel');" value="Заполнить/добавить товары">
+					<input type="button" onclick="showPanel('#importTablePanel');" value="Импорт">
 				</div>
 			</div>
 
@@ -350,15 +265,16 @@
 		</div>
 		<div class="content_body">
 
-			<div class="table_data_block">
-				<div id="shops_dialog"></div>
-				<div id="tovs_dialog"></div>
-				<div id="contragent_dialog"></div>
+			<div id="shops_dialog"></div>
+			<div id="tovs_dialog"></div>
+			<div id="contragent_dialog"></div>
 
- 				<div id="parentTableHeader">
-					<div id="offset"></div>
-					<div id="tableHeader"></div>
-				</div>
+        	<table id="jqGridList"><tr><td></td></tr></table> 
+        	<div id="jqGridpager"></div> 
+
+<!--
+
+			<div class="table_data_block">
 
 				<table id="tableTovs">
 					<thead>
@@ -418,7 +334,6 @@
 							@foreach($tovList as $k => $v)
 								<tr>
 									<td>
-
 										<input type="checkbox" class="deleteRow">
 									</td>
 									<td>
@@ -639,26 +554,28 @@
 
 					</tbody>
 				</table>
-
-
 			</div>
+			-->
+
 		</div>
 	</form>
 
 @endsection
 
 @section('addition_js')
-
 	<script src="{{ asset('js/jquery.mask.min.js') }}"></script>
 	<script src="{{ asset('js/select2.full.min.js') }}"></script>
 	<script src="{{ asset('js/select2.full.min.ru.js') }}"></script>
-	<script src="{{ asset('js/tableFixHeader.js') }}"></script>
-	<script src="{{ asset('js/action_add_form.js') }}"></script>
 
+    <script src="{{ asset('js/jquery.jqGrid.min.js') }}"></script>
+	<script src="{{ asset('js/grid.locale-ru.js') }}"></script>
+	<script src="{{ asset('js/action_edit_form.js') }}"></script>
+    <script src="{{ asset('js/jquery.jqGrid.after.js') }}"></script>
 @endsection
 
 @section('addition_css')
 	<link href="{{ asset('css/select2.min.css') }}" rel="stylesheet">
 	<link href="{{ asset('css/select2.change.css') }}" rel="stylesheet">
 
+    <link href="{{ asset('css/ui.jqgrid.css') }}" rel="stylesheet">
 @endsection

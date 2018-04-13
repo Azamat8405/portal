@@ -20,14 +20,6 @@ class TestController extends Controller
     public function index(Request $request)
     {
 
-        // $r = '<';
-        // $r1 = 1;
-        // $r2 = 2;
-        // $result = eval("return (1 $r 2);");
-
-        // var_dump($result);
-        // exit();
-
         $validator = Validator::make(
             [
                 'proc_field' => '100%',

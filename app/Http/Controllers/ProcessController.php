@@ -16,6 +16,8 @@ use App\TovCategs;
 use App\ShopRegion;
 use App\Brend;
 use App\Document;
+use App\DocumentActionFirstData;
+
 use Validator;
 use File;
 use Excel;
@@ -30,17 +32,71 @@ class ProcessController extends Controller
 	private $cache_shops = [];
 	private $validate_errors = [];
 
-	// $validate_errors['form'] = [];ошибки формы
-	// $validate_errors['file'] = [];ошибки файла загрузки
+	/**
+	* Подгрузка списка для таблицы jqGrid
+	**/
+	public function ajaxJsonList(Request $request)
+	{
+		$perPage = 20;
+		$processes = Process::paginate($perPage);
+
+		$responce=[];
+		$responce['page'] = $processes->currentPage();
+		$responce['total'] = $processes->lastPage();
+		$responce['records'] = $processes->count();
+
+		if($processes->currentPage() > 1)
+		{
+			$number = ($perPage * ($processes->currentPage()-1));
+		}
+		else
+		{
+			$number = 0;
+		}
+		foreach ($processes as $key => $value)
+		{
+			$responce['rows'][$key]['id'] = $value->id;
+		    $responce['rows'][$key]['cell'] = 
+		    	[
+					++$number, $value->title, $value->start_date, $value->end_date, $value->processType->title
+				];
+		}
+		echo json_encode($responce);
+	}
+
+	public function ajaxGetTovList(Request $request, $procId)
+	{
+		$tovs = Process::find($procId)->processTovs;
+		foreach ($tovs as $key => $value)
+		{
+			$responce['rows'][$key]['id'] = $value->id;
+		    $responce['rows'][$key]['cell'] = 
+		    	[
+					1, $value->id, $value->id, $value->id, $value->id
+				];
+		}
+		echo json_encode($responce);
+	}
 
 	public function list()
 	{
- 		return view('processes/list', ['processes' => Process::all()]);
+		return view('processes/list', ['processes' => Process::all()]);
 	}
 
 	public function showAddFrom(Request $request)
 	{
 		return view('processes/add', [
+			'tov_categs_lvl1' => TovCategs::where('level', 1)->orderBy('title')->get(),
+			'shop_regions_lvl1' => ShopRegion::where('level', 1)->orderBy('title')->get(),
+			'process_types' => ProcessType::all(),
+			'action_types' => ActionType::all(),
+			'action_marks' => ActionMark::all()
+		]);
+	}
+
+	public function edit(Request $request, $id)
+	{
+		return view('processes/edit', ['process' => Process::find($id),
 			'tov_categs_lvl1' => TovCategs::where('level', 1)->orderBy('title')->get(),
 			'shop_regions_lvl1' => ShopRegion::where('level', 1)->orderBy('title')->get(),
 			'process_types' => ProcessType::all(),
@@ -170,14 +226,16 @@ class ProcessController extends Controller
 					$doc->title = 'Документ '.$pr->title;
 					$doc->save();
 
-					// TODO нужно на лету создавать эту таблицу. И удалять ее если удаляется документ(родительский документ)
-					if(!\Schema::hasTable('documents_values_'.$doc->id))
+					//TODO перенести в миграцию
+					if(!\Schema::hasTable('document_action_first_datas'))
 					{
-						$res = \Schema::create('documents_values_'.$doc->id, function ($table) {
+						$res = \Schema::create('document_action_first_datas', function ($table) {
 							$table->increments('id');
 
+							$table->integer('doc_id')->unsigned();
 				            $table->integer('shop_id')->unsigned();
-				            // $table->integer('process_id')->unsigned();
+				            $table->integer('process_id')->unsigned();
+				            $table->integer('process_type_id')->unsigned();
 
 				            $table->string('kod_dis')->comment('код ДиС Ном. Номер');
 				            $table->string('articule_sk')->comment('Артикул ШК это артикул по базе поставщика');
@@ -215,13 +273,16 @@ class ProcessController extends Controller
 				{
 					foreach ($value['shops'] as $value2)
 					{
-						\DB::table('documents_values_'.$doc->id)->insert(
+						\DB::table('document_action_first_datas')->insert(
 		 					[
+		 						'doc_id' => $doc->id,
 								'shop_id' => $value2,
+								'process_id' => $pr->id,
+								'process_type_id' => $doc->process_type_id,
 					            'kod_dis' => $value['kodTov'],
 					            'articule_sk' => $value['articule_sk'] ?? 0,
 								'action_types_ids' => $value['type'],
-					            'on_invoice' => parseProcenteFromExcelToInt($value['skidka_on_invoice']),
+					            'on_invoice' => $this->parseProcenteFromExcelToInt($value['skidka_on_invoice']),
 					            'off_invoice' => $value['kompensaciya_off_invoice'],
 					            'skidka_itogo' => $value['skidka_itogo'],
 					            'old_zakup_price' => $value['zakup_old'],
@@ -416,15 +477,12 @@ class ProcessController extends Controller
 			$postavshik = DB::connection('sqlsrv_imported_data')->select('
 				SELECT TOP 2 [Наименование], [Код], [ИНН]
 				FROM [Imported_Data].[dbo].[Действующие_Поставщики]
-				WHERE 
-					(
-						[Наименование] LIKE \''.$data['distrTitles'].'\'
-						OR
-						[Код] LIKE \''.$data['distrTitles'].'\'
-					)');
-			$tmp = count($postavshik);
-			if($tmp > 1 || $tmp == 0)
+				WHERE [Наименование] LIKE \'%'.$data['distrTitles'].'%\' ');
+
+			if(count($postavshik) != 1)
 			{
+				$data['distrTitles'] = '';
+
 //				$this->validate_errors[$source][$row_num]['distr'] = 'Не удалось определить поставщика(Дистрибьютора) указан "'.$data['distrTitles'].'"';
 			}
 			else
@@ -878,6 +936,8 @@ class ProcessController extends Controller
 			$returnData['errors'][0] = 'Не удалось загрузить файл';
 		}
 
+// exit();
+
 		$returnData['data'] = $dataToInsert;
 		$returnData['errors'] = (($returnData['errors'] ?? []) + ($this->validate_errors['file'] ?? []));
 
@@ -980,9 +1040,9 @@ class ProcessController extends Controller
 		}
 	}
 
-	function parseProcenteFromExcelToInt($proc)
+	private function parseProcenteFromExcelToInt($proc)
 	{
-		$value = preg_replace('/[\%\-]/', '', $value);
+		$value = preg_replace('/[\%\-]/', '', $proc);
 		$value = preg_replace('/[\,]/', '.', $value);
 
         if(trim($value) != '')

@@ -1,5 +1,23 @@
 $(function(){
 
+	//высчитываем высоту общей панели
+	var sum = 0;
+	setTimeout(function(){
+		var prevHeight = $('.wrapper section.header').outerHeight()+2;
+		$('.content-panel-block:visible').each(function(){
+
+			if(prevHeight > 0)
+			{
+				$(this).css('top', prevHeight);
+			}
+			tmp = $(this).outerHeight(true);
+			prevHeight += tmp;
+			sum += tmp;
+		});
+		$('.content-panel').outerHeight(sum);
+	}, 100);
+
+	//скрываем фильтры
 	$(window).keydown(function(e)
 	{
 		if(e.keyCode == 27)//ESC
@@ -7,7 +25,7 @@ $(function(){
 			$('.hideBlock').hide();
 		}
 	});
-
+	//перетаскиваем левую панель
 	if($('nav .handrail > div').length > 0)
 	{
 		$( ".handrail > div" ).draggable({
@@ -24,15 +42,11 @@ $(function(){
 
 	if($('.error_dialog_messages').length > 0)
 	{
-		setTimeout(function(){
-			// showMessage('error', '.error_dialog_messages');
-		}, 1000);
+		showMessage('error', '.error_dialog_messages');
 	}
 	if($('.success_dialog_messages').length > 0)
 	{
-		setTimeout(function(){
-			// showMessage('success', '.success_dialog_messages');
-		}, 1000);
+		showMessage('success', '.success_dialog_messages');
 	}
 
 	left_menu_height();
@@ -41,13 +55,22 @@ $(function(){
 	$("input").button();
 	$('#tabs').tabs();
 
+
+	$('ul.auth > li').click(function(e){
+
+		if($(this).find('ul').length > 0)
+		{
+			e.preventDefault();
+			$(this).find('ul').toggle();
+		}
+	});
+
 	$('nav ul li').each(function(){
 		let el = $(this).find('ul');
 		if(el.length > 0)
 		{
 			$(this).click(function(e){
 				e.preventDefault();
-
 				el.toggle('fast');
 			});
 
@@ -56,6 +79,7 @@ $(function(){
 			});
 		}
 	});
+
 	$(document).click(function(e) {
 
 		var ret = false;
@@ -75,23 +99,13 @@ $(function(){
 			e.stopPropagation();
 			ret = true;
 		}
-
 		if(ret)
 			return;
 	});
 
-	$('ul.auth > li').click(function(e){
-
-		if($(this).find('ul').length > 0)
-		{
-			e.preventDefault();
-			$(this).find('ul').toggle();
-		}
-	});
-
 	if($.fn.datepicker)
 	{
-	 	jQuery(function ($) {
+	 	jQuery(function ($){
 	        $.datepicker.regional['ru'] = {
 	            closeText: 'Закрыть',
 	            prevText: '&#x3c;Пред',
@@ -120,7 +134,6 @@ function left_menu_height()
 {
 	let padd = parseInt($('section.header').css('padding-top')) + parseInt($('section.header').css('padding-bottom'))
 	let header = parseInt($('section.header').height()) + padd;
-
 	let h = parseInt($(window).height()) - header;
 
 	$('nav').height(h);
@@ -147,7 +160,13 @@ function showMessage(type, source, message, params)
 	$('#'+type+'_dialog_messages').dialog({
 		autoOpen: true,
 		width:params.width,
+		maxHeight:$(window).height()-50,
 		title:'Внимание!',
+		position:{
+			my:"top+5%",
+			at:"top+5%",
+			of:window
+		},
 		classes: {
 			'ui-dialog-titlebar':type+'_dialog',
 		},
