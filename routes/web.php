@@ -28,10 +28,6 @@ Route::group(['middleware' => 'auth'], function () {
 
 
 
-
-		
-
-
 		Route::get('/sys/getContragentsForAvtocomplete', 	'SystemController@ajaxGetContragentsAvtocomplete');
 		Route::get('/sys/getContragentsErarhi',				'SystemController@ajaxGetContragentsErarhi');
 		Route::get('/sys/getContragents',				 	'SystemController@ajaxGetContragents');
@@ -56,10 +52,14 @@ Route::group(['middleware' => 'auth'], function () {
 		Route::get('/test', 'TestController@index');
 	});
 
-	Route::get('/ucenka/list',					'UcenkaController@list')->name('ucenka.list');
-	Route::get('/ucenka/add',					'UcenkaController@add')->name('ucenka.add');
-	Route::post('/ucenka/addSubmit',			'UcenkaController@addSubmit')->name('ucenka.addSubmit');
-	Route::get('/ucenka/full/{appId}',			'UcenkaController@full')->name('ucenka.full');
+	Route::get('/ucenka/list',							'UcenkaController@list')->name('ucenka.list');
+	Route::get('/ucenka/add',							'UcenkaController@add')->name('ucenka.add');
+
+	Route::get('/ucenka/ajaxJsonList',					'UcenkaController@ajaxJsonList');
+	Route::get('/ucenka/edit/{appId}',					'UcenkaController@edit');
+	Route::get('/ucenka/ajaxJsonEdit/{appId}',			'UcenkaController@ajaxJsonEdit');
+	Route::post('/ucenka/ajaxAddSubmit',				'UcenkaController@ajaxAddSubmit');
+	Route::post('/ucenka/ajaxJsonEditSubmit',			'UcenkaController@ajaxJsonEditSubmit');
 
 	Route::get('/tovs/ajaxGetTovForAvtocomplete', 	'TovController@ajaxGetTovForAvtocomplete');
 

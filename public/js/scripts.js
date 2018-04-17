@@ -25,6 +25,8 @@ $(function(){
 			$('.hideBlock').hide();
 		}
 	});
+
+
 	//перетаскиваем левую панель
 	if($('nav .handrail > div').length > 0)
 	{
@@ -50,11 +52,13 @@ $(function(){
 	}
 
 	left_menu_height();
-	$(window).resize(left_menu_height);
+	$(window).resize(function()
+		{
+			left_menu_height();
+		});
 
 	$("input").button();
 	$('#tabs').tabs();
-
 
 	$('ul.auth > li').click(function(e){
 
@@ -233,6 +237,8 @@ function resizeMenu(el)
 		$('.content').width( $(window).width() - nav_w );
 		$('.content').css('margin-left', nav_w);
 	}
+
+	$(window).trigger('resize');
 }
 
 function show_load()

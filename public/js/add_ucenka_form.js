@@ -12,7 +12,6 @@ var kodNomenkaturAvtocomplete = {
 			$('.tovName:eq('+n_row+')').val(cache_kodNomenkatur[term][0].label);
 			return;
 		}
-
 		$.ajax({
 			url:"/tovs/ajaxGetTovForAvtocomplete",
 			data:request,
@@ -32,9 +31,6 @@ var kodNomenkaturAvtocomplete = {
 		});
 	},
 	minLength: 2,
-	select: function(event, ui) {
-
-	}
 }
 
 var select2Common = {
@@ -43,7 +39,6 @@ var select2Common = {
 };
 
 $(function(){
-
 	$('.select_shop').select2({
 		width:'350px',
 		minimumResultsForSearch:Infinity,
@@ -187,7 +182,7 @@ function checkValues()
 
 	if(!kodExist)
 	{
-		mess += 'Не указано ни одиного товара<br>';
+		mess += 'Не указано ни одного товара<br>';
 		err = true;
 	}
 

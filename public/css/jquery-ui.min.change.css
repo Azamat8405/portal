@@ -27,3 +27,9 @@ font-weight: bold;
 #ui-datepicker-div{
 z-index:110 !important;
 }
+.ui-datepicker {
+width: 15em;
+}
+.ui-datepicker table {
+    font-size: .8em;
+}

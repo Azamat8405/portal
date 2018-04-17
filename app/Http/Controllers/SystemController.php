@@ -246,7 +246,6 @@ class SystemController extends Controller
 					,sr.StoreRegion ASC
 					,sr.StoreCity ASC
 					,sm.StoreName ASC');
-
 		if($shops)
 		{
 			$result = [];

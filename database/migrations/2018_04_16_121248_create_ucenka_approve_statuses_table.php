@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateUcenkaAppTable extends Migration
+class CreateUcenkaApproveStatusesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,9 @@ class CreateUcenkaAppTable extends Migration
      */
     public function up()
     {
-        Schema::create('ucenka_apps', function (Blueprint $table) {
+        Schema::create('ucenka_approve_statuses', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('shop_id')->unsigned();
-            $table->tinyInteger('approved_id');
-            $table->integer('user_id')->unsigned();
-
+            $table->string('title');
             $table->timestamps();
         });
     }
@@ -30,6 +27,6 @@ class CreateUcenkaAppTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('ucenka_apps');
+        Schema::dropIfExists('ucenka_approve_statuses');
     }
 }

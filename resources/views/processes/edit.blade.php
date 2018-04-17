@@ -578,4 +578,5 @@
 	<link href="{{ asset('css/select2.change.css') }}" rel="stylesheet">
 
     <link href="{{ asset('css/ui.jqgrid.css') }}" rel="stylesheet">
+	<link href="{{ asset('css/ui.jqgrid.change.css') }}" rel="stylesheet">
 @endsection

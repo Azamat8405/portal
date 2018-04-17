@@ -2,13 +2,15 @@
 
 @section('content')
 
-<form class="addProcessForm" action="{{ route('ucenka.addSubmit') }}" onSubmit="return checkValues();" method="post" enctype="multipart/form-data">
+<form action="" onSubmit="return checkValues();" method="post" enctype="multipart/form-data" clas="form">
 		@csrf
 		<div class="content-panel">
 			<div class="content-panel-block">
 				<h2>Добавление заявок на уценку</h2>
 
-				<div class="form-fields-row">
+<!--
+
+ 				<div class="form-fields-row">
 					<div class="form-field-cell">
 						<div class="form-field-input">
 						    <div>
@@ -17,16 +19,13 @@
 					    	<div>
 					    		<select name="shop" id="shop" class="select_shop">
 					            	<option value="0"> Не выбрано </option>
-
 									@if($shops)
 										@foreach($shops as $sh)
-
 											@if(old('shop') == $sh->id)
 												<option value="{{$sh->id}}" selected="selected">{{$sh->title}}</option>
 											@else
 												<option value="{{$sh->id}}">{{$sh->title}}</option>
 											@endif
-
 										@endforeach
 									@endif
 					            </select>
@@ -35,11 +34,13 @@
 					</div>
 				</div>
 
+-->
+
 				<div class="content-panel-inputs">
-					<input type="submit" value="Подать заявку">
+					<input type="submit" id="save" value="Подать заявку">
 
 					<input type="button" onclick="delRows();" value="Удалить строки">
-					<input type="button" onclick="addNewRow();" value="Добавить строку">
+					<input type="button" onclick="addRow();" value="Добавить строку">
 				</div>
 			</div>
 
@@ -56,6 +57,17 @@
 				</div>
 			@endif
 		</div>
+
+	    <div class="content_body">
+	    	<script>
+	    		var reasonVariants = '{{$reasonVariants}}';
+	    	</script>
+	        <table id="jqGridAdd"><tr><td></td></tr></table> 
+	        <div id="jqGridAddPager"></div> 
+		</div>
+
+
+{{--
 
 		<div class="content_body">
 			<div class="table_data_block">
@@ -155,17 +167,31 @@
 
 			</div>
 		</div>
+--}}
+
+
 	</form>
 @endsection
 
 @section('addition_js')
 	<script src="{{ asset('js/select2.full.min.js') }}"></script>
 	<script src="{{ asset('js/select2.full.min.ru.js') }}"></script>
-	<script src="{{ asset('js/tableFixHeader.js') }}"></script>
+
+	<script src="{{ asset('js/jquery.jqGrid.min.js') }}"></script>
+	<script src="{{ asset('js/grid.locale-ru.js') }}"></script>
+{{--
 	<script src="{{ asset('js/add_ucenka_form.js') }}"></script>
+--}}
+
+	<script src="{{ asset('js/ucenka.js') }}"></script>
+    <script src="{{ asset('js/jquery.jqGrid.after.js') }}"></script>
+
 @endsection
 
 @section('addition_css')
 	<link href="{{ asset('css/select2.min.css') }}" rel="stylesheet">
 	<link href="{{ asset('css/select2.change.css') }}" rel="stylesheet">
+
+	<link href="{{ asset('css/ui.jqgrid.css') }}" rel="stylesheet">
+	<link href="{{ asset('css/ui.jqgrid.change.css') }}" rel="stylesheet">
 @endsection

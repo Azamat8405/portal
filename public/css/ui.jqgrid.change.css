@@ -1,0 +1,17 @@
+.ui-jqgrid tr.ui-row-ltr td,
+.ui-jqgrid-labels th{
+vertical-align: middle;
+}
+.ui-jqgrid{
+z-index:50;
+}
+.ui-state-highlight, .ui-widget-content .ui-state-highlight, .ui-widget-header .ui-state-highlight{
+background: #f7f2dc;
+border: 1px solid #ddd;
+}
+.ui-state-hover, .ui-widget-content .ui-state-hover, .ui-widget-header .ui-state-hover, .ui-state-focus, .ui-widget-content .ui-state-focus, .ui-widget-header .ui-state-focus, .ui-button:hover, .ui-button:focus{
+border: 1px solid #ddd;
+}
+.ui-jqgrid tr.ui-row-ltr td, .ui-jqgrid-labels th{
+height:31px;
+}

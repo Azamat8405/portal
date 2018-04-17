@@ -63,10 +63,11 @@ class RegisterController extends Controller
     protected function create(array $data)
     {
         return User::create([
-            'name' => $data['name'],
+            'name'          => $data['name'],
+            'role'          => $data['role'],
             'user_group_id' => $data['user_group_id'],
-            'email' => $data['email'],
-            'password' => bcrypt($data['password']),
+            'email'         => $data['email'],
+            'password'      => bcrypt($data['password']),
         ]);
     }
 }

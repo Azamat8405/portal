@@ -1,19 +1,16 @@
 @extends('layouts.app')
 
 @section('content')
-
-	<form class="addProcessForm" action="{{ route('processes.add') }}" method="post" enctype="multipart/form-data">
+	<form action="" method="post" enctype="multipart/form-data">
 		@csrf
+
 		<div class="content-panel-fon"></div>
 		<div class="content-panel">
 			<div class="content-panel-block">
-				<h2>Список заявок на уценку</h2>
+				<h2>Редактирование заявки "{{$app->shop->title}}"</h2>
 
-				<div class="content-panel-inputs">
-					<a class="button" href="{{route('ucenka.add')}}">Добавить заявку</a>
-
-					<!-- <input type="submit" onclick="addRow();" value="Фильтровать"> -->
-
+ 				<div class="content-panel-inputs">
+					<input type="submit" id="save" value="Сохранить">
 				</div>
 			</div>
 
@@ -42,18 +39,20 @@
 			@endif
 		</div>
 	</form>
-	<div class="content_body">
-        <table id="jqGridList"><tr><td></td></tr></table>
-        <div id="jqGridpager"></div>
+
+    <div class="content_body">
+        <table id="jqGridEdit" data-id="{{$app->id}}"><tr><td></td></tr></table> 
+        <div id="jqGridEditPager"></div> 
 	</div>
+
 @endsection
+
 
 @section('addition_js')
     <script src="{{ asset('js/jquery.jqGrid.min.js') }}"></script>
     <script src="{{ asset('js/grid.locale-ru.js') }}"></script>
 	<script src="{{ asset('js/ucenka.js') }}"></script>
     <script src="{{ asset('js/jquery.jqGrid.after.js') }}"></script>
-
 @endsection
 
 @section('addition_css')

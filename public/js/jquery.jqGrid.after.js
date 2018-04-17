@@ -20,7 +20,7 @@ function resizeHeightjqGrid(grid)
 	var tmp = $('.content-panel').outerHeight()
 		+$('.wrapper section.header').outerHeight()
 		+$('.ui-jqgrid-htable').outerHeight()
-		+$('#jqGridpager').outerHeight()
+		+ ($('.ui-jqgrid-pager').length > 0 ? $('.ui-jqgrid-pager').outerHeight() : 0) 
 		+10;
 	var gridHeight = $(window).height() - tmp;
 	grid.jqGrid("setGridHeight", gridHeight);
@@ -28,7 +28,7 @@ function resizeHeightjqGrid(grid)
 
 function resizeWidthjqGrid(grid)
 {
-	var w = grid.jqGrid("getGridParam", 'width');
+	var w = grid.jqGrid("getGridParam", 'width')
 	var w2 = $('.content_body').width();
 	if(w < w2)
 	{

@@ -46,6 +46,7 @@
                     @endguest
                 </ul>
             </section>
+
             @guest
                 <style>
                     section.content
@@ -58,10 +59,19 @@
                 <nav>
                     <div class="handrail"><div></div></div>
                     <ul>
-                        <li><a href="{{ route('processes') }}">Акции</a></li>
 
                         @php
-                        if(Gate::allows('ucenka-read') || Gate::allows('ucenka-create') || Gate::allows('admin'))
+                        if(Gate::allows('processes-read') || Gate::allows('processes-create') || Gate::allows('admin'))
+                        {
+                        @endphp
+                            <li><a href="{{ route('processes') }}">Акции</a></li>
+                        @php
+                        }
+                        @endphp
+                        
+
+                        @php
+                        if(Gate::allows('ucenkaapp-read') || Gate::allows('ucenkaapp-create') || Gate::allows('admin'))
                         {
                         @endphp
                             <li><a href="{{ route('ucenka.list') }}">Уценка</a></li>

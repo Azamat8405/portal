@@ -13,6 +13,7 @@
 	<div class="content_body">
 		<script src="{{ asset('js/jquery.jqGrid.min.js') }}"></script>
 		<link href="{{ asset('css/ui.jqgrid.css') }}" rel="stylesheet">
+		<link href="{{ asset('css/ui.jqgrid.change.css') }}" rel="stylesheet">
 
 		<script>
 

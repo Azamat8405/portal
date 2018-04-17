@@ -27,7 +27,21 @@ class AuthServiceProvider extends ServiceProvider
     //     $this->registerPolicies();
     // }
 
+    private function checkRole($user, $rol)
+    {
+        $roles = explode(',', $user->role);
 
+        if(in_array('admin', $roles))
+        {
+            return true;
+        }
+
+        if(in_array($rol, $roles))
+        {
+            return true;
+        }
+        return false;
+    }
 
     /**
     * Регистрация любых сервисов аутентификации/авторизации для приложения.
@@ -39,14 +53,20 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies($gate);
 
-        $gate->define('ucenka-read', function ($user) {
+        $gate->define('admin', function ($user) {
+            return $this->checkRole($user, 'admin');
+        });
 
-            $roles = explode(',', $user->role);
-            if(in_array('ucenka-read', $roles))
-            {
-                return true;
-            }
-            return false;
+        $gate->define('ucenkaapp-read', function ($user) {
+            return $this->checkRole($user, 'ucenkaapp-read');
+        });
+
+        $gate->define('ucenkaapp-edit', function ($user) {
+            return $this->checkRole($user, 'ucenkaapp-edit');
+        });
+
+        $gate->define('ucenkaapp-create', function ($user) {
+            return $this->checkRole($user, 'ucenkaapp-create');
         });
     }
 }

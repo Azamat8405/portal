@@ -30,4 +30,5 @@
 
 @section('addition_css')
     <link href="{{ asset('css/ui.jqgrid.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/ui.jqgrid.change.css') }}" rel="stylesheet">
 @endsection

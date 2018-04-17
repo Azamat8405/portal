@@ -27,12 +27,13 @@ class CreateUcenkaAppTovsTable extends Migration
 
             $table->integer('user_id')->unsigned()->nullable()->comment('Согласователь из users');
             $table->integer('agreement_date')->unsigned()->nullable();
-            $table->integer('skidka')->unsigned()->nullable();
 
+            $table->string('refusal_comment')->nullable();
+
+            $table->integer('skidka')->unsigned()->nullable();
             $table->timestamps();
         });
     }
-
     /**
      * Reverse the migrations.
      *

@@ -23,6 +23,9 @@ class HomeController extends Controller
      */
     public function index()
     {
+
+        return redirect('/processes');
+
         return view('home');
     }
 }

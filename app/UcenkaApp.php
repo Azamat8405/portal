@@ -15,4 +15,9 @@ class UcenkaApp extends Model
 	{
 		return $this->belongsTo('App\Shop');
 	}
+
+	public function status()
+	{
+		return $this->belongsTo('App\UcenkaApproveStatus', 'ucenka_approve_status_id');
+	}
 }

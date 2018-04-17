@@ -15,7 +15,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password', 'user_group_id',
+        'name', 'email', 'password', 'user_group_id', 'role',
     ];
 
     /**
@@ -30,5 +30,10 @@ class User extends Authenticatable
     public function getDateFormat()
     {
         return 'Y-m-d\TH:i:s';
+    }
+
+    public function shop()
+    {
+        return $this->belongsTo('App\Shop');
     }
 }
