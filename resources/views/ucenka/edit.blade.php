@@ -2,8 +2,8 @@
 
 @section('content')
 	<form action="" method="post" enctype="multipart/form-data">
-		@csrf
 
+		@csrf
 		<div class="content-panel-fon"></div>
 		<div class="content-panel">
 			<div class="content-panel-block">
@@ -11,6 +11,11 @@
 
  				<div class="content-panel-inputs">
 					<input type="submit" id="save" value="Сохранить">
+
+					@if($user->user_group_id == 5)
+						<input type="button" onclick="delRows();" value="Удалить строки">
+						<input type="button" onclick="addRow();" value="Добавить строку">
+					@endif
 				</div>
 			</div>
 
@@ -41,6 +46,14 @@
 	</form>
 
     <div class="content_body">
+		<script>
+			@if($user->user_group_id == 4)
+				var isKM = true;
+			@else
+				var isKM = false;
+			@endif
+			var reasonVariants = '{{$reasonVariants}}';
+		</script>
         <table id="jqGridEdit" data-id="{{$app->id}}"><tr><td></td></tr></table> 
         <div id="jqGridEditPager"></div> 
 	</div>

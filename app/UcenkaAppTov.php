@@ -13,7 +13,7 @@ class UcenkaAppTov extends Model
 
 	public function getSrokGodnostyAttribute($value)
 	{
-		if(intval($value) == $value)
+		if(intval($value) == $value && $value > 0)
 		{
 			return date('d.m.Y', $value);
 		}

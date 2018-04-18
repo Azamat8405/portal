@@ -16,7 +16,8 @@ class UcenkaController extends Controller
 {
 	public function list()
 	{
-		if (Gate::denies('ucenkaapp-read', User::find(Auth::id())))
+		$user = User::find(Auth::id());
+		if (Gate::denies('ucenkaapp-read', $user))
 		{
 			abort(403);
 		}
@@ -24,21 +25,30 @@ class UcenkaController extends Controller
 		$apps = UcenkaApp::paginate(20);
 		return view('ucenka/list', 
 			[
+				'user' => $user,
 				'apps' => $apps,
-				'reasons' => UcenkaReason::all(),
-				'shops' => Shop::all()->sortBy('title')
+				'reasons' => UcenkaReason::all()
 			]);
 	}
 
 	public function ajaxJsonList()
 	{
-		if (Gate::denies('ucenkaapp-read', User::find(Auth::id())))
+		$user = User::find(Auth::id());
+		if (Gate::denies('ucenkaapp-read', $user))
 		{
 			abort(403);
 		}
-
 		$perPage = 20;
-		$apps = UcenkaApp::where('user_id', Auth::id())->orderBy('created_at', 'desc')->paginate($perPage);
+
+		// Если пользователь категорийный менеджер, он видит все заявки на скидку
+		if($user->user_group_id == 4)
+		{
+			$apps = UcenkaApp::orderBy('created_at', 'desc')->paginate($perPage);
+		}
+		else
+		{
+			$apps = UcenkaApp::where('user_id', Auth::id())->orderBy('created_at', 'desc')->paginate($perPage);
+		}
 
 		$responce=[];
 		$responce['page'] = $apps->currentPage();
@@ -72,6 +82,7 @@ class UcenkaController extends Controller
 					$value->shop->title,
 					($value->status ? $value->status->title : ''),
 					$tovs,
+					date('d.m.Y', $value->created_at->timestamp)
 				];
 		}
 		echo json_encode($responce);
@@ -79,17 +90,43 @@ class UcenkaController extends Controller
 
 	public function edit($appId)
 	{
+		$reasonVariants = [];
+		$reasons = UcenkaReason::all();
+		if($reasons)
+		{
+			foreach ($reasons as $key => $value)
+			{
+				$reasonVariants[] = $value->id.':'.$value->title;
+			}
+		}
+
+		//TODO Проверка прав в сервис перенести
+		$user = User::find(Auth::id());
+		if (Gate::denies('ucenkaapp-edit', $user) &&
+			Gate::denies('ucenkaapp-read', $user))
+		{
+			abort(403);
+		}
+
 		$app = UcenkaApp::find($appId);
 		return view('ucenka/edit', 
  			[
- 				'app' => $app
+ 				'app' => $app,
+ 				'user' => $user,
+				'reasonVariants' => implode(';', $reasonVariants)
  			]);
 	}
 
 	public function ajaxJsonEdit($appId)
 	{
-		$perPage = 20;
+		$user = User::find(Auth::id());
+		if (Gate::denies('ucenkaapp-edit', $user) && 
+			Gate::denies('ucenkaapp-read', $user))
+		{
+			abort(403);
+		}
 
+		$perPage = 20;
 		$app = UcenkaApp::find($appId);
 		$app_tovs = UcenkaAppTov::where('ucenka_app_id', $appId)->paginate($perPage);
 
@@ -109,92 +146,227 @@ class UcenkaController extends Controller
 
 		foreach($app_tovs as $key => $value)
 		{
+			$data = [
+				$value->id,
+				++$number,
+				$app->shop->title,
+				$value->nomenklatury_kod,
+				$value->nomenklatury_title,
+				$value->srok_godnosty > 0 ? $value->srok_godnosty : '',
+				($value->ucenka_reason ? $value->ucenka_reason->title : ''),
+				$value->ostatok,
+			];
+
+			//	если есть пользователь является Категорийным менеджером, то ему выводим дополнительные поля
+			if($user->user_group_id == 4)
+			{
+				$data = array_merge($data, [
+							$value->skidka,
+							is_null($value->agreement_date) ? 'Отклонено' : 'Одобрено',
+							$value->refusal_comment]);
+			}
+
 			$responce['rows'][$key]['id'] = $value->id;
-		    $responce['rows'][$key]['cell'] = 
-		    	[
-					++$number,
-					$app->shop->title,
-					$value->nomenklatury_kod,
-					$value->nomenklatury_title,
-					$value->srok_godnosty,
-					($value->ucenka_reason ? $value->ucenka_reason->title : ''),
-					$value->ostatok,
-					$value->skidka,
-					is_null($value->agreement_date) ? 'Отклонено' : 'Одобрено',
-					'',
-				];
+		    $responce['rows'][$key]['cell'] = $data;
 		}
 		echo json_encode($responce);
 	}
 
 	public function ajaxJsonEditSubmit(Request $request)
 	{
-		if( trim($request->get('id')) == '' ||
-			trim($request->get('approve')) == '' ||
-			trim($request->get('app_id')) == '')
+		$result = [];
+		$user = User::find(Auth::id());
+		if (Gate::denies('ucenkaapp-edit', $user) && 
+			Gate::denies('ucenkaapp-read', $user))
 		{
-			echo 0;
-			return;
+			abort(403);
 		}
 
-		$tov = UcenkaAppTov::find($request->get('id'));
-		if($request->get('approve') == 1)
+		// Если пользователь КМ
+		if($user->user_group_id == 4)
 		{
-			$tov->agreement_date = time();
-		}
-		else
-		{
-			$tov->agreement_date = null;
-		}
-		$tov->refusal_comment = $request->get('refusal_comment');
-		$tov->user_id = Auth::id();
+			$agreement = [];
+			$nomenkatura = json_decode($request->get('d'));
 
-		if($tov->save())
-		{
-			// TODO вынести в сервисный слой изменение сатуса
-			//	Дальше изменяем статус у самой заявки 
-			$app = UcenkaApp::find($request->get('app_id'));
-
-			$approved = 0;
-			$notapproved = 0;
-
-			foreach($app->app_tovs as $key => $value)
+			if(trim($request->get('appId')) == '')
 			{
-				if(is_null($value->agreement_date))
+				$result['errors'][] = 'Ошибка сохранения. Обратитесь к администратору системы.';
+				echo json_encode($result);
+				return;
+			}
+
+			if( count($nomenkatura) == 0)
+			{
+				$result['errors'][] = 'Не указано ни одного кода номенклатуры';
+				echo json_encode($result);
+				return;
+			}
+
+			foreach ($nomenkatura as $key => $value)
+			{
+				$tov = UcenkaAppTov::find($value->ID);
+				if(mb_strtolower($value->approve) == 'одобрено')
 				{
-					$notapproved++;
+					$tov->agreement_date = time();
+					$tov->refusal_comment = '';
 				}
 				else
 				{
-					$approved++;
+					$tov->agreement_date = null;
+					$tov->refusal_comment = $value->refusal_comment;
 				}
-				if($approved > 0 && $notapproved > 0)
+			
+				$tov->skidka = $value->skidka;
+				$tov->user_id = Auth::id();
+
+				if(!$tov->save())
 				{
-					$app->ucenka_approve_status_id = 2;//одобрено частично
-					if($app->save())
-					{
-						echo 1;
-						return;
-					}
-					break;
+					$result['errors'][] = 'Не удалось сохранить данные.';
 				}
-			}
-			if($app->app_tovs->count() == $approved)
-			{
-				$app->ucenka_approve_status_id = 1;// одобрено полностью
-			}
-			elseif($app->app_tovs->count() == $notapproved)
-			{
-				$app->ucenka_approve_status_id = 3;// отклонено
 			}
 
-			if($app->save())
+			if(!isset($result['errors']))
 			{
-				echo 1;
-				return;
+				// TODO вынести в сервисный слой изменение сатуса
+				//	Дальше изменяем статус у самой заявки 
+				$app = UcenkaApp::find($request->get('appId'));
+
+				$approved = 0;
+				$notapproved = 0;
+
+				foreach($app->app_tovs as $key => $value)
+				{
+					if(is_null($value->agreement_date))
+					{
+						$notapproved++;
+					}
+					else
+					{
+						$approved++;
+					}
+					if($approved > 0 && $notapproved > 0)
+					{
+						$app->ucenka_approve_status_id = 2;//одобрено частично
+						if($app->save())
+						{
+							$result['success'] = 1;
+							echo json_encode($result);
+							return;
+						}
+						break;
+					}
+				}
+				if($app->app_tovs->count() == $approved)
+				{
+					$app->ucenka_approve_status_id = 1;// одобрено полностью
+				}
+				elseif($app->app_tovs->count() == $notapproved)
+				{
+					$app->ucenka_approve_status_id = 3;// отклонено
+				}
+
+				if($app->save())
+				{
+					$result['success'] = 1;
+					echo json_encode($result);
+					return;
+				}
 			}
 		}
-		echo 0;
+		else
+		{
+			$kod_reason = []; // не должно быть строк с повторящимися занчениями кода и причины;
+			$reasons = [];// для кеширования, чтобы каждый раз не ходить в базу.
+
+			$tovs = UcenkaAppTov::where('ucenka_app_id', $request->get('appId'))->get();
+			$nomenkatura = json_decode($request->get('d'));
+
+			if( count($nomenkatura) == 0)
+			{
+				$result['errors'][] = 'Не указано ни одного кода номенклатуры';
+				echo json_encode($result);
+				return;
+			}
+
+			foreach ($nomenkatura as $key => $value)
+			{
+				if(trim($value->kod) == '')
+				{
+					$result['errors'][$value->ID]['kod'] = 'Пустое значение для кода номенклатуры';
+					break;
+				}
+
+				$tov = null;
+				foreach ($tovs as $key => $val)
+				{
+					if($value->ID == $val->id)
+					{
+						$tov = $val;
+						unset($tovs[$key]);//найденный, удаляем из коллекции. Все что останеться в итоге, нужно будет удалить из таблицы.
+						break;
+					}
+				}
+				//Если не нашли пришедшую из формы номенклатуру, значит ее добавили при редактировании и мы тоже добавляем.
+				if(!$tov)
+				{
+					$tov = new UcenkaAppTov();
+					$tov->ucenka_app_id = $request->get('appId');
+				}
+
+				$tov->nomenklatury_kod = $value->kod;
+	            $tov->nomenklatury_title = $value->name ?? '';
+	            $tov->srok_godnosty = strtotime($value->srok) ?? 0;
+
+				if(!in_array($value->reason, $reasons))
+				{
+					$reason = UcenkaReason::where('title', $value->reason)->get();
+					if($reason->count() > 0)
+					{
+						$reasons[$reason[0]->id] = $value->reason;
+		            	$tov->ucenka_reason_id = $reason[0]->id;
+		            }
+		            else
+		            {
+						$result['errors'][$value->ID]['reason'] = 'Причина не определена';
+						break;
+		            }
+				}
+				else
+				{
+					$tmp = array_keys($reasons, $value->reason);
+					$tov->ucenka_reason_id = $tmp[0];
+				}
+
+				if(!isset($kod_reason[$tov->nomenklatury_kod.$tov->ucenka_reason_id]))
+				{
+					$kod_reason[$tov->nomenklatury_kod.$tov->ucenka_reason_id] = 1;
+				}
+				else
+				{
+					$result['errors'][$value->ID]['kod'] = 'Не допустимо указывать код с одной и той же причиной. В заявке уже указан код "'.$tov->nomenklatury_kod.'" с причиной "'.$reasons[$tov->ucenka_reason_id].'".';
+				}
+	            $tov->ostatok = $value->ostatok ?? 0;
+
+	            if(!$tov->save())
+	            {
+					$result['errors'][$value->ID]['save'] = 'Не удалось сохранить данные. Попробуйте еще раз, либо обратитесь к администратору системы.';
+					break;
+	            }
+			}
+
+			if(!isset($result['errors']) && $tov->save())
+			{
+				if($tovs->count() > 0)
+				{
+					foreach ($tovs as $key => $val)
+					{
+						$val->delete();
+					}
+				}
+				$result['success'] = 1;
+			}
+		}
+		echo json_encode($result);
 	}
 
 	public function add()
@@ -234,7 +406,6 @@ class UcenkaController extends Controller
 			return;
 		}
 
-		$nomenkatura = json_decode($request->get('d'));
 		DB::beginTransaction();
 
 			$app = new UcenkaApp();
@@ -250,6 +421,7 @@ class UcenkaController extends Controller
 			else
 			{
 				$reasons = [];
+				$nomenkatura = json_decode($request->get('d'));
 				foreach ($nomenkatura as $key => $value)
 				{
 					$key++;

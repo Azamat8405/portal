@@ -30,13 +30,7 @@ class AuthServiceProvider extends ServiceProvider
     private function checkRole($user, $rol)
     {
         $roles = explode(',', $user->role);
-
-        if(in_array('admin', $roles))
-        {
-            return true;
-        }
-
-        if(in_array($rol, $roles))
+        if(in_array($rol, $roles) || in_array('admin', $roles))
         {
             return true;
         }

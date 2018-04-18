@@ -935,12 +935,8 @@ class ProcessController extends Controller
 		{
 			$returnData['errors'][0] = 'Не удалось загрузить файл';
 		}
-
-// exit();
-
 		$returnData['data'] = $dataToInsert;
 		$returnData['errors'] = (($returnData['errors'] ?? []) + ($this->validate_errors['file'] ?? []));
-
 		echo json_encode($returnData);
 	}
 

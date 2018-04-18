@@ -3,8 +3,8 @@
 @section('content')
 <form class="reg_form" method="POST" action="{{ route('register') }}">
     @csrf
-    <input type="hidden" value="1" name="user_group_id">
-    <input type="hidden" value="admin" name="role">
+    <input type="hidden" value="6" name="user_group_id">
+    <input type="hidden" value="www" name="role">
 
     @if ($errors->has('name'))
         <div class="form-field-input">

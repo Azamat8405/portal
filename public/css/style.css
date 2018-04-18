@@ -260,8 +260,6 @@ section.header ul.auth li ul li:hover
 border-left: 4px solid #00a7f7;
 background:#ddf4ff;
 }
-
-
 .error_dialog{
 background: #ffc8c8;
 }
@@ -277,6 +275,7 @@ display:none;
 padding:10px;
 line-height: 16px;
 width:100%;
+white-space: normal;
 }
 .error_input{
 border:1px solid red !important;

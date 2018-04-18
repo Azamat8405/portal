@@ -7,8 +7,6 @@ var kodNomenkaturAvtocomplete = {
 	source: function( request, response ){
 
 		var el = this.element;
-
-
 		var n_row = getRowNumber(el);
 		var term = request.term;
 
@@ -51,6 +49,7 @@ $(function () {
 
 	if($.fn.jqGrid)
 	{
+
 		if($("#jqGridList").length > 0)
 		{
 			grid = $("#jqGridList");
@@ -58,12 +57,12 @@ $(function () {
 				url:'/ucenka/ajaxJsonList',
 				datatype: "json",
 				height:300,
-				colNames:['Номер','Магазин','Одобрена','Наименование товара'],
 				colModel:[
-				   		{name:'num',width:30,align:"center"},
-				   		{name:'name',width:100},
-				   		{name:'status',width:50,align:"center"},
-				   		{name:'tov_name',width:100,},
+				   		{label:'Номер',   				name:'num',		width:30,align:"center"},
+				   		{label:'Магазин', 				name:'name',	width:100},
+				   		{label:'Одобрена',				name:'status',	width:50,align:"center"},
+				   		{label:'Наименование товара', 	name:'tov_name',width:100,},
+				   		{label:'Дата подачи заявки',	name:'addDate',	width:50,align:"center"},
 				   	],
 				multiselect:false,
 				pager: '#jqGridpager',
@@ -84,49 +83,128 @@ $(function () {
 				}
 			});
 
+			let colModelEditOp;
+			if(isKM)
+			{
+				colModelEditOp = [
+			   		{label:'ID',name:'ID',hidden:true},
+			   		{label:'Номер',name:'num',width:30,align:"center"},
+			   		{label:'Магазин',name:'shop',width:100},
+			   		{label:'Код Номенклатуры',name:'kod',width:70},
+			   		{label:'Наименование',name:'name',width:150},
+			   		{label:'Срок годности',name:'srok',width:50,align:"center"},
+			   		{label:'Причина уценки',name:'reason',width:50,align:"center"},
+			   		{label:'Остаток',name:'ostatok',width:50,align:"center"},
+				];
+			}
+			else
+			{
+				colModelEditOp = [
+			   		{label:'ID',				name:'ID',hidden:true},
+			   		{label:'Номер',				name:'num',width:30,align:"center"},
+			   		{label:'Магазин',			name:'shop',width:100},
+				 	{label:'Код Номенклатуры',	name:'kod',width:70,editable:true,edittype:'text'},
+			   		{label:'Наименование',		name:'name',width:150,editable:true},
+			   		{label:'Срок годности',		name:'srok',width:50,align:"center",editable:true,edittype:'text'},
+			   		{label:'Причина',			name:'reason',width:50,align:"center",editable:true,edittype:'select',editoptions:{value:reasonVariants}},//{dataUrl:'include/test.php'}
+			   		{label:'Остаток',			name:'ostatok',width:50,align:"center",editable:true,edittype:'text'},
+				];
+			}
+
+			if(isKM)
+			{
+				colModelEditOp.push(
+					{label:'Скидка %',name:'skidka',width:50,align:"center",editable:true,edittype:"text"},
+					{label:'Одобрить',name:'approve',index:'approve',width:70,align:"center",editable:true,edittype:"select",editoptions:{value:approveVariants}},
+					{label:'Комметарий',name:'refusal_comment',index:'refusal_comment',width:100,align:"center",editable:true,edittype:'text'}
+					);
+			}
+
 			grid = $("#jqGridEdit");
 			grid.jqGrid({
 				url: 	'/ucenka/ajaxJsonEdit/'+grid.data('id'),
-				editurl:'/ucenka/ajaxJsonEditSubmit',
+				// editurl:'/ucenka/ajaxJsonEditSubmit',
+				editurl:'clientArray',
 				datatype: "json",
 				height:300,
-				colNames:['Номер','Магазин','Код Номенклатуры','Наименование','Срок годности','Причина уценки','Остаток','Скидка','Одобрить','Комметарий'],
-				colModel:[
-				   		{name:'num',width:30,align:"center"},
-				   		{name:'shop',width:100},
-				   		{name:'kod',width:70},
-				   		{name:'name',width:150},
-				   		{name:'srok',width:50,align:"center"},
-				   		{name:'reason',width:50,align:"center"},
-				   		{name:'ostatok',width:50,align:"center"},
-				   		{name:'skidka',width:50,align:"center"},
-				   		{name:'approve',index:'approve',width:70,align:"center",editable:true,edittype:"select",editoptions:{value:approveVariants}},
-				   		{name:'refusal_comment',index:'refusal_comment',width:100,align:"center",editable:true,edittype:'text'},
-					],
-				multiselect:false,
+				colModel:colModelEditOp,
+				multiselect:true,
 				pager:'#jqGridEditPager',
 				ondblClickRow:function(rowid)
 				{
 					grid.editRow(rowid);
+					events();
 				}
 			});
 
 			$("#save").click( function(e) {
 				e.preventDefault();
 
+
+				// grid.find('tr[editable=1]').each(function(){
+				// 	grid.jqGrid('saveRow', this.id, function(d, l, o){
+				// 		if(d.responseText == 1)
+				// 		{
+				// 			return true;
+				// 		}
+				// 		return false;
+				// 	}, '', {'app_id': grid.data('id')});
+				// });
+
+				if($('input.error_input:visible').length)
+				{
+					return showMessage('error', false, 'Необходимо поправить ошибки формы.');
+				}
+
 				grid.find('tr[editable=1]').each(function(){
-
-					grid.jqGrid('saveRow', this.id, function(d, l, o){
-
-						if(d.responseText == 1)
-						{
-							return true;
-						}
-						return false;
-					}, '', {'app_id': grid.data('id')});
+					save(grid, this.id);
 				});
-			});
 
+				let json = JSON.stringify(grid.getRowData());
+				$.ajax({
+					url:'/ucenka/ajaxJsonEditSubmit',
+					type:'post',
+					dataType:'json',
+					data:'d='+json+'&appId='+grid.data('id'),
+					success:function(d){
+
+						if(d.success)
+						{
+							showMessage('success', false, 'Заявка успешно сохранена.');
+							setTimeout(function(){
+								window.location.href = '/ucenka/list';
+							}, 1000);
+						}
+						else if(d.errors)
+						{
+							let str = '';
+							for (i in d.errors) {
+
+								if(i == 0)
+								{
+									str += d.errors[i]+'<br>';
+								}
+								else
+								{
+
+console.log(i);
+									grid.editRow(i);
+									events();
+
+									for (ind in d.errors[i]) {
+
+										$('input#'+i+'_'+ind).before( '<div class="error_message">'+d.errors[i][ind]+'</div>' );
+									}
+								}
+							}
+							if(str != '')
+								showMessage('error', false, str);
+						}
+					}
+				});
+
+
+			});
 			grid.jqGrid('navGrid','#jqGridEditPager', {edit:false,add:false,del:false,search:false,refresh:false});
 		}
 		else if($("#jqGridAdd").length > 0)
@@ -136,17 +214,18 @@ $(function () {
 					'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
 				}
 			});
+
 			grid = $("#jqGridAdd");
 			grid.jqGrid({
 				height:300,
 				multiselect:true,
 				colModel:[
-				   		{label:'Код Номенклатуры',name:'kod',width:70,editable:true,edittype:'text'},
-				   		{label:'Наименование',	name:'name',width:150,editable:true},
-				   		{label:'Срок годности',	name:'srok',width:50,align:"center",editable:true,edittype:'text'},
-				   		{label:'Причина',		name:'reason',width:50,align:"center",editable:true,edittype:'select', editoptions:{value:reasonVariants}},//{dataUrl:'include/test.php'}
-				   		{label:'Остаток',		name:'ostatok',width:50,align:"center",editable:true,edittype:'text'},
-					],
+				 	{label:'Код Номенклатуры',		name:'kod',width:70,editable:true,edittype:'text'},
+			   		{label:'Наименование',			name:'name',width:150,editable:true},
+			   		{label:'Срок годности',			name:'srok',width:50,align:"center",editable:true,edittype:'text'},
+			   		{label:'Причина',				name:'reason',width:50,align:"center",editable:true,edittype:'select',editoptions:{value:reasonVariants}},//{dataUrl:'include/test.php'}
+			   		{label:'Остаток',				name:'ostatok',width:50,align:"center",editable:true,edittype:'text'},
+				],
 				ondblClickRow:function(rowid)
 				{
 					grid.editRow(rowid);
@@ -223,15 +302,6 @@ function addRow()
 	}
 	grid.jqGrid('addRow',parameters);
 	events();
-
-
-	// $('input').button();
-	// var select2Common = {
-	// 	width:'95%',
-	// 	minimumResultsForSearch:Infinity,
-	// };
-	// $('select').select2(select2Common);
-
 }
 function save(grid, id)
 {

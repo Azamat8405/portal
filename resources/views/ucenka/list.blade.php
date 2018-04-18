@@ -10,10 +10,10 @@
 				<h2>Список заявок на уценку</h2>
 
 				<div class="content-panel-inputs">
-					<a class="button" href="{{route('ucenka.add')}}">Добавить заявку</a>
 
-					<!-- <input type="submit" onclick="addRow();" value="Фильтровать"> -->
-
+					@if($user->user_group_id == 5)
+						<a class="button" href="{{route('ucenka.add')}}">Добавить заявку</a>
+					@endif
 				</div>
 			</div>
 

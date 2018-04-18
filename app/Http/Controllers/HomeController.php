@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\User;
 
 class HomeController extends Controller
 {
@@ -23,9 +25,18 @@ class HomeController extends Controller
      */
     public function index()
     {
+        //ЗАГЛУШКА пока не сделана главная страница портала
+        $user = User::find(Auth::id());
 
-        return redirect('/processes');
-
+        // Если пользователь КМ или директор магазина
+        if($user->user_group_id == 4 || $user->user_group_id == 5)
+        {
+            return redirect('/ucenka/list');
+        }
+        elseif($user->user_group_id == 1)
+        {
+            return redirect('/processes');
+        }
         return view('home');
     }
 }
