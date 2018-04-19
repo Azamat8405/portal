@@ -49,7 +49,6 @@ $(function () {
 
 	if($.fn.jqGrid)
 	{
-
 		if($("#jqGridList").length > 0)
 		{
 			grid = $("#jqGridList");
