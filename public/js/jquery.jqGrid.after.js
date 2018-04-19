@@ -1,6 +1,5 @@
 /*Подключаем после инициализации таблицы модуля jqGrid */
 $(function () {
-
 	if($.fn.jqGrid)
 	{
 		setTimeout(function(){
@@ -14,7 +13,6 @@ $(function () {
 		});
 	}
 });
-
 function resizeHeightjqGrid(grid)
 {
 	var tmp = $('.content-panel').outerHeight()
