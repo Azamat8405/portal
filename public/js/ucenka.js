@@ -58,8 +58,8 @@ $(function () {
 				datatype: "json",
 				height:300,
 				colModel:[
-				   		{label:'Номер',   				name:'num',		width:30,align:"center"},
-				   		{label:'Магазин', 				name:'name',	width:100},
+				   		{label:'Номер',   				name:'num',		width:30,align:"center", frozen : true},
+				   		{label:'Магазин', 				name:'name',	width:100, frozen : true},
 				   		{label:'Одобрена',				name:'status',	width:50,align:"center"},
 				   		{label:'Наименование товара', 	name:'tov_name',width:100,},
 				   		{label:'Дата подачи заявки',	name:'addDate',	width:50,align:"center"},
@@ -127,6 +127,7 @@ $(function () {
 				editurl:'clientArray',
 				datatype: "json",
 				height:300,
+				width:500,
 				colModel:colModelEditOp,
 				multiselect:true,
 				pager:'#jqGridEditPager',
@@ -139,17 +140,6 @@ $(function () {
 
 			$("#save").click( function(e) {
 				e.preventDefault();
-
-
-				// grid.find('tr[editable=1]').each(function(){
-				// 	grid.jqGrid('saveRow', this.id, function(d, l, o){
-				// 		if(d.responseText == 1)
-				// 		{
-				// 			return true;
-				// 		}
-				// 		return false;
-				// 	}, '', {'app_id': grid.data('id')});
-				// });
 
 				if($('input.error_input:visible').length)
 				{
@@ -186,8 +176,6 @@ $(function () {
 								}
 								else
 								{
-
-console.log(i);
 									grid.editRow(i);
 									events();
 

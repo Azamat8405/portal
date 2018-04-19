@@ -20,43 +20,43 @@ class TestController extends Controller
     public function index(Request $request)
     {
 
-        $validator = Validator::make(
-            [
-                'proc_field' => '100%',
-                'date2' => '31-12-2018',
-                'date3' => '31-12-2018',
-                'shops' => '111',
-            ],
-            [
-                'proc_field' => 'procent:'.serialize([
-                        'max' => 100,
-                        'min' => 0
-                    ]),
-                'date2' => 'date2:>'.mktime(0,0,0,1,1,2019),
-                'date3' => 'date2:>'.mktime(0,0,0,1,1,2019),
-                'shops' => 'shops_by_name',
-            ]
-        );
+//         $validator = Validator::make(
+//             [
+//                 'proc_field' => '100%',
+//                 'date2' => '31-12-2018',
+//                 'date3' => '31-12-2018',
+//                 'shops' => '111',
+//             ],
+//             [
+//                 'proc_field' => 'procent:'.serialize([
+//                         'max' => 100,
+//                         'min' => 0
+//                     ]),
+//                 'date2' => 'date2:>'.mktime(0,0,0,1,1,2019),
+//                 'date3' => 'date2:>'.mktime(0,0,0,1,1,2019),
+//                 'shops' => 'shops_by_name',
+//             ]
+//         );
 
-        if($validator->fails())
-        {
-            echo 'err';
-        }
-        else
-        {
-            echo 'ok';
-        }
+//         if($validator->fails())
+//         {
+//             echo 'err';
+//         }
+//         else
+//         {
+//             echo 'ok';
+//         }
 
-        print_r( $validator->messages() );
+//         print_r( $validator->messages() );
 
-exit();
+// exit();
 
         $phpExcel = PHPExcel_IOFactory::createReader('Excel2007');
         $phpExcel = $phpExcel->load( public_path().'/upload/action_upload_form.xlsx' );
-        $phpExcel->setActiveSheetIndex(1); // Делаем активной 2 страницу
+        $phpExcel->setActiveSheetIndex(2); // Делаем активной 3 лист
         $sheet = $phpExcel->getActiveSheet();
 
-        if(strtolower($sheet->getTitle()) == 'справочник')
+        if(strtolower($sheet->getTitle()) == 'список магазинов')
         {
             $sheet->setCellValue('B1', 'Магазины');
             // $sheet->setCellValue('B1', 'Контрагенты');

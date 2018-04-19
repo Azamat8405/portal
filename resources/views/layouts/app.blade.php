@@ -32,9 +32,6 @@
                         <li>
                             <a href="">{{ Auth::user()->name }}<i></i></a>
                             <ul>
-                                <li><a href="">Аккаунт</a></li>
-                                <li><a href="">Настройки</a></li>
-
                                 <li><a href="{{ route('logout') }}" onclick="event.preventDefault();
                                     document.getElementById('logout-form').submit();">Выход</a>
                                 </li>

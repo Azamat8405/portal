@@ -25,7 +25,6 @@ function resizeHeightjqGrid(grid)
 	var gridHeight = $(window).height() - tmp;
 	grid.jqGrid("setGridHeight", gridHeight);
 }
-
 function resizeWidthjqGrid(grid)
 {
 	var w = grid.jqGrid("getGridParam", 'width')
