@@ -1,4 +1,5 @@
 /*Подключаем после инициализации таблицы модуля jqGrid */
+
 $(function () {
 	if($.fn.jqGrid)
 	{
@@ -25,10 +26,23 @@ function resizeHeightjqGrid(grid)
 }
 function resizeWidthjqGrid(grid)
 {
-	var w = grid.jqGrid("getGridParam", 'width')
-	var w2 = $('.content_body').width();
-	if(w < w2)
-	{
-		grid.jqGrid("setGridWidth", w2);
-	}
+	grid.jqGrid("setGridWidth", $('.content_body').width());
+}
+function setFrozenHeightTd()
+{
+	setTimeout(function(){
+		if($('#'+grid.attr('id')+'_frozen tr.jqgrow').length == 0)
+		{
+			setFrozenHeightTd();
+			return;
+		}
+		$('#'+grid.attr('id')+'_frozen tr.jqgrow').each(function(index){
+			var h = grid.find('tr.jqgrow:eq('+index+') td:eq(0)').outerHeight();
+			$(this).find('td').each(function(index2){
+
+				$(this).css('height',h);
+			});
+			$(this).css('height',h);
+		});
+	}, 20);
 }

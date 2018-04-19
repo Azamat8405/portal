@@ -1,3 +1,24 @@
+// { name: 'DocGroupName', index: 'DocGroupName', width: 310, editable: true, edittype: "select", editrules: { required: true} , 
+//                      editoptions: { 
+
+//                          dataInit: function (element) {
+//                                         $(element).focusout(function (e) {
+//                                         if(this.value!="")
+//                                         {
+
+//                                         }
+//                                         });
+//                                     },
+
+//                          dataEvents: [{type: 'change', fn: function(e){
+//                             myfunction(e);
+//                             }
+//                          }]}
+
+//                      },
+
+
+var grid;
 var cache_avtocomplete_contr = {};
 var cache_avtocomplete_tovs = {};
 var cache_avtocomplete_shops = {};
@@ -8,12 +29,16 @@ var cache_shops_regions = {};
 var cache_tovs_categs_dialog = {};
 var cache_tovs_categs = {};
 var cache_tovs_dialog = {};
+var cache_kodNomenkatur = {};
+
+var checkFields = [];
 var selects_cats = ['#tovCategory','#tovGroup','#tovTipIsdeliya','#tovVidIsdeliya', '#tovBrendSelect'];
 var selectsBrens = ['#division','#oblast','#city','#shop'];
 var select2Option = {
 	width:'180',
 	minimumResultsForSearch:Infinity,
 };
+
 
 var copied_shops_index = null;
 var select2OptionBrends = {
@@ -45,8 +70,10 @@ var select2OptionBrends = {
 $(function(){
 
 	$('#tabs').tabs();
-
 	events();
+
+/* head start */
+
 	$('.addProcessForm').keydown(function(e)
 	{
 		if(e.keyCode == 13)
@@ -54,10 +81,6 @@ $(function(){
 			e.preventDefault();
 			return false;
         }
-	});
-
-	$('.addProcessForm').submit(function(){
-		$('.skidka_itogo').prop('disabled', false);
 	});
 
 	$.each(selects_cats, function(index, value){
@@ -162,27 +185,184 @@ $(function(){
 
 	if($("#process_type").length > 0)
 	{
-		// var tmp = function (){
-		// 	var d = new Date();
-		// 	d.setTime(d.getTime() + $("#process_type option:selected").data('dedlain') * 1000 );
-		// 	from.datepicker( "option", "minDate", d);
-		// 	return d;
-		// }
 		$('#process_type').select2({
 			width:'160',
 			minimumResultsForSearch:Infinity
  		});
- 		// tmp();
  		$("#process_type").on('change', function(evt) {
 			$(this).parents('.form-field-input').find('label').removeClass('error_input');
-
-			// tmp();
-			// if($('#start_date').val() != '')
-			// {
-			// 	tmp2( $('#start_date').val() );
-			// }
 		});
 	}
+/* head end */
+
+/* таблица начало */
+	$.ajaxSetup({
+		headers: {
+			'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+		}
+	});
+
+	grid = $("#jqGridAdd");
+	grid.jqGrid({
+		// url:'/processes/ajaxAddList',
+		// datatype: "json",
+		height:300,
+		width:500,
+		shrinkToFit:true,
+		colModel:[
+	   		{label:'Товар <sup>*</sup>',
+		   		name:'tovsTitles',
+		   		align:"center",
+		   		width:250,
+		   		edittype:'text',
+				editable:true,
+		   		fixed:true,
+		   		frozen:true},
+	   		{label:'Код товара <sup>*</sup>',
+		   		name:'kodTov',
+		   		align:"center",
+		   		width:150,
+		   		edittype:'text',
+				editable:true,
+		   		fixed:true,
+		   		frozen:true},
+	   		{label:'Магазин <sup>*</sup>', 
+		   		name:'shops', 
+		   		align:"center",
+		   		width:250,
+		   		edittype:'text',
+				editable:true,
+		   		fixed:true,
+		   		frozen:true},
+	   		{label:'Дистрибьютор',
+		   		name:'distr',
+		   		align:"center",
+		   		width:250,
+		   		edittype:'text',
+				editable:true,
+		   		fixed:true},
+	   		{label:'Тип акции <sup>*</sup>',
+		   		name:'type',
+		   		align:"center",
+		   		width:150,
+		   		edittype:'text',
+				editable:true,
+		   		fixed:true},
+	   		{label:'Размер скидки ON INVOICE (%)',
+		   		name:'skidka_on_invoice',
+		   		align:"center",
+		   		width:180,
+		   		edittype:'text',
+				editable:true,
+		   		fixed:true},
+	   		{label:'% компенсации OFF INVOICE (%)',
+		   		name:'kompensaciya_off_invoice',
+		   		align:"center",
+		   		width:190,
+		   		edittype:'text',
+				editable:true,
+		   		fixed:true},
+	   		{label:'Итого скидка (%) <sup>*</sup>',
+		   		name:'skidka_itogo',
+		   		align:"center",
+		   		width:190,
+		   		edittype:'text',
+				editable:true,
+		   		fixed:true},
+	   		{label:'Старая розничная цена (руб)',
+		   		name:'roznica_old',
+		   		align:"center",
+		   		width:180,
+		   		edittype:'text',
+				editable:true,
+		   		fixed:true},
+	   		{label:'Новая розничная цена (руб)',
+		   		name:'roznica_new',
+		   		align:"center",
+		   		width:180,
+		   		edittype:'text',
+				editable:true,
+		   		fixed:true},
+	   		{label:'Старая закупочная цена (руб)',
+		   		name:'zakup_old',
+		   		align:"center",
+		   		width:190,
+		   		edittype:'text',
+				editable:true,
+		   		fixed:true},
+	   		{label:'Новая закупочная цена (руб)',
+		   		name:'zakup_new',
+		   		align:"center",
+		   		width:180,
+		   		edittype:'text',
+				editable:true,
+		   		fixed:true},
+	   		{label:'Дата начала скидки ON INVOICE',
+		   		name:'start_date_on_invoice',
+		   		align:"center",
+		   		width:200,
+		   		edittype:'text',
+				editable:true,
+		   		fixed:true},
+	   		{label:'Дата окончания скидки ON INVOICE',
+		   		name:'end_date_on_invoice',
+		   		align:"center",
+		   		width:210,
+		   		edittype:'text',
+				editable:true,
+		   		fixed:true},
+	   		{label:'Подписи, слоганы, расшифровки и пояснения к товарам в рекламе.',
+		   		name:'descr',
+		   		align:"center",
+		   		width:200,
+		   		edittype:'text',
+				editable:true,
+		   		fixed:true},
+	   		{label:'Пометки к товарам',
+		   		name:'marks',
+		   		width:150,
+		   		edittype:'text',
+				editable:true,
+		   		align:"center",
+		   		fixed:true},
+		],
+		multiselect:true,
+		afterInsertRow:function(){
+
+console.log('5555');
+
+		}
+	});
+
+	addJqGridRow();
+
+	setTimeout(function(){
+		grid.jqGrid('setFrozenColumns');
+		setFrozenHeightTd();
+	}, 150);
+
+
+//	grid.trigger('reloadGrid', [{current:true}]);
+//	// как вариант только при скроле замораживаем столбцы
+//	$('#jqGridAdd').parents('.ui-jqgrid-bdiv').scroll(function(){
+
+//	if($(this).scrollLeft() > 10)
+//	{
+// 		if($('table[id$=_frozen]').length > 0)
+// 		{
+// 			return;
+// 		}
+// 		grid.jqGrid('setFrozenColumns');
+// 		setFrozenHeightTd();
+// 	}
+// 	else
+// 	{
+// 		// grid.jqGrid('destroyFrozenColumns');
+// 	}
+// });
+
+
+/* таблица конец */
 
 
 	// выбор чекбоксов во всплывающем окне выбора
@@ -320,6 +500,9 @@ $(function(){
 		}
 	});
 
+
+
+
 	$('#fillTableFromFile').click(function(e){
 		e.preventDefault();
 
@@ -373,7 +556,7 @@ $(function(){
 			cache:false,
 			contentType:false,
 			processData:false,
-			data:formData,//указываем что отправляем
+			data:formData,
 			success:function(data)
 			{
 				hide_load();
@@ -613,7 +796,7 @@ function build_contragents_list(cache_contragents)
 
 function get_contragents_list()
 {
-	$('#contragent_dialog').append('<img class="load_img" src="/img/load75x75.gif">');
+	show_load('#contragent_dialog');
 
 	if($.isEmptyObject(cache_contr_dialog))
 	{
@@ -651,12 +834,12 @@ function escape(string) {
     });
 };
 
-function addEmptyRow()
-{
-	addRow();
-	events();
-	$(window).trigger('resize');
-}
+// function addEmptyRow()
+// {
+// 	addRow();
+// 	events();
+// 	$(window).trigger('resize');
+// }
 
 function addRow(dataToFill, tr)
 {
@@ -1566,11 +1749,528 @@ function showHint(id, text)
 	d.css('line-height', '14px');
 	d.css('border', '1px solid #ccc');
 	d.html(text);
-
 	$('body').append(d);
 }
-
 function hideHint()
 {
 	$('.type_descr').remove();
+}
+function addJqGridRow()
+{
+	var r = grid.jqGrid('getGridParam','records');
+	var parameters = 
+	{
+		rowID:++r,
+	    initdata: {},
+	    position :"last",
+	    useDefValues : true,
+	    useFormatter : false,
+	    addRowParams : {extraparam:{}}
+	}
+	grid.jqGrid('addRow',parameters);
+
+	if($('table[id$=_frozen]').length > 0)
+	{
+		setFrozenHeightTd();
+	}
+	grid.editRow(r);
+	eventsJqGridRow();
+}
+
+
+function delJqGridRows()
+{
+	let ids = grid.jqGrid('getGridParam','selarrrow');
+	for (var i = ids.length - 1; i >= 0; i--) {
+
+		grid.jqGrid('delRowData', ids[i]);
+	}
+}
+
+function getJqGridRowNumber(el)
+{
+	return $(el).parents('tr').attr('id');
+}
+
+function eventsJqGridRow()
+{
+	// $('input[id$=_kod]').autocomplete(kodNomenkaturAvtocomplete);
+
+	// let d = new Date();
+	// let min = new Date();
+	// min.setTime(d.getTime() + 86400000);
+	// let max = new Date();
+	// max.setTime(d.getTime() + 6048000000);
+	// $('input[id$=_srok]').datepicker({
+	// 	minDate:min,
+	// 	maxDate:max,
+	// });
+
+	// $('input[type=text]').on('change', function(){
+	// 	$(this).parents('td').find('.error_message').remove();
+	// });
+
+	$('input[id$=_kodTov]').autocomplete({
+		source: function( request, response ){
+			var term = request.term;
+			request.kod = true;
+
+			if ( term in cache_avtocomplete_tovs )
+			{
+				response( cache_avtocomplete_tovs[term]);
+				return;
+			}
+
+			$.getJSON( "/tovs/ajaxGetTovarForAvtoComplete", request, function( data, status, xhr ) {
+				cache_avtocomplete_tovs[term] = data;
+				response(data);
+			});
+		},
+		minLength:2,
+		change:function()
+		{
+			var n = getJqGridRowNumber(this);
+			if(checkFields[n] &&
+				checkFields[n]['chKod'] &&
+				$(this).val() != checkFields[n]['chKod'])
+			{
+				$(this).val(checkFields[n]['chKod']);
+			}
+			$('#'+n+'_tovsTitles').trigger('change');
+		},
+		select: function( event, ui )
+		{
+			var n = getJqGridRowNumber(this);
+			$(this).val(ui.item.value);
+
+			checkAddField(n, 'chTitle', ui.item.val);
+			checkAddField(n, 'chKod', ui.item.value);
+
+			$('#'+n+'_tovsTitles').val(ui.item.val);
+		}
+	});
+
+	$('input[id$=_tovsTitles]').autocomplete({
+		source: function( request, response ){
+			var term = request.term;
+			if ( term in cache_avtocomplete_tovs )
+			{
+				response( cache_avtocomplete_tovs[term]);
+				return;
+			}
+			$.getJSON( "/tovs/ajaxGetTovarForAvtoComplete", request, function( data, status, xhr ) {
+				cache_avtocomplete_tovs[term] = data;
+				response(data);
+			});
+		},
+		minLength: 2,
+		change:function()
+		{
+			var n = getJqGridRowNumber(this);
+			if(checkFields[n] &&
+				checkFields[n]['chTitle'] &&
+				$(this).val() != checkFields[n]['chTitle'])
+			{
+				$(this).val(checkFields[n]['chTitle']);
+			}
+			$('#'+n+'_kodTov').trigger('change');
+		},
+		select: function( event, ui )
+		{
+			var n = getJqGridRowNumber(this);
+			$(this).val(ui.item.value);
+
+			checkAddField(n, 'chTitle', ui.item.label);
+			checkAddField(n, 'chKod', ui.item.val);
+
+			$('#'+n+'_kodTov').val(ui.item.val);
+		}
+	});
+
+	$('input[id$=_shops]').autocomplete({
+		source: function( request, response ){
+
+			if(request.term.length > 100)
+			{
+				return;
+			}
+
+			var term = request.term;
+			if ( term in cache_avtocomplete_shops )
+			{
+				response( cache_avtocomplete_shops[term]);
+				return;
+			}
+
+			$.getJSON("/shop/ajaxGetShops", request, function( data, status, xhr ) {
+				cache_avtocomplete_shops[term] = data;
+				response(data);
+			});
+		},
+		minLength: 2,
+		select: function( event, ui )
+		{
+			checkAddField(getJqGridRowNumber(this), 'chShop', ui.item.value);
+		},
+		change: function( event, ui )
+		{
+			var n = getJqGridRowNumber(this);
+			if(checkFields[n] &&
+				checkFields[n]['chShop'] &&
+				$(this).val() != checkFields[n]['chShop'])
+			{
+				$(this).val(checkFields[n]['chShop']);
+			}
+		}
+	});
+
+	$('input[id$=_distr]').autocomplete({
+		source: function( request, response ){
+			var term = request.term;
+			if ( term in cache_avtocomplete_contr )
+			{
+				response(cache_avtocomplete_contr[term]);
+				return;
+			}
+			$.getJSON( "/sys/getContragentsForAvtocomplete", request, function( data, status, xhr ) {
+				cache_avtocomplete_contr[term] = data;
+				response(data);
+			});
+		},
+		minLength: 2,
+		change:function()
+		{
+			var n = getRowNumber(this);
+			if($(this).val() != $("input.chDistr:eq("+n+")").val())
+			{
+				$(this).val($("input.chDistr:eq("+n+")").val());
+			}
+			$("input.distrTitles:eq("+n+")").trigger('change');
+		},
+		select: function(event, ui) {
+
+			var n = getRowNumber(this);
+
+			$('input.distr:eq('+n+')').val(ui.item.val);
+			$('input.chDistr:eq('+n+')').val(ui.item.label);
+		}
+	});
+
+
+
+return;
+
+
+
+
+
+
+
+	$('.shopsTitles, .tovsTitles, .distrTitles, .maskProcent, .maskPrice, .maskDate, .kodTov, .select').off('change');
+	$('.shopsTitles, .tovsTitles, .distrTitles, .maskProcent, .maskPrice, .maskDate, .kodTov, .select').on('change', function()
+	{
+		$(this).parents('td').find('.error_message').remove();
+	});
+
+	$('.shopsTitles').off('copy');
+	$('.shopsTitles').on('copy', function(e){
+		copied_shops_index = getRowNumber(this);
+	});
+	$('.shopsTitles').off('paste');
+	$('.shopsTitles').on('paste', function(e){
+		let copied = $('.shops:eq(' + copied_shops_index + ')').val();
+		$('.shops:eq(' + getRowNumber(this) + ')').val(copied);
+	});
+
+	$('.distrTitles').off('copy');
+	$('.distrTitles').on('copy', function(e){
+		copied_shops_index = getRowNumber(this);
+	});
+	$('.distrTitles').off('paste');
+	$('.distrTitles').on('paste', function(e){
+		let copied = $('.distr:eq(' + copied_shops_index + ')').val();
+		$('.distr:eq(' + getRowNumber(this) + ')').val(copied);
+	});
+
+	$('.field_input_file > .file, .field_input_file > .shopsTitles, .field_input_file > .distrTitles').off("mouseenter mouseleave");
+	$('.field_input_file > .file, .field_input_file > .shopsTitles, .field_input_file > .distrTitles').hover(function(e){
+
+			if($('body').find('> div.file_hint').length > 0)
+			{
+				$('body').find('> div.file_hint').remove();
+			}
+
+			var row_n = getRowNumber(this);
+
+			if($(this).hasClass('file'))
+			{
+				if($(this).parents('.field_input_file').find('.shopsTitles').length > 0)
+				{
+					$(this).parents('.field_input_file').find('.shopsTitles').trigger('mouseenter');
+				}
+				else if($(this).parents('.field_input_file').find('.distrTitles').length > 0)
+				{
+					$(this).parents('.field_input_file').find('.distrTitles').trigger('mouseenter');
+				}
+				return;
+			}
+
+			var tmp = $(this).parents('.field_input_file').find('.shopsTitles').val();
+			if(!tmp || tmp == '')
+			{
+				tmp = $(this).parents('.field_input_file').find('.distrTitles').val();
+				if(!tmp || tmp == '')
+				{
+					return;
+				}
+			}
+			var d = $(this).find('> div');
+			if(d.length == 0)
+			{
+				var d = $('<div />');
+				d.addClass('file_hint');
+			}
+
+			tmp = tmp.split('; ');
+			d.html(tmp.join('<br>'));
+			d.css('top', $(this).offset().top+23);
+			d.css('left', $(this).offset().left);
+			d.css('z-index', 100);
+			d.show();
+			d.hover(function(){
+				$('body').find('> div.file_hint').show();
+				$('body').find('> div.file_hint').addClass('nodel');
+			}, function(){
+				$('body').find('> div.file_hint').remove();
+			});
+			$('body').append(d);
+		},
+		function()
+		{
+			if($('body').find('> div.file_hint.nodel').length == 0)
+			{
+				$('body').find('> div.file_hint').hide();
+			}
+		}
+	);
+
+	if($.fn.mask)
+	{
+		$('.maskProcent').mask('ZZZZZ', {
+		    placeholder: "0 %",
+			onKeyPress: function(cep, event, currentField, options){
+
+				var reg2 = new RegExp("[^\.\,0-9]+");
+				var reg = new RegExp("[0-9]{1,3}[(\.|\,)]*[0-9]{0,2}");
+
+				if(parseFloat(cep) >= 100 || parseFloat(cep) < 0 || !reg.test(cep) || reg2.test(cep))
+				{
+					$(currentField).val('');
+				}
+			},
+			translation:{
+      			'Z': {
+        			pattern: /[\.\,0-9]*/
+      			}
+    		}
+		});
+
+		$('.maskPrice').on('keyup', function(e){
+			var str = $(this).val();
+			var reg = /[^\.\,0-9]+/g;
+
+			if( reg.test(str) )
+			{
+				str = str.replace(reg, '');
+			}
+
+			var result = '';
+			str = str.replace(/[\.\,]+/g, '.');
+			
+			var point_ind = str.indexOf('.');
+			if(point_ind > 0)
+			{
+				var result_st = str.slice(0, point_ind)
+				var result_end = str.slice(point_ind);
+			}
+			else
+			{
+				var result_st = str;
+				var result_end = '';
+			}
+
+			var arr = result_st.split('');
+			arr.reverse();
+
+			$.each(arr, function(index){
+
+				if(index%3 == 0)
+				{
+					result = this+' '+result;
+				}
+				else
+				{
+					result = this + result;
+				}
+			});
+
+			result += result_end;
+			result = result.replace(/[ ]*\.[ ]*/g, '.').trim();
+			$(this).val(result);
+		});
+
+		$('.maskDate').mask('ZZ-ZZ-ZZZZ', {
+		    placeholder: "01-01-2001",
+			onKeyPress: function(cep, event, currentField, options){
+
+				var tmp = cep.split('-');
+				if(parseInt(tmp[0]) > 31 || parseInt(tmp[1]) > 12)
+				{
+				 	$(currentField).val('');
+				}
+			},
+			translation:{
+      			'Z': {
+					pattern: /[0-9]/
+      			}
+			}
+		});
+	}
+
+	$('.on_invoice, .off_invoice, .roznica_new, .roznica_old').on('change', function(){
+		var row_n = getRowNumber(this);
+
+		var roznica_new = $('input.roznica_new:eq('+row_n+')').val().replace(/ /g, '');;
+		var roznica_old = $('input.roznica_old:eq('+row_n+')').val().replace(/ /g, '');;
+
+		var on_invoice = $('input.on_invoice:eq('+row_n+')').val().replace(/ /g, '');;
+		var off_invoice = $('input.off_invoice:eq('+row_n+')').val().replace(/ /g, '');;
+
+		if(parseInt(roznica_new) > parseInt(roznica_old))
+		{
+			showMessage('error', false, 'Новая розничная цена не должна быть больше старой');
+		}
+		var itogo = 0;
+		// поле итого
+		if(roznica_new == 0 || roznica_old == 0)
+		{
+			if(off_invoice != '' && on_invoice != '')
+			{
+				let sum = (parseInt(off_invoice) + parseInt(on_invoice));
+				if(sum < 100)
+					itogo = sum;
+				else
+					itogo = 0;
+			}
+			else if(off_invoice != '')
+			{
+				itogo = off_invoice;
+			}
+			else if(on_invoice != '')
+			{
+				itogo = on_invoice;
+			}
+		}
+		else if(roznica_new > 0 && roznica_old > 0)
+		{
+			itogo = (1 - (parseInt(roznica_new)/parseInt(roznica_old)))*100;
+			itogo = itogo.toFixed(1);
+		}
+		$('input.skidka_itogo:eq('+row_n+')').val(itogo);
+
+		setTimeout(function (){
+			illumination($('input.skidka_itogo:eq('+row_n+')'), 0);
+		}, 300);
+	});
+
+	if($.fn.datepicker)
+	{
+		//Даты ON INVOICE в табличной части
+		$('.start_on_invoice_date').datepicker({
+			minDate: new Date(),
+			dateFormat: "dd-mm-y"
+		})
+		.change(function() {
+
+			var dateObj = $.datepicker.parseDate( "dd-mm-y", this.value);
+			dateObj.setTime(dateObj.getTime() + 86400000);
+
+			var row_n = getRowNumber(this);
+			var end_date = $('input[name^=end_date_on_invoice]:eq('+row_n+')');
+			end_date.datepicker( "option", "minDate",  dateObj);
+
+			prepareDate(this);
+        });
+
+		$('.end_on_invoice_date').datepicker({
+			minDate: new Date(),
+			dateFormat: "dd-mm-y"
+		})
+		.change(function() {
+			prepareDate(this);
+		});
+	}
+
+	$('.select').select2(select2Option).change(function(){
+		hideHint();
+	});
+	$('.select').on('select2:close', function (e) {
+	  hideHint();
+	});
+
+
+
+	$("input.tovsTitles").hover(function(){
+
+		if($(this).val() == '')
+			return;
+
+		var h = $('div.tov_hint');
+		if(h.length > 0)
+		{
+			h.html($(this).val());
+			h.css('top', $(this).offset().top + $(this).outerHeight());
+			h.css('left', $(this).offset().left);
+			h.show();
+		}
+		else
+		{
+			var d = $('<div />');
+			d.addClass('tov_hint');
+			d.css('position', 'absolute');
+			d.css('background', '#fff');
+			d.css('width', '550px');
+			d.css('padding', '5px');
+			d.css('z-index', '100');
+			d.css('border', '1px solid #ccc');
+			d.css('min-height', '27px');
+			d.css('height', 'auto');
+			d.css('top', $(this).offset().top + $(this).outerHeight());
+			d.css('left', $(this).offset().left);
+			d.on('click', function(){
+				$('.tov_hint').hide();
+			});
+			d.html($(this).val());
+			$(this).before(d);
+		}
+	},
+	function(){
+		$('.tov_hint').hide();
+	});
+
+
+
+
+
+
+
+}
+
+function checkAddField(rowNum, index, value)
+{
+	if(!checkFields[rowNum])
+	{
+		checkFields[rowNum] = [];
+	}
+	checkFields[rowNum][index] = value;
 }

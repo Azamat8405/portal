@@ -35,7 +35,7 @@ class ProcessController extends Controller
 	/**
 	* Подгрузка списка для таблицы jqGrid
 	**/
-	public function ajaxJsonList(Request $request)
+	public function ajaxList(Request $request)
 	{
 		$perPage = 20;
 		$processes = Process::paginate($perPage);
@@ -86,17 +86,6 @@ class ProcessController extends Controller
 	public function showAddFrom(Request $request)
 	{
 		return view('processes/add', [
-			'tov_categs_lvl1' => TovCategs::where('level', 1)->orderBy('title')->get(),
-			'shop_regions_lvl1' => ShopRegion::where('level', 1)->orderBy('title')->get(),
-			'process_types' => ProcessType::all(),
-			'action_types' => ActionType::all(),
-			'action_marks' => ActionMark::all()
-		]);
-	}
-
-	public function edit(Request $request, $id)
-	{
-		return view('processes/edit', ['process' => Process::find($id),
 			'tov_categs_lvl1' => TovCategs::where('level', 1)->orderBy('title')->get(),
 			'shop_regions_lvl1' => ShopRegion::where('level', 1)->orderBy('title')->get(),
 			'process_types' => ProcessType::all(),
@@ -315,6 +304,17 @@ class ProcessController extends Controller
 		{
 			return redirect()->back()->with('ok', 'Добавление прошло успешно');
 		}
+	}
+
+	public function edit(Request $request, $id)
+	{
+		return view('processes/edit', ['process' => Process::find($id),
+			'tov_categs_lvl1' => TovCategs::where('level', 1)->orderBy('title')->get(),
+			'shop_regions_lvl1' => ShopRegion::where('level', 1)->orderBy('title')->get(),
+			'process_types' => ProcessType::all(),
+			'action_types' => ActionType::all(),
+			'action_marks' => ActionMark::all()
+		]);
 	}
 
     /**

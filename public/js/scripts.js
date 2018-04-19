@@ -241,9 +241,13 @@ function resizeMenu(el)
 	$(window).trigger('resize');
 }
 
-function show_load()
+function show_load(target)
 {
-	$('body').append('<img class="load_img" src="/img/load75x75.gif" style="z-index:1000;width:40px;position:fixed;top:250px;left:49%;">');
+	if(target == '')
+	{
+		target = 'body';
+	}
+	$(target).append('<img class="load_img" src="/img/load75x75.gif" style="z-index:1000;width:40px;position:fixed;top:250px;left:49%;">');
 }
 
 function hide_load()

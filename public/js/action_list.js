@@ -5,7 +5,7 @@ $(function () {
 	{
 		grid = jQuery("#jqGridList");
 		grid.jqGrid({
-			url:'/processes/ajaxJsonList',
+			url:'/processes/ajaxList',
 			datatype: "json",
 			height:300,
 			colNames:['Номер','Наименование','Начало акции','Конец акции','Тип'],

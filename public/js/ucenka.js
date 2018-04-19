@@ -20,8 +20,7 @@ var kodNomenkaturAvtocomplete = {
 			url:"/tovs/ajaxGetTovForAvtocomplete",
 			data:request,
 			dataType:'json',
-			success:function(data)
-			{
+			success:function(data){
 				$(el).removeClass('error_input');
 				cache_kodNomenkatur[term] = data;
 				$('#'+n_row+'_name').val(data[0].label);
@@ -35,7 +34,6 @@ var kodNomenkaturAvtocomplete = {
 	},
 	minLength:2,
 }
-
 $(function () {
 
 	$('.form').keydown(function(e)
@@ -46,7 +44,6 @@ $(function () {
 			return false;
         }
 	});
-
 	if($.fn.jqGrid)
 	{
 		if($("#jqGridList").length > 0)
@@ -56,23 +53,32 @@ $(function () {
 				url:'/ucenka/ajaxJsonList',
 				datatype: "json",
 				height:300,
+				width:500,
+				shrinkToFit:true,
 				colModel:[
-				   		{label:'Номер',   				name:'num',		width:30,align:"center", frozen : true},
-				   		{label:'Магазин', 				name:'name',	width:100, frozen : true},
-				   		{label:'Одобрена',				name:'status',	width:50,align:"center"},
-				   		{label:'Наименование товара', 	name:'tov_name',width:100,},
-				   		{label:'Дата подачи заявки',	name:'addDate',	width:50,align:"center"},
-				   	],
+				   		{label:'Номер',   				name:'num',		width:50,align:"center"},
+				   		{label:'Магазин', 				name:'name',	width:180},
+				   		{label:'Одобрена',				name:'status',	width:150,align:"center"},
+				   		{label:'Наименование товара', 	name:'tov_name',width:250},
+				   		{label:'Дата подачи заявки',	name:'addDate',	width:120,align:"center"},
+					],
 				multiselect:false,
-				pager: '#jqGridpager',
+				pager:'#jqGridpager',
 				ondblClickRow: function(rowid)
 				{
 					if(!rowid)
 						return;
 					window.location.href="/ucenka/edit/"+rowid;
-				}
+				},
+				// onPaging: function()
+				// {
+				// 	setFrozenHeightTd();
+				// }
 			});
+
 			grid.jqGrid('navGrid','#jqGridpager', {edit:false,add:false,del:false,search:false,refresh:false});
+			// grid.jqGrid('setFrozenColumns');
+			// setFrozenHeightTd();
 		}
 		else if($("#jqGridEdit").length > 0)
 		{
@@ -219,7 +225,7 @@ $(function () {
 					events();
 				}
 			});
-			addRow();
+			addJqGridRow();
 			$("#save").click( function(e) {
 				e.preventDefault();
 
@@ -275,7 +281,7 @@ $(function () {
 	}
 });
 
-function addRow()
+function addJqGridRow()
 {
 	var r = grid.jqGrid('getGridParam','records');
 	var parameters = 
@@ -290,6 +296,14 @@ function addRow()
 	grid.jqGrid('addRow',parameters);
 	events();
 }
+function delJqGridRows()
+{
+	let ids = grid.jqGrid('getGridParam','selarrrow');
+	for (var i = ids.length - 1; i >= 0; i--){
+		grid.jqGrid('delRowData', ids[i]);
+	}
+}
+
 function save(grid, id)
 {
 	grid.saveRow(id, false, 'clientArray');
@@ -302,7 +316,6 @@ function events()
 {
 	$('input[id$=_kod]').autocomplete(kodNomenkaturAvtocomplete);
 
-	//
 	let d = new Date();
 	let min = new Date();
 	min.setTime(d.getTime() + 86400000);
@@ -316,13 +329,4 @@ function events()
 	$('input[type=text]').on('change', function(){
 		$(this).parents('td').find('.error_message').remove();
 	});
-}
-
-function delRows()
-{
-	let ids = grid.jqGrid('getGridParam','selarrrow');
-	for (var i = ids.length - 1; i >= 0; i--) {
-
-		grid.jqGrid('delRowData', ids[i]);
-	}
 }

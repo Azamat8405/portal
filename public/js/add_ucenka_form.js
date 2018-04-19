@@ -1,3 +1,5 @@
+//НЕ ИСПОЛЬЗУЕТСЯ.УДАЛИТЬ.
+
 var cache_kodNomenkatur = {};
 
 var kodNomenkaturAvtocomplete = {

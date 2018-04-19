@@ -13,8 +13,8 @@
 					<input type="submit" id="save" value="Сохранить">
 
 					@if($user->user_group_id == 5)
-						<input type="button" onclick="delRows();" value="Удалить строки">
-						<input type="button" onclick="addRow();" value="Добавить строку">
+						<input type="button" onclick="delJqGridRows();" value="Удалить строки">
+						<input type="button" onclick="addJqGridRow();" value="Добавить строку">
 					@endif
 				</div>
 			</div>

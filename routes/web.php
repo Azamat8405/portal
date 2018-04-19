@@ -21,18 +21,15 @@ Route::group(['middleware' => 'auth'], function () {
 		Route::get('/processes', 						'ProcessController@list')->name('processes');
 		Route::get('/processes/add', 					'ProcessController@showAddFrom')->name('processes.add');
 		Route::get('/processes/edit/{id}',				'ProcessController@edit');
-		Route::get('/processes/ajaxJsonList',			'ProcessController@ajaxJsonList');
+		Route::get('/processes/ajaxList',				'ProcessController@ajaxList');
 		Route::get('/processes/ajaxGetTovList/{procId}','ProcessController@ajaxGetTovList');
 		Route::post('/processes/add',					'ProcessController@add');
 		Route::post('/processes/prepareDataFromFile',	'ProcessController@prepareDataFromFile');
-
-
 
 		Route::get('/sys/getContragentsForAvtocomplete', 	'SystemController@ajaxGetContragentsAvtocomplete');
 		Route::get('/sys/getContragentsErarhi',				'SystemController@ajaxGetContragentsErarhi');
 		Route::get('/sys/getContragents',				 	'SystemController@ajaxGetContragents');
 
-		Route::get('/sys/getTovarForAvtoComplete', 			'SystemController@ajaxGetTovarForAvtoComplete');
 		Route::get('/sys/getTovsCategsErarhi', 				'SystemController@ajaxGetTovsCategsErarhi');
 		Route::get('/sys/getTovsForCateg/{categId}', 		'SystemController@ajaxGetTovsForCateg');
 		Route::get('/sys/getTovIdsForCategs', 				'SystemController@ajaxGetTovIdsForCategs');
@@ -43,25 +40,26 @@ Route::group(['middleware' => 'auth'], function () {
 		Route::get('/sys/getBrendsForAvtocomplete',			'SystemController@ajaxGetBrendsForAvtocomplete');
 		Route::get('/sys/getTovsToFillTable',				'SystemController@ajaxGetTovsToFillTable');
 
-		Route::get('/sys/getShops', 			'SystemController@ajaxGetShops');
+
 		Route::get('/sys/getShopsErarhi', 		'SystemController@ajaxGetShopsErarhi');
 		Route::get('/sys/fillTovCategs', 		'SystemController@fillTovCategsTable');
-		// Route::get('/sys/fillTov2Categs', 		'SystemController@fillTov2CategsTable');
 		Route::get('/sys/fillRegionsTable', 	'SystemController@fillRegionsTable');
-	
+
 		Route::get('/test', 'TestController@index');
 	});
 
-	Route::get('/ucenka/list',							'UcenkaController@list')->name('ucenka.list');
-	Route::get('/ucenka/add',							'UcenkaController@add')->name('ucenka.add');
+	Route::get('/ucenka/list',						'UcenkaController@list')->name('ucenka.list');
+	Route::get('/ucenka/add',						'UcenkaController@add')->name('ucenka.add');
 
-	Route::get('/ucenka/ajaxJsonList',					'UcenkaController@ajaxJsonList');
-	Route::get('/ucenka/edit/{appId}',					'UcenkaController@edit');
-	Route::get('/ucenka/ajaxJsonEdit/{appId}',			'UcenkaController@ajaxJsonEdit');
-	Route::post('/ucenka/ajaxAddSubmit',				'UcenkaController@ajaxAddSubmit');
-	Route::post('/ucenka/ajaxJsonEditSubmit',			'UcenkaController@ajaxJsonEditSubmit');
+	Route::get('/ucenka/ajaxJsonList',				'UcenkaController@ajaxJsonList');
+	Route::get('/ucenka/edit/{appId}',				'UcenkaController@edit');
+	Route::get('/ucenka/ajaxJsonEdit/{appId}',		'UcenkaController@ajaxJsonEdit');
+	Route::post('/ucenka/ajaxAddSubmit',			'UcenkaController@ajaxAddSubmit');
+	Route::post('/ucenka/ajaxJsonEditSubmit',		'UcenkaController@ajaxJsonEditSubmit');
 
 	Route::get('/tovs/ajaxGetTovForAvtocomplete', 	'TovController@ajaxGetTovForAvtocomplete');
+	Route::get('/tovs/ajaxGetTovarForAvtoComplete',	'TovController@ajaxGetTovarForAvtoComplete');
 
+	Route::get('/shop/ajaxGetShops', 				'ShopController@ajaxGetShops');
 });
 Auth::routes();
