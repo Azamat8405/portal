@@ -2,10 +2,9 @@
 
 @section('content')
 
-
 	<form action="" onSubmit="return checkValues();" method="post" enctype="multipart/form-data" clas="form">
 		@csrf
-<div class="content-panel">
+		<div class="content-panel">
 			<div class="content-panel-block">
 				<h2>Добавление акции</h2>
 				<div class="form-fields-row">
@@ -76,8 +75,7 @@
 					</div>
 				</div>
 				<div class="content-panel-inputs">
-					<input type="submit" value="Сохранить акцию">
-
+					<input type="button" onclick="addJqGridSubmit();" value="Сохранить акцию">
 					<input type="button" onclick="addJqGridRow();" value="Добавить строку">
 					<input type="button" onclick="delJqGridRows();" value="Удалить строки">
 
@@ -294,9 +292,11 @@
 			<div id="tovs_dialog"></div>
 			<div id="contragent_dialog"></div>
 			<script>
-{{--
-				var reasonVariants = '{{$reasonVariants}}';
---}}
+				var action_types = "{{$action_types}}";
+				var action_types_descr = [];
+				@foreach($action_types_descr as $key => $value)
+					action_types_descr[{{$key}}] = "{{$value}}";
+				@endforeach
 			</script>
 	        <table id="jqGridAdd"><tr><td></td></tr></table> 
 	        <div id="jqGridAddPager"></div> 
@@ -371,6 +371,7 @@
 	</style>
 	<form class="addProcessForm" action="{{ route('processes.add') }}" method="post" enctype="multipart/form-data">
 		@csrf
+{{--
 		<!-- <div class="content-panel">
 			<div class="content-panel-block">
 				<h2>Добавление акции</h2>
@@ -947,6 +948,9 @@
 			</div>
 		</div>
 -->
+
+--}}
+
 	</form>
 
 @endsection

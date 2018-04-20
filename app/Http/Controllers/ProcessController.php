@@ -85,11 +85,22 @@ class ProcessController extends Controller
 
 	public function showAddFrom(Request $request)
 	{
+		$action_types = [];
+		$action_types[] = '0:Не выбрано';
+		$action_types_descr = [];
+
+		foreach (ActionType::all() as $type)
+		{
+			$action_types[] = $type->id.':'.$type->title;
+			$action_types_descr[$type->id] = $type->description;
+		}
+
 		return view('processes/add', [
 			'tov_categs_lvl1' => TovCategs::where('level', 1)->orderBy('title')->get(),
 			'shop_regions_lvl1' => ShopRegion::where('level', 1)->orderBy('title')->get(),
 			'process_types' => ProcessType::all(),
-			'action_types' => ActionType::all(),
+			'action_types' => implode(';', $action_types),
+			'action_types_descr' => $action_types_descr,
 			'action_marks' => ActionMark::all()
 		]);
 	}
@@ -305,6 +316,223 @@ class ProcessController extends Controller
 			return redirect()->back()->with('ok', 'Добавление прошло успешно');
 		}
 	}
+
+	public function ajaxAdd(Request $request)
+	{
+
+print_r(json_decode(Request::input('d')));
+exit();
+
+		$err = false;
+
+		//	Валидация даты
+		$start_date = strtotime(Request::input('start_date'));
+		$proc_type = ProcessType::find(Request::input('process_type'));
+
+		if($proc_type)
+		{
+			// ПОКА убираем проверку
+			// $cur_date = mktime(0, 0, 0, date("n"), date("j"), date("Y"));
+			// if($proc_type->dedlain + $cur_date > $start_date)
+			// {
+			// 	$this->validate_errors['form'][0]['start_date'] = 'Дата начала акции должна быть больше либо равна '.strftime('%d-%m-%Y', $proc_type->dedlain + time());
+			// }
+		}
+		else
+		{
+			$this->validate_errors['form'][0]['process_type'] = 'Нет Акций указанного типа';
+		}
+
+		$end_date = '';
+		if($proc_type)
+		{
+			$end_date = strtotime(Request::input('end_date'));
+			if($end_date <= $start_date)
+			{
+				$this->validate_errors['form'][0]['end_date'] = 'Дата окончания акции должна быть больше даты начала.';
+			}
+		}
+
+		if(!$request::has('kodTov'))
+		{
+			$this->validate_errors['form'][0]['kodTov'] = 'Не указан товар или указан не верно.';
+		}
+
+		// Если в шапке есть ошибки покаызваем их пока.
+		if(!empty($this->validate_errors['form']))
+		{
+			// return redirect()->back()
+			// 	->with('errors', $this->validate_errors)
+			// 	->withInput();
+		}
+		$dataToInsert = [];
+
+		// Проверка полей формы
+		foreach($request::input('kodTov') as $key => $value)
+		{
+			if(trim($value) == '' && count($request::input('kodTov')) == 1)
+			{
+				break;
+			}
+			$dataToInsert[$key]['kodTov'] = $value;
+			$dataToInsert[$key]['tovsTitles'] = $request::input('tovsTitles')[$key] ?? null;
+
+			if(isset($request::input('shops')[$key]))
+			{
+				$dataToInsert[$key]['shops'] = explode(';', $request::input('shops')[$key]);
+			}
+
+			$dataToInsert[$key]['distr'] = $request::input('distr')[$key] ?? null;
+			$dataToInsert[$key]['type'] = $request::input('type')[$key] ?? null;
+			$dataToInsert[$key]['skidka_on_invoice'] = $request::input('skidka_on_invoice')[$key] ?? null;
+			$dataToInsert[$key]['kompensaciya_off_invoice'] = $request::input('kompensaciya_off_invoice')[$key] ?? null;
+			$dataToInsert[$key]['skidka_itogo'] = $request::input('skidka_itogo')[$key] ?? null;
+			$dataToInsert[$key]['zakup_old'] = $request::input('zakup_old')[$key] ?? null;
+			$dataToInsert[$key]['zakup_new'] = $request::input('zakup_new')[$key] ?? null;
+			$dataToInsert[$key]['start_date_on_invoice'] = $request::input('start_date_on_invoice')[$key] ?? null;
+			$dataToInsert[$key]['end_date_on_invoice'] = $request::input('end_date_on_invoice')[$key] ?? null;
+			$dataToInsert[$key]['roznica_old'] = $request::input('roznica_old')[$key] ?? null;
+			$dataToInsert[$key]['roznica_new'] = $request::input('roznica_new')[$key] ?? null;
+			$dataToInsert[$key]['descr'] = $request::input('descr')[$key] ?? null;
+			$dataToInsert[$key]['marks'] = $request::input('marks')[$key] ?? null;
+
+			$this->validateData($dataToInsert[$key], 'form', $start_date, $end_date, $key);
+		}
+
+		if($err || !empty($this->validate_errors['form']) || !empty($this->validate_errors['file']))
+		{
+			return redirect()->back()
+				->with('errors', $this->validate_errors)
+				->withInput();
+		}
+
+		try
+		{
+			DB::transaction(function () use ($start_date, $end_date, $proc_type, $dataToInsert)
+			{
+				$pr = new Process();
+				if(trim(Request::input('process_title')) == '')
+				{
+					$pr->title = $proc_type->title.' '.Request::input('start_date');
+				}
+				else
+				{
+					$pr->title = Request::input('process_title');
+				}
+
+				$pr->process_type_id = Request::input('process_type');
+				$pr->start_date = $start_date;
+				$pr->end_date = $end_date;
+				$pr->save();
+
+				// $step_title = 'Данные';
+				// $step = new Step();
+				// $step->process_id = $pr->id;
+				// $step->title = $step_title;
+				// $step->conditions = '';
+				// $step->from_ids = 0;
+				// $step->to_ids = 0;
+				// $step->save();
+
+				$doc = Document::where('process_type_id', Request::input('process_type'))->get();
+				if(count($doc) == 0)
+				{
+					$doc = new Document();
+					$doc->process_type_id = Request::input('process_type');
+					$doc->title = 'Документ '.$pr->title;
+					$doc->save();
+
+					//TODO перенести в миграцию
+					if(!\Schema::hasTable('document_action_first_datas'))
+					{
+						$res = \Schema::create('document_action_first_datas', function ($table) {
+							$table->increments('id');
+
+							$table->integer('doc_id')->unsigned();
+				            $table->integer('shop_id')->unsigned();
+				            $table->integer('process_id')->unsigned();
+				            $table->integer('process_type_id')->unsigned();
+
+				            $table->string('kod_dis')->comment('код ДиС Ном. Номер');
+				            $table->string('articule_sk')->comment('Артикул ШК это артикул по базе поставщика');
+
+							$table->string('action_types_ids')->comment('Артикул ШК это артикул по базе поставщика');
+
+				            $table->string('on_invoice')->nullable();
+				            $table->string('off_invoice')->nullable();
+				            $table->string('skidka_itogo')->nullable();
+
+				            $table->string('old_zakup_price')->nullable();
+				            $table->string('new_zakup_price')->nullable();
+
+				            $table->string('on_invoice_start')->nullable()->comment('Дата начала предоставления скидки он инвойс');
+				            $table->string('on_invoice_end')->nullable()->comment('Дата окончания предоставления скидки он инвойс');
+
+				            $table->string('old_roznica_price')->nullable();
+				            $table->string('new_roznica_price')->nullable();
+
+				            $table->text('description')->comment('подписи, слоганы, расшифровки и пояснения, которые Вы хотели бы видеть к своим товарам.')->nullable();
+				            $table->text('metka')->comment('Хит, Новинка, Суперцена, Выгода 0000  рублей...')->nullable();
+				            //TODO внешний ключ ???
+
+							$table->timestamps();
+				            $table->softDeletes();
+						});
+					}
+				}
+				else
+				{
+					$doc = $doc[0];
+				}
+
+				foreach ($dataToInsert as $key => $value)
+				{
+					foreach ($value['shops'] as $value2)
+					{
+						\DB::table('document_action_first_datas')->insert(
+		 					[
+		 						'doc_id' => $doc->id,
+								'shop_id' => $value2,
+								'process_id' => $pr->id,
+								'process_type_id' => $doc->process_type_id,
+					            'kod_dis' => $value['kodTov'],
+					            'articule_sk' => $value['articule_sk'] ?? 0,
+								'action_types_ids' => $value['type'],
+					            'on_invoice' => $this->parseProcenteFromExcelToInt($value['skidka_on_invoice']),
+					            'off_invoice' => $value['kompensaciya_off_invoice'],
+					            'skidka_itogo' => $value['skidka_itogo'],
+					            'old_zakup_price' => $value['zakup_old'],
+					            'new_zakup_price' => $value['zakup_new'],
+					            'on_invoice_start' => $value['start_date_on_invoice'],
+					            'on_invoice_end' => $value['end_date_on_invoice'],
+					            'old_roznica_price' => $value['roznica_old'],
+					            'new_roznica_price' => $value['roznica_new'],
+					            'description' => $value['descr'],
+					            'metka' => $value['marks'],
+					            'created_at' => date('Y-m-d H:i:s')
+		 					]
+		 				);
+					}
+				}
+			}, 2);
+		}
+		catch(Exception $e)
+		{
+			$this->validate_errors['form'][0]['error_db_save'] = 'Не удалось сохранить данные. Попробуйте еще раз либо обратитесь к администратору системы.';
+		}
+
+		if($err || !empty($this->validate_errors['form']) || !empty($this->validate_errors['file']))
+		{
+			return redirect()->back()
+				->with('errors', $this->validate_errors)
+				->withInput();
+		}
+		else
+		{
+			return redirect()->back()->with('ok', 'Добавление прошло успешно');
+		}
+	}
+
 
 	public function edit(Request $request, $id)
 	{

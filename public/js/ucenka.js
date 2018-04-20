@@ -58,7 +58,7 @@ $(function () {
 				colModel:[
 				   		{label:'Номер',   				name:'num',		width:50,align:"center"},
 				   		{label:'Магазин', 				name:'name',	width:180},
-				   		{label:'Одобрена',				name:'status',	width:150,align:"center"},
+				   		{label:'Одобрено',				name:'status',	width:150,align:"center"},
 				   		{label:'Наименование товара', 	name:'tov_name',width:250},
 				   		{label:'Дата подачи заявки',	name:'addDate',	width:120,align:"center"},
 					],
@@ -120,7 +120,17 @@ $(function () {
 			{
 				colModelEditOp.push(
 					{label:'Скидка %',name:'skidka',width:50,align:"center",editable:true,edittype:"text"},
-					{label:'Одобрить',name:'approve',index:'approve',width:70,align:"center",editable:true,edittype:"select",editoptions:{value:approveVariants}},
+					{
+						label:'Одобрить',
+						name:'approve',
+						index:'approve',
+						width:70,
+						align:"center",
+						editable:true,
+						formatter:'select',
+						edittype:"select",
+						editoptions:{value:approveVariants},
+					},
 					{label:'Комметарий',name:'refusal_comment',index:'refusal_comment',width:100,align:"center",editable:true,edittype:'text'}
 					);
 			}

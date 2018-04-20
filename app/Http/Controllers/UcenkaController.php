@@ -162,7 +162,7 @@ class UcenkaController extends Controller
 			{
 				$data = array_merge($data, [
 							$value->skidka,
-							is_null($value->agreement_date) ? 'Отклонено' : 'Одобрено',
+							is_null($value->agreement_date) ? 2 : 1, //2:'Отклонено', 1:'Одобрено'
 							$value->refusal_comment]);
 			}
 
@@ -174,6 +174,7 @@ class UcenkaController extends Controller
 
 	public function ajaxJsonEditSubmit(Request $request)
 	{
+
 		$result = [];
 		$user = User::find(Auth::id());
 		if (Gate::denies('ucenkaapp-edit', $user) && 
@@ -205,7 +206,7 @@ class UcenkaController extends Controller
 			foreach ($nomenkatura as $key => $value)
 			{
 				$tov = UcenkaAppTov::find($value->ID);
-				if(mb_strtolower($value->approve) == 'одобрено')
+				if($value->approve == 1)
 				{
 					$tov->agreement_date = time();
 					$tov->refusal_comment = '';

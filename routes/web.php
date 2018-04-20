@@ -24,6 +24,8 @@ Route::group(['middleware' => 'auth'], function () {
 		Route::get('/processes/ajaxList',				'ProcessController@ajaxList');
 		Route::get('/processes/ajaxGetTovList/{procId}','ProcessController@ajaxGetTovList');
 		Route::post('/processes/add',					'ProcessController@add');
+		Route::post('/processes/ajaxAdd',				'ProcessController@ajaxAdd');
+		
 		Route::post('/processes/prepareDataFromFile',	'ProcessController@prepareDataFromFile');
 
 		Route::get('/sys/getContragentsForAvtocomplete', 	'SystemController@ajaxGetContragentsAvtocomplete');

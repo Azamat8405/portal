@@ -32,8 +32,15 @@ $(function(){
 	{
 		$( ".handrail > div" ).draggable({
 			axis: "x",
-			drag: function( event, ui ) {
-				resizeMenu(this);
+			start: function( event, ui ){
+				resizeMenu( this );
+			},
+			drag: function( event, ui ){
+				var el = this;
+				resizeMenu(el);
+				setTimeout(function(){
+					resizeMenu(el);
+				}, 10);
 			},
 			stop:function()
 			{
@@ -211,15 +218,15 @@ $(function(){
 
 function resizeMenu(el)
 {
-	var nav_w = parseInt($(el).css('left')) + 9;
-	if(nav_w < 10)
+	var nav_w = parseInt($(el).css('left')) + 5;
+	if(nav_w < 5)
 	{
 		$('.wrapper > nav').width(10);
 
 		setTimeout(function(){
 
-			tmp = parseInt($(el).css('left')) + 9;
-			if(tmp < 10)
+			tmp = parseInt($(el).css('left')) + 5;
+			if(tmp < 5)
 			{
 				$(el).css('left', 0);
 			}
@@ -227,7 +234,7 @@ function resizeMenu(el)
 		}, 100);
 
 		$('.content').width( $(window).width() - nav_w );
-		$('.content').css('margin-left', 12);
+		$('.content').css('margin-left', 5);
 
 		return;
 	}

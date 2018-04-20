@@ -44,5 +44,7 @@ function setFrozenHeightTd()
 			});
 			$(this).css('height',h);
 		});
+
+		$('.frozen-div.ui-jqgrid-hdiv').height($('.ui-jqgrid-hdiv').height());
 	}, 20);
 }
