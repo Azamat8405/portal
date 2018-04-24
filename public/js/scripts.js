@@ -172,6 +172,7 @@ function showMessage(type, source, message, params)
 		autoOpen: true,
 		width:params.width,
 		maxHeight:$(window).height()-50,
+		resizable:true,
 		title:'Внимание!',
 		position:{
 			my:"top+5%",
@@ -195,7 +196,7 @@ function showMessage(type, source, message, params)
 				html += message;
 			}
 			$('#'+type+'_dialog_messages').html(html);
-		}
+		},
 	});
 }
 
@@ -250,7 +251,7 @@ function resizeMenu(el)
 
 function show_load(target)
 {
-	if(target == '')
+	if(!target)
 	{
 		target = 'body';
 	}

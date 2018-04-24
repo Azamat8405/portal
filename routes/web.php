@@ -38,8 +38,6 @@ Route::group(['middleware' => 'auth'], function () {
 		Route::get('/sys/getSubCategs/{categId}',			'SystemController@ajaxGetSubCategs');
 		Route::get('/sys/getSubRegions/{regionId}',			'SystemController@ajaxGetSubRegions');
 		Route::get('/sys/getShopsForRegion/{regionId}',		'SystemController@ajaxGetShopsForRegion');
-		Route::get('/sys/getBrendsForCategs/{categId}',		'SystemController@ajaxGetBrendsForCategs');
-		Route::get('/sys/getBrendsForAvtocomplete',			'SystemController@ajaxGetBrendsForAvtocomplete');
 		Route::get('/sys/getTovsToFillTable',				'SystemController@ajaxGetTovsToFillTable');
 
 
@@ -63,5 +61,12 @@ Route::group(['middleware' => 'auth'], function () {
 	Route::get('/tovs/ajaxGetTovarForAvtoComplete',	'TovController@ajaxGetTovarForAvtoComplete');
 
 	Route::get('/shop/ajaxGetShops', 				'ShopController@ajaxGetShops');
+
+	Route::get('/brends/getBrendsForAvtocomplete',			'BrendController@ajaxGetBrendsForAvtocomplete');
+	Route::get('/brends/getBrendsForCategs/{categId}',		'BrendController@ajaxGetBrendsForCategs');
+
+	Route::get('/avtodefectura',				'AvtodefecturaController@list')->name('avtodefectura.list');
+
+
 });
 Auth::routes();

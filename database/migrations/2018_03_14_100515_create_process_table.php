@@ -19,8 +19,8 @@ class CreateProcessTable extends Migration
             $table->string('title');
             $table->string('process_type_id');
 
-//          slave branch
-//          $table->string('status');
+            $table->string('status');
+            $table->integer('user_id')->unsigned();
 
             $table->integer('start_date')->unsigned();
             $table->integer('end_date')->unsigned()->nullable();

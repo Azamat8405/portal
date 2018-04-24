@@ -15,6 +15,7 @@ use App\ActionMark;
 use App\TovCategs;
 use App\ShopRegion;
 use App\Brend;
+use App\User;
 use App\Document;
 use App\DocumentActionFirstData;
 
@@ -58,7 +59,14 @@ class ProcessController extends Controller
 			$responce['rows'][$key]['id'] = $value->id;
 		    $responce['rows'][$key]['cell'] = 
 		    	[
-					++$number, $value->title, $value->start_date, $value->end_date, $value->processType->title
+					++$number,
+					$value->title,
+					$value->start_date,
+					$value->end_date,
+					$value->processType->title,
+					$value->status,
+					($value->user ? $value->user->name : ''),
+					date('d.m.Y', $value->created_at->timestamp)
 				];
 		}
 		echo json_encode($responce);
@@ -89,7 +97,8 @@ class ProcessController extends Controller
 		$action_types[] = '0:Не выбрано';
 		$action_types_descr = [];
 
-		foreach (ActionType::all() as $type)
+		$types = ActionType::orderBy('title')->get();
+		foreach ($types as $type)
 		{
 			$action_types[] = $type->id.':'.$type->title;
 			$action_types_descr[$type->id] = $type->description;
@@ -101,7 +110,8 @@ class ProcessController extends Controller
 			'process_types' => ProcessType::all(),
 			'action_types' => implode(';', $action_types),
 			'action_types_descr' => $action_types_descr,
-			'action_marks' => ActionMark::all()
+			'action_marks' => ActionMark::all(),
+			'user' => User::find(Auth::id()),
 		]);
 	}
 
@@ -320,8 +330,8 @@ class ProcessController extends Controller
 	public function ajaxAdd(Request $request)
 	{
 
-print_r(json_decode(Request::input('d')));
-exit();
+// print_r(json_decode(Request::input('d')));
+// exit();
 
 		$err = false;
 
@@ -693,10 +703,6 @@ exit();
 				$this->validate_errors[$source][$row_num]['distr'] = 'Не удалось определить поставщика(Дистрибьютора) указан "'.$data['distr'].'"';
 			}
 		}
-		// else
-		// {
-		// 	$this->validate_errors[$source][$row_num]['distr'] = 'Не указан поставщик для товара';
-		// }
 
 		// если дистрибьютер оределелился, то берем его, если нет то игнорируем. т.е. в базу вносим только проверенные данные.
 		// дистрибьютер на текущий момент не обязательное поле
@@ -710,7 +716,6 @@ exit();
 			if(count($postavshik) != 1)
 			{
 				$data['distrTitles'] = '';
-
 //				$this->validate_errors[$source][$row_num]['distr'] = 'Не удалось определить поставщика(Дистрибьютора) указан "'.$data['distrTitles'].'"';
 			}
 			else
@@ -728,6 +733,7 @@ exit();
 				WHERE ArtCode = ? ', [$data['kodTov']]);
 			if(!$tmp)
 			{
+				// Если нет точного соответствия, то ищем по вхождению. т.к. может быть что код пришел без ведущих нулей.
 				$searched = false;
 				$tmp = DB::connection('sqlsrv_imported_data')->select('SELECT [ArtName], [BrandName], [ArtArticle], [ArtCode]
 					FROM [Imported_Data].[dbo].[Assortment] 
@@ -736,11 +742,15 @@ exit();
 				{
 					foreach($tmp as $key => $value)
 					{
+						// удаляем из кода(из базы) код который пришел. если остались только нули. значит это тот самый код.мы его нашли по вхождению
 						$t_ = str_replace($data['kodTov'], '', $value->ArtCode);
                 		if(preg_match('/^[0]+$/', $t_))
 						{
 							$searched = true;
 							$data['tovsTitles'] = $value->ArtName;
+
+							// заменяем код на корректный
+							$data['kodTov'] = $value->ArtCode;
 						}
 					}
 
@@ -764,39 +774,37 @@ exit();
 			$this->validate_errors[$source][$row_num]['kodTov'] = 'Не указан код товара';
 		}
 
-		if($source == 'form')
+		if(isset($data['tovsTitles']) && trim($data['tovsTitles']) != '')
 		{
-			if(isset($data['tovsTitles']) && trim($data['tovsTitles']) != '')
+			$tmp = DB::connection('sqlsrv_imported_data')->select('select [ArtName], [BrandName], [ArtArticle], [ArtCode]
+				FROM [Imported_Data].[dbo].[Assortment]
+				WHERE ArtName = ? ', [$data['tovsTitles']]);
+			if(!$tmp)
 			{
-				$tmp = DB::connection('sqlsrv_imported_data')->select('select [ArtName], [BrandName], [ArtArticle], [ArtCode]
-					FROM [Imported_Data].[dbo].[Assortment]
-					WHERE ArtName = ? ', [$data['tovsTitles']]);
-				if(!$tmp)
-				{
-					$this->validate_errors[$source][$row_num]['tovsTitles'] = 'Не найден товар с указанным наименованием "'.$data['tovsTitles'].'"';
-				}
-				else
-				{
-					if(!isset($data['kodTov']) || trim($data['kodTov']) == '')
-					{
-						$data['kodTov'] = $tmp[0]->{'ArtCode'};
-					}
-
-					// бренд не проверяем.
-					// if(isset($data['brend']))
-					// {
-					// 	if(trim($tmp[0]->BrandName) != trim($data['brend']))
-					// 	{
-					// 		$this->validate_errors[$source][$row_num]['brend'] = 'Не верно указан Бренд для товара "'.($tmp[0]->BrandName).'". Введен "'.$data['brend'].'".';
-					// 	}
-					// }
-
-				}
+				$this->validate_errors[$source][$row_num]['tovsTitles'] = 'Не найден товар с указанным наименованием "'.$data['tovsTitles'].'"';
 			}
 			else
 			{
-				$this->validate_errors[$source][$row_num]['tovsTitles'] = 'Не указано наименование товара.';
+				if(!isset($data['kodTov']) || trim($data['kodTov']) == '')
+				{
+					$data['kodTov'] = $tmp[0]->{'ArtCode'};
+				}
+
+				// если бренд пришел, проверяем его. если не правильный игнорируем ))
+				// если верный бренд то возвращаем еще и id бренда
+				if(isset($data['brend']) && $tmp[0]->BrandName == $data['brend'])
+				{
+					$br = Brend::where('name', $tmp[0]->BrandName)->get();
+					if($br->count() > 0)
+					{
+						$data['brendId'] = $br[0]->id;
+					}
+				}
 			}
+		}
+		else
+		{
+			$this->validate_errors[$source][$row_num]['tovsTitles'] = 'Не указано наименование товара.';
 		}
 
 		// Проверка типа маркетинговой акции
@@ -837,26 +845,23 @@ exit();
 		// Размер скидки ON INVOICE
 		if(isset($data['skidka_on_invoice']) && trim($data['skidka_on_invoice']) != '')
 		{
-
-
-
 			if(!$this->validateDataProcent($data['skidka_on_invoice']))
 			{
 				$this->validate_errors[$source][$row_num]['skidka_on_invoice'] = 'Не верное значение процента в колонке скидка ON INVOICE('.$data['skidka_on_invoice'].'). Значение должно быть от 0 - 100.';
 			}
 			elseif($source == 'file')
 			{
+				$data['skidka_on_invoice'] = (float)str_replace([',', '%', '-'], ['.','',''], $data['skidka_on_invoice']);
 				if($data['skidka_on_invoice'] <= 1)
 				{
-					$data['skidka_on_invoice'] = str_replace(',', '.', $data['skidka_on_invoice']);
-					$data['skidka_on_invoice'] = (float)$data['skidka_on_invoice'] * 100;
+					$data['skidka_on_invoice'] = round($data['skidka_on_invoice'] * 100);
+				}
+				else
+				{
+					$data['skidka_on_invoice'] = round($data['skidka_on_invoice']);
 				}
 			}
 		}
-		// else
-		// {
-		// 	$this->validate_errors[$source][$row_num]['skidka_on_invoice'] = 'Не указана скидка ON INVOICE('.$data['skidka_on_invoice'].') или указана неверно.';
-		// }
 
 		// Процент компенсации OFF INVOICE 
 		if(isset($data['kompensaciya_off_invoice']) && trim($data['kompensaciya_off_invoice']) != '')
@@ -867,11 +872,14 @@ exit();
 			}
 			elseif($source == 'file')
 			{
-				$data['kompensaciya_off_invoice'] = str_replace('-', '', $data['kompensaciya_off_invoice']);
+				$data['kompensaciya_off_invoice'] = (float)str_replace([',', '%', '-'], ['.','',''], $data['kompensaciya_off_invoice']);
 				if($data['kompensaciya_off_invoice'] <= 1)
 				{
-					$data['kompensaciya_off_invoice'] = str_replace(',', '.', $data['kompensaciya_off_invoice']);
-					$data['kompensaciya_off_invoice'] = (float)$data['kompensaciya_off_invoice'] * 100;
+					$data['kompensaciya_off_invoice'] = round($data['kompensaciya_off_invoice'] * 100);
+				}
+				else
+				{
+					$data['kompensaciya_off_invoice'] = round($data['kompensaciya_off_invoice']);
 				}
 			}
 		}
@@ -885,10 +893,14 @@ exit();
 			}
 			elseif($source == 'file')
 			{
+				$data['skidka_itogo'] = (string)str_replace([',', '%', '-'], ['.','',''], $data['skidka_itogo']);
 				if($data['skidka_itogo'] <= 1)
 				{
-					$data['skidka_itogo'] = str_replace(',', '.', $data['skidka_itogo']);
-					$data['skidka_itogo'] = (float)$data['skidka_itogo'] * 100;
+					$data['skidka_itogo'] = round($data['skidka_itogo'] * 100);
+				}
+				else
+				{
+					$data['skidka_itogo'] = round($data['skidka_itogo']);
 				}
 			}
 		}
@@ -905,7 +917,15 @@ exit();
 		}
 		elseif($source == 'file')
 		{
-			$data['zakup_old'] = round($data['zakup_old'], 2);
+			$data['zakup_old'] = (float)$data['zakup_old'];
+			if(strpos($data['zakup_old'], '.') === false)
+			{
+				$data['zakup_old'] .= '.00';
+			}
+			else
+			{
+				$data['zakup_old'] = round($data['zakup_old'], 2);
+			}
 		}
 
 		$data['zakup_new'] = preg_replace('/[ ]+/', '', $data['zakup_new']);
@@ -915,13 +935,21 @@ exit();
 		}
 		elseif($source == 'file')
 		{
-			$data['zakup_new'] = round($data['zakup_new'], 2);
+			$data['zakup_new'] = (float)$data['zakup_new'];
+			if(strpos($data['zakup_new'], '.') === false)
+			{
+				$data['zakup_new'] .= '.00';
+			}
+			else
+			{
+				$data['zakup_new'] = round($data['zakup_new'], 2);
+			}
 		}
 
 		if(trim($data['zakup_new']) != '' && trim($data['zakup_old']) != '' && intval($data['zakup_new']) > intval($data['zakup_old']))
 		{
 			$this->validate_errors[$source][$row_num]['zakup_new'] = 'Новая закупочная цена должны быть меньше старой закупочной цены.
-			(Новая:'.intval($data['zakup_new']).' Старая:'.intval($data['zakup_old']).')';
+			(Новая:'.$data['zakup_new'].' Старая:'.$data['zakup_old'].')';
 		}
 
 		// если предоставляется скидка он-инвойс,
@@ -946,7 +974,10 @@ exit();
 			}
 			else
 			{
-				$data['start_date_on_invoice'] = strtotime($data['start_date_on_invoice']);
+				if($source == 'form')
+				{
+					$data['start_date_on_invoice'] = strtotime($data['start_date_on_invoice']);
+				}
 			}
 
 			// дата окончания
@@ -961,15 +992,19 @@ exit();
 			{
 				$this->validate_errors[$source][$row_num]['end_date_on_invoice'] = 'Неверный формат даты окончания предоставления скидки ON INVOICE.';
 			}
-
 			// дата начала предоставления скидки он-инвойс <= дата начала акции
-			elseif(strtotime($data['start_date_on_invoice']) > strtotime($data['end_date_on_invoice']))
+			elseif($data['start_date_on_invoice'] > strtotime($data['end_date_on_invoice']))
 			{
 				$this->validate_errors[$source][$row_num]['end_date_on_invoice'] = 'Дата начала предоставления скидки ON INVOICE не должна быть больше даты окончания скидки.';
 			}
 			else
 			{
-				$data['start_date_on_invoice'] = strtotime($data['start_date_on_invoice']);
+				// если из формы пришли данные, то дальше мы их вносим в базу. а значит нам нужне timastamp
+				if($source == 'form')
+				{
+					$data['end_date_on_invoice'] = strtotime($data['end_date_on_invoice']);
+				}
+				// если же из файла, то мы возвращаем данные обратно в браузер, а соответсвенно не меняем в timestamp. оставляем в формате dd-mm-yyyy
 			}
 		}
 
@@ -981,7 +1016,15 @@ exit();
 		}
 		elseif($source == 'file')
 		{
-			$data['roznica_old'] = round($data['roznica_old'], 2);
+			$data['roznica_old'] = (float)$data['roznica_old'];
+			if(strpos($data['roznica_old'], '.') === false)
+			{
+				$data['roznica_old'] .= '.00';
+			}
+			else
+			{
+				$data['roznica_old'] = round($data['roznica_old'], 2);
+			}
 		}
 
 		$data['roznica_new'] = preg_replace('/[ ]+/', '', $data['roznica_new']);
@@ -991,10 +1034,18 @@ exit();
 		}
 		elseif($source == 'file')
 		{
-			$data['roznica_new'] = round($data['roznica_new'], 2);
+			$data['roznica_new'] = (float)$data['roznica_new'];
+			if(strpos($data['roznica_new'], '.') === false)
+			{
+				$data['roznica_new'] .= '.00';
+			}
+			else
+			{
+				$data['roznica_new'] = round($data['roznica_new'], 2);
+			}
 		}
 
-		if($data['roznica_new'] != '' && $data['roznica_old'] != '' && intval($data['roznica_new']) > intval($data['roznica_old']))
+		if($data['roznica_new'] != '' && $data['roznica_old'] != '' && $data['roznica_new'] > $data['roznica_old'])
 		{
 			$this->validate_errors[$source][$row_num]['roznica_new'] = 'Новая розничная цена должны быть меньше старой розничной цены.';
 		}
@@ -1059,6 +1110,7 @@ exit();
 						if(trim($sheet->getCell('F'.$row_num)->getValue()) == '' AND
 							trim($sheet->getCell('G'.$row_num)->getValue()) == '')
 						{
+							$this->validate_errors['file'][$row_num]['kodTov'] = 'Не указан товар в строке ('.$row_num.'), либо строка пустая.';
 							continue;
 						}
 
@@ -1134,10 +1186,13 @@ exit();
 									//TODO дробная часть куда девается
 									$dataToInsert[$row_num]['roznica_new'] = $cell->getCalculatedValue();
 									break;
-								case 'S': 
-									$dataToInsert[$row_num]['descr'] = $cell->getCalculatedValue();
+								case 'S':
+									$dataToInsert[$row_num]['razmesh_price'] = $cell->getCalculatedValue();
 									break;
 								case 'T': 
+									$dataToInsert[$row_num]['descr'] = $cell->getCalculatedValue();
+									break;
+								case 'U': 
 									$dataToInsert[$row_num]['marks'] = $cell->getCalculatedValue();
 									break;
 							}
@@ -1165,6 +1220,7 @@ exit();
 		}
 		$returnData['data'] = $dataToInsert;
 		$returnData['errors'] = (($returnData['errors'] ?? []) + ($this->validate_errors['file'] ?? []));
+
 		echo json_encode($returnData);
 	}
 
@@ -1175,24 +1231,22 @@ exit();
 	*/
 	private function validateDataStartProcessDate($value, $start_date)
 	{
-		$valid = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $value);
+		$valid = (bool)preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $value);
         if($valid)
         {
 			$valid = ($start_date <= strtotime($value));
 		}
 		return $valid;
 	}
-
 	private function validateDataEndProcessDate($value, $end_date)
 	{
-		$valid = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $value);
+		$valid = (bool)preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $value);
 		if($valid)
         {
 			$valid = ($end_date >= strtotime($value));
         }
         return $valid;
 	}
-
 	private function dateFormatReplace($value)
 	{
 		$value = preg_replace('/[\-\/\\\,]/', '.', $value);
@@ -1205,7 +1259,6 @@ exit();
 		}
 		return $value;
 	}
-
 	private function validateDataProcent($value, $parameters = [])
 	{
 		$value = preg_replace('/[\%\-]/', '', $value);
@@ -1220,7 +1273,6 @@ exit();
 		}
 		return false;
 	}
-
 	private function parseDateFromExcelToInt($cell)
 	{
 		if(trim($cell->getCalculatedValue()) == '')
@@ -1263,7 +1315,6 @@ exit();
 			return false;
 		}
 	}
-
 	private function parseProcenteFromExcelToInt($proc)
 	{
 		$value = preg_replace('/[\%\-]/', '', $proc);

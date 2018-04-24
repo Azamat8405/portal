@@ -16,6 +16,11 @@ class Process extends Model
 		return $this->hasMany('App\DocumentActionFirstData');
     }
 
+	public function user()
+    {
+		return $this->belongsTo('App\User');
+	}
+
 	public function getStartDateAttribute($value)
     {
 		return date('d.m.Y', $value);
@@ -25,4 +30,6 @@ class Process extends Model
     {
 		return date('d.m.Y', $value);
 	}
+
+
 }

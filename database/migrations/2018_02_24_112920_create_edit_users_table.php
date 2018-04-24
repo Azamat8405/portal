@@ -14,10 +14,8 @@ class CreateEditUsersTable extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-
             $table->foreign('user_group_id')->references('id')->on('users_groups')->onDelete('cascade');
             // $table->integer('user_group_id')->unsigned()->nullable()->change();
-
         });
     }
 
@@ -28,7 +26,7 @@ class CreateEditUsersTable extends Migration
      */
     public function down()
     {
-        Schema::table('users', function (Blueprint $table) {
+        Schema::table('users', function (Blueprint $table){
             $table->dropForeign('users_user_group_id_foreign');
         });
     }

@@ -1,19 +1,5 @@
-//	{ name: 'DocGroupName', index: 'DocGroupName', width: 310, editable: true, edittype: "select", editrules: { required: true} , 
-//	editoptions: {
-//                          dataInit: function (element) {
-//                                         $(element).focusout(function (e) {
-//                                         if(this.value!="")
-//                                         {
-//                                         }
-//                                         });
-//                                     },
-//                          dataEvents: [{type: 'change', fn: function(e){
-//                             myfunction(e);
-//                             }
-//                          }]}
-//	},
-
 var grid;
+var dopData = [];
 var cache_avtocomplete_contr = {};
 var cache_avtocomplete_tovs = {};
 var cache_avtocomplete_shops = {};
@@ -34,12 +20,12 @@ var select2Option = {
 	minimumResultsForSearch:Infinity,
 };
 
-var copied_shops_index = null;
+var copied_index = null;
 var select2OptionBrends = {
 	width:'180',
 	ajax:{
 		delay: 300,
-	    url: "/sys/getBrendsForAvtocomplete",
+	    url: "/brends/getBrendsForAvtocomplete",
 	    dataType: 'json',
 	    cache: true,
 	    language: "ru",
@@ -202,6 +188,30 @@ $(function(){
 		width:500,
 		shrinkToFit:true,
 		colModel:[
+			{label:'Действия',
+				name:'actions',
+				width:60,
+				fixed:true,
+				frozen:true,
+				formatter:'actions',
+				formatoptions:{ 
+					keys: true,
+					editbutton : true,
+					delbutton : true,
+					editformbutton: false,
+					onEdit : function(){
+						eventsJqGridRow();
+					},
+					delOptions : {
+						url:'clientArray'
+					},
+					onSuccess: null,
+					afterSave: null,
+					onError: null,
+					extraparam: {oper:'edit'},
+					url:'clientArray',
+				}
+			},
 	   		{label:'Товар <sup>*</sup>',
 		   		name:'tovsTitles',
 		   		align:"center",
@@ -210,6 +220,7 @@ $(function(){
 				editable:true,
 		   		fixed:true,
 		   		resizable:false,
+		   		title:false,
 		   		frozen:true},
 	   		{label:'Код товара <sup>*</sup>',
 		   		name:'kodTov',
@@ -219,9 +230,10 @@ $(function(){
 				editable:true,
 		   		fixed:true,
 		   		resizable:false,
+		   		title:false,
 		   		frozen:true},
-	   		{label:'Магазин <sup>*</sup>', 
-		   		name:'shops', 
+	   		{label:'Магазин <sup>*</sup>',
+		   		name:'shopsTitles',
 		   		align:"center",
 		   		width:250,
 		   		edittype:'text',
@@ -233,18 +245,36 @@ $(function(){
 						attachDialogBtn(elem, 'getShopsErarhi')
 					}
 				},
+		   		title:false,
 		   		frozen:true},
-	   		{label:'Дистрибьютор',
-		   		name:'distr',
+	   		{label:'Бренд',
+		   		name:'brendTitles',
 		   		align:"center",
 		   		width:250,
 		   		edittype:'text',
 				editable:true,
+		   		title:false,
+		   		fixed:true},
+	   		{label:'Дистрибьютор',
+		   		name:'distrTitles',
+		   		align:"center",
+		   		width:250,
+		   		edittype:'text',
+				editable:true,
+		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
 						attachDialogBtn(elem, 'getContagentsErarhi')
 					}
 				},
+		   		fixed:true},
+	   		{label:'Артикул ШК',
+		   		name:'articule_sk',
+		   		align:"center",
+		   		width:250,
+		   		edittype:'text',
+				editable:true,
+		   		title:false,
 		   		fixed:true},
 	   		{label:'Тип акции <sup>*</sup>',
 		   		name:'type',
@@ -253,6 +283,7 @@ $(function(){
 		   		edittype:'select',
 				editable:true,
 				formatter:'select',
+		   		title:false,
 				editoptions:{value:action_types,
 					dataInit:function(elem){
 						$(elem).addClass('selectInRow');
@@ -271,6 +302,7 @@ $(function(){
 		   		width:180,
 		   		edittype:'text',
 				editable:true,
+		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
 						$(elem).addClass('maskProcent');
@@ -283,6 +315,7 @@ $(function(){
 		   		width:190,
 		   		edittype:'text',
 				editable:true,
+		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
 						$(elem).addClass('maskProcent');
@@ -295,6 +328,7 @@ $(function(){
 		   		width:190,
 		   		edittype:'text',
 				editable:true,
+		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
 						$(elem).addClass('maskProcent');
@@ -307,12 +341,12 @@ $(function(){
 		   		width:180,
 		   		edittype:'text',
 				editable:true,
+		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
 						$(elem).addClass('maskPrice');
 					}
 				},
-
 		   		fixed:true},
 	   		{label:'Новая розничная цена (руб)',
 		   		name:'roznica_new',
@@ -320,6 +354,7 @@ $(function(){
 		   		width:180,
 		   		edittype:'text',
 				editable:true,
+		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
 						$(elem).addClass('maskPrice');
@@ -332,6 +367,7 @@ $(function(){
 		   		width:190,
 		   		edittype:'text',
 				editable:true,
+		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
 						$(elem).addClass('maskPrice');
@@ -344,6 +380,7 @@ $(function(){
 		   		width:180,
 		   		edittype:'text',
 				editable:true,
+		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
 						$(elem).addClass('maskPrice');
@@ -356,6 +393,7 @@ $(function(){
 		   		width:200,
 		   		edittype:'text',
 				editable:true,
+		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
 						$(elem).addClass('maskDate').addClass('start_on_invoice_date');
@@ -368,9 +406,24 @@ $(function(){
 		   		width:210,
 		   		edittype:'text',
 				editable:true,
+		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
 						$(elem).addClass('maskDate').addClass('end_on_invoice_date');
+					}
+				},
+		   		fixed:true},
+
+	   		{label:'Стоимость размещения',
+		   		name:'razmesh_price',
+		   		align:"center",
+		   		width:210,
+		   		edittype:'text',
+				editable:true,
+		   		title:false,
+				editoptions:{
+					dataInit:function(elem){
+						$(elem).addClass('maskPrice');
 					}
 				},
 		   		fixed:true},
@@ -390,27 +443,41 @@ $(function(){
 		   		fixed:true},
 		],
 		multiselect:true,
+		rownumbers: true,
 		ondblClickRow:function(rowid)
 		{
 			grid.editRow(rowid);
-			// events();
-		}
+			eventsJqGridRow();
+		},
+		onCellSelect: function(rowId, colId, c, event){
+
+			if(colId == 2)
+			{
+				setTimeout(function(){
+					if($(event.target).closest('#jSaveButton_'+rowId).length || 
+						$(event.target).closest('#jCancelButton_'+rowId).length)
+					{
+						grid.jqGrid('resetSelection',rowId);
+					}
+					else if($(event.target).closest('#jEditButton_'+rowId).length)
+					{
+						grid.jqGrid('resetSelection',rowId);
+						grid.jqGrid('setSelection',rowId);
+					}
+				}, 200);
+			}
+		},
+	});
+	grid.on('jqGridDelRowBeforeSubmit', function(e,id){
+		delJqGridRows(id);
 	});
 
-	addJqGridRow();
+	let r = addJqGridRow();
+	grid.editRow(r);
+	grid.setSelection(r);
+	eventsJqGridRow();
 
-	// destroyFrozenColumns();
-	// setFrozenColumns();
-	// setFrozenHeightTd();
-
-	// setTimeout(function(){
-	//	setFrozenColumns()
-	//	setFrozenHeightTd();
-	// }, 150);
-
-	// grid.trigger('reloadGrid', [{current:true}]);
-
-	// как вариант только при скроле замораживаем столбцы
+	// только при скроле замораживаем столбцы
 	$('#' + grid.attr('id')).parents('.ui-jqgrid-bdiv').scroll(function(){
 
 		if($(this).scrollLeft() > 0)
@@ -428,7 +495,6 @@ $(function(){
 			destroyFrozenColumns();
 		}
 	});
-
 
 /* таблица конец */
 
@@ -483,12 +549,29 @@ $(function(){
 		{
 			return;
 		}
-		if($(this).data('type') == 'getShopsErarhi')
+		if($(el).data('type') == 'getShopsErarhi' || $(el).data('type') == 'getShopsErarhiIsk')
 		{
 			$("#shops_dialog").dialog({
 				title: "Выбор магазинов",
 				open:function( event, ui){
-					get_shop_list($(el).prev().val().split(';'));
+
+					if($(el).data('type') == 'getShopsErarhiIsk')
+					{
+						get_shop_list( $(el).prev().val().split(';') );
+					}
+					else
+					{
+						var n = getJqGridRowNumber(el);
+						if(dopData['shops'] && dopData['shops'][n])
+						{
+							var data = dopData['shops'][n].split(';');
+						}
+						else
+						{
+							var data = [];
+						}
+						get_shop_list( data );
+					}
 				},
 				resizable:true,
 				width:500,
@@ -502,19 +585,31 @@ $(function(){
 				closeOnEscape:true,
 				buttons:{
 				    "Выбрать магазин": function(e){
+
 						var ids=[],titles=[];
 						$('#shops_dialog input[value]:checked').each(function(){
 							ids.push($(this).val());
 							titles.push($(this).data('title'));
 						});
 
-						var row_n = getRowNumber(el);
+						titles = titles.sort().join('; ');
+						var row_n = getJqGridRowNumber(el);
+						if(row_n)
+						{
+							//в таблице
+							$('#'+row_n+'_shopsTitles').val(titles);
+							checkAddField(row_n, 'chShop', titles);
 
-						$(el).parents('.field_input_file').find('input.shops').val(ids.join(';'));
-						$(el).parents('.field_input_file').find('input.shopsTitles').val(titles.join(';  '));
-						$(el).parents('.field_input_file').find('input.chShop').val(titles.join(';  '));
-						$(el).parents('.field_input_file').find('input.shopsTitles').trigger('change');
-
+							$('#'+row_n+'_shopsTitles').trigger('change');
+							addDopData(row_n, 'shops', ids.join(';'));
+						}
+						else
+						{
+							//в фильтре
+							$(el).parents('.field_input_file').find('input.shops').val(ids.join(';'));
+							$(el).parents('.field_input_file').find('input.shopsTitles').val(titles);
+							$(el).parents('.field_input_file').find('input.shopsTitles').trigger('change');
+						}
 						$("#shops_dialog").dialog("close");
 				    }
 				}
@@ -538,7 +633,16 @@ $(function(){
 				},
 				open:function( event, ui )
 				{
-					let selIds = $(el).prev().val().split(',');
+					let selIds;
+					var n = getJqGridRowNumber(el);
+					if(dopData['distr'] && dopData['distr'][n])
+					{
+						selIds = dopData['distr'][n].split(',');
+					}
+					else
+					{
+						selIds = [];
+					}
 
 					$("#contragent_dialog").dialog( "option", 'selAgents', selIds);
 					get_contragents_list();
@@ -552,20 +656,16 @@ $(function(){
 							titles.push($(this).data('title'));
 						});
 
-						var row_n = getRowNumber(el);
-
-						$('input.distr:eq('+row_n+')').val(ids.join());
-						$('input.distrTitles:eq('+row_n+')').val(titles.join(';  '));
-						$('input.chDistr:eq('+row_n+')').val(titles.join(';  '));
-
+						var row_n = getJqGridRowNumber(el);
+						checkAddField(row_n, 'chDistr', titles.join(';  '));
+						$('#'+row_n+'_distrTitles').val(titles.join(';  '));
+						addDopData(row_n, 'distr', ids.join());
 						$("#contragent_dialog").dialog("close");
 					}
 				}
 			});
 		}
 	});
-
-
 
 
 	$('#fillTableFromFile').click(function(e){
@@ -614,6 +714,7 @@ $(function(){
 				'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
 			}
 		});
+
 		$.ajax({
 			url:"/processes/prepareDataFromFile",
 			type:"post",
@@ -657,17 +758,40 @@ $(function(){
 					}
 				}
 
-				var empty = false;
+console.log(data['data']);
+
+
 				for(ind in data['data'])
 				{
-					addRow(data['data'][ind]);
-					empty = true;
+					data['data'][ind]['shopsTitles'] = data['data'][ind]['shopsTitles'].join('; ');
+					data['data'][ind]['brendTitles'] = data['data'][ind]['brend'];
+
+					var r = addJqGridRow(data['data'][ind]);
+					if(r)
+					{
+						checkAddField(r, 'chTitle', data['data'][ind]['tovsTitles']);
+						checkAddField(r, 'chKod', data['data'][ind]['kodTov']);
+						checkAddField(r, 'chShop', data['data'][ind]['shopsTitles']);
+						checkAddField(r, 'chDistr', data['data'][ind]['distrTitles']);
+						checkAddField(r, 'chBrendTitles', data['data'][ind]['brend']);
+
+						if(typeof(data['data'][ind]['shops']) != 'undefined')
+						{
+							addDopData(r, 'shops', data['data'][ind]['shops'].join(';'));
+						}
+						if(typeof(data['data'][ind]['distr']) != 'undefined')
+						{
+							addDopData(r, 'distr', data['data'][ind]['distr']);
+						}
+						if(typeof(data['data'][ind]['brendId']) != 'undefined')
+						{
+							addDopData(r, 'brend', data['data'][ind]['brendId']);
+						}
+					}
 				}
+				eventsJqGridRow();
 
-				delRows(empty);
-				events();
 				$(window).trigger('resize');
-
 				$('.hideBlock').hide();
 			}
 		});
@@ -711,16 +835,9 @@ $(function(){
 			arr.tovTipIsdeliya = $('#tovTipIsdeliya').val();
 		}
 
-		// if($('#tovVidIsdeliya').val() == 0)
-		// {
-		// 	$('#select2-tovVidIsdeliya-container').parents('.select2-selection').addClass('error_input');
-		// 	err = true;
-		// }
-		// else
-		// {
-			$('#select2-tovVidIsdeliya-container').parents('.select2-selection').removeClass('error_input');
-			arr.tovVidIsdeliya = $('#tovVidIsdeliya').val();
-		// }
+		$('#select2-tovVidIsdeliya-container').parents('.select2-selection').removeClass('error_input');
+		arr.tovVidIsdeliya = $('#tovVidIsdeliya').val();
+
 
 		if($('#tovBrendSelect').val() == 0)
 		{
@@ -820,7 +937,6 @@ function getTovsToFillTable(arr, page)
 	});
 }
 
-
 function clearFilter()
 {
 	for(ind in selects_cats)
@@ -880,10 +996,6 @@ function get_contragents_list()
 	}
 }
 
-function getRowNumber(el)
-{
-	return $(el).parents('tr').find('.row_number').val();
-}
 function escape(string) {
     var htmlEscapes = {
         '&': '&amp;',
@@ -898,641 +1010,6 @@ function escape(string) {
         return htmlEscapes[match];
     });
 };
-
-// function addEmptyRow()
-// {
-// 	addRow();
-// 	events();
-// 	$(window).trigger('resize');
-// }
-
-function addRow(dataToFill, tr)
-{
-	$('.select').each(function(){
-		if($(this).hasClass("select2-hidden-accessible"))
-		{
-			$(this).select2('destroy');
-			$(this).removeAttr('data-select2-id').find('option').removeAttr('data-select2-id');
-		}
-	});
-
-	$('.start_on_invoice_date, .end_on_invoice_date').removeClass("hasDatepicker")
-	$('.start_on_invoice_date, .end_on_invoice_date').datepicker("destroy");
-	if(!tr)
-	{
-		tr = $('.table_data_block table tr:eq(1)').clone();
-	}
-	else
-	{
-		tr = $(tr);
-	}
-
-	$('.select').each(function(){
-
-		if($(this).val() == 0)
-		{
-			$(this).val("0").trigger("change");
-		}
-	});
-
-	let newRowNumber = ($('.table_data_block table tr').length - 1);
-	tr.find('input,textarea').val('');
-	tr.find('.error_message').remove();
-	tr.find('.start_on_invoice_date, .end_on_invoice_date ').removeAttr('id');
-	tr.find('input.row_number').val(newRowNumber);
-
-	if(dataToFill && dataToFill['shops'])
-	{
-		var ids = [];
-		for(ind in dataToFill['shops'])
-		{
-			ids.push(dataToFill['shops'][ind]);
-		}
-		tr.find('input.shops').val( ids.join(';') );
-	}
-
-	if(dataToFill && dataToFill['shopsTitles'])
-	{
-		var ttls = [];
-		for(ind in dataToFill['shopsTitles'])
-		{
-			ttls.push(dataToFill['shopsTitles'][ind]);
-		}
-		tmp = ttls.join(';  ')
-		tr.find('input.shopsTitles').val( tmp );
-		tr.find('input.chShop').val( tmp );
-	}
-
-	if(dataToFill && dataToFill['kodTov'])
-	{
-		tr.find('input.kodTov').val( dataToFill['kodTov']);
-		tr.find('input.chKod').val(dataToFill['kodTov']);
-	}
-
-	if(dataToFill && dataToFill['tovsTitles'])
-	{
-		tr.find('input.tovsTitles').val( dataToFill['tovsTitles'] );
-		tr.find('input.chTitle').val( dataToFill['tovsTitles'] );
-	}
-
-	if(dataToFill && dataToFill['distrTitles'])
-	{
-		tr.find('input.distrTitles').val( dataToFill['distrTitles'] );
-		tr.find('input.distr').val( dataToFill['distr'] );
-		tr.find('input.chDistr').val( dataToFill['distrTitles'] );
-	}
-	if(dataToFill && dataToFill['skidka_on_invoice'])
-	{
-		tr.find('input.on_invoice').val( dataToFill['skidka_on_invoice'] );
-	}
-	if(dataToFill && dataToFill['kompensaciya_off_invoice'])
-	{
-		tr.find('input.off_invoice').val( dataToFill['kompensaciya_off_invoice'] );
-	}
-	if(dataToFill && dataToFill['skidka_itogo'])
-	{
-		tr.find('input.skidka_itogo').val( dataToFill['skidka_itogo'] );
-	}
-	if(dataToFill && dataToFill['roznica_old'])
-	{
-		tr.find('input.roznica_old').val( dataToFill['roznica_old'] );
-	}
-	if(dataToFill && dataToFill['roznica_new'])
-	{
-		tr.find('input.roznica_new').val( dataToFill['roznica_new'] );
-	}
-	if(dataToFill && dataToFill['zakup_old'])
-	{
-		tr.find('input.zakup_old').val( dataToFill['zakup_old'] );
-	}
-	if(dataToFill && dataToFill['zakup_new'])
-	{
-		tr.find('input.zakup_new').val( dataToFill['zakup_new'] );
-	}
-	if(dataToFill && dataToFill['start_date_on_invoice'])
-	{
-		tr.find('input.start_on_invoice_date').val( dataToFill['start_date_on_invoice'] );
-	}
-	if(dataToFill && dataToFill['end_date_on_invoice'])
-	{
-		tr.find('input.end_on_invoice_date').val( dataToFill['end_date_on_invoice'] );
-	}
-	if(dataToFill && dataToFill['start_date_on_invoice'])
-	{
-		tr.find('input.start_on_invoice_date').val( dataToFill['start_date_on_invoice'] );
-	}
-	if(dataToFill && dataToFill['end_date_on_invoice'])
-	{
-		tr.find('input.end_on_invoice_date').val( dataToFill['end_date_on_invoice'] );
-	}
-	if(dataToFill && dataToFill['descr'])
-	{
-		tr.find('.descr').val( dataToFill['descr'] );
-	}
-	if(dataToFill && dataToFill['marks'])
-	{
-		tr.find('.marks').val( dataToFill['marks'] );
-	}
-	if(dataToFill && dataToFill['type'])
-	{
-		tr.find('.select').val(dataToFill['type'][0]).trigger("change");
-	}
-	$('.table_data_block table tbody').append(tr);
-}
-
-function delRows(allEmpty)
-{
-	$('.select').each(function(){
-		if($(this).hasClass("select2-hidden-accessible"))
-		{
-			$(this).select2('destroy');
-			$(this).removeAttr('data-select2-id').find('option').removeAttr('data-select2-id');
-		}
-	});
-
-	if($('.deleteRow:checked').length > 0 && confirm('Вы хотите удалить выбранные строки?') || allEmpty )
-	{
-		if(allEmpty)
-		{
-			$('#tableTovs input.kodTov').each(function(){
-
-				if($(this).val() == '')
-				{
-					$(this).parents('tr').remove();
-				}
-			});
-		}
-		else
-		{
-			if($('#tableTovs input.row_number').length > 1)
-			{
-				let addEmptyTr = null;
-
-				if($('.deleteRow:checked').length == $('.deleteRow').length)
-				{
-					addEmptyTr = $('.deleteRow').parents('tr:eq(0)').clone();
-				}
-				$('.deleteRow:checked').parents('tr').remove();
-
-				if(addEmptyTr)
-				{
-					addRow(false, addEmptyTr);
-
-					events();
-					$(window).trigger('resize');
-				}
-			}
-			else if($('#tableTovs input.row_number').length == 1)
-			{
-				$('#tableTovs input[type=text], #tableTovs input[type=hidden], #tableTovs select, #tableTovs textarea').val('');
-
-				$('.select').select2(select2Option);
-				$('.select').val("0").trigger("change");
-			}
-		}
-
-		$('#tableTovs input.row_number').each(function(index){
-			$(this).val(index);
-		});
-	}
-	$('#delAll, .deleteRow').prop('checked', false);
-	$(window).trigger('resize');
-}
-
-function events()
-{
-	$('.shopsTitles, .tovsTitles, .distrTitles, .maskProcent, .maskPrice, .maskDate, .kodTov, .select').off('change');
-	$('.shopsTitles, .tovsTitles, .distrTitles, .maskProcent, .maskPrice, .maskDate, .kodTov, .select').on('change', function()
-	{
-		$(this).parents('td').find('.error_message').remove();
-	});
-
-	$('.shopsTitles').off('copy');
-	$('.shopsTitles').on('copy', function(e){
-		copied_shops_index = getRowNumber(this);
-	});
-	$('.shopsTitles').off('paste');
-	$('.shopsTitles').on('paste', function(e){
-		let copied = $('.shops:eq(' + copied_shops_index + ')').val();
-		$('.shops:eq(' + getRowNumber(this) + ')').val(copied);
-	});
-
-	$('.distrTitles').off('copy');
-	$('.distrTitles').on('copy', function(e){
-		copied_shops_index = getRowNumber(this);
-	});
-	$('.distrTitles').off('paste');
-	$('.distrTitles').on('paste', function(e){
-		let copied = $('.distr:eq(' + copied_shops_index + ')').val();
-		$('.distr:eq(' + getRowNumber(this) + ')').val(copied);
-	});
-
-	$('.field_input_file > .file, .field_input_file > .shopsTitles, .field_input_file > .distrTitles').off("mouseenter mouseleave");
-	$('.field_input_file > .file, .field_input_file > .shopsTitles, .field_input_file > .distrTitles').hover(function(e){
-
-			if($('body').find('> div.file_hint').length > 0)
-			{
-				$('body').find('> div.file_hint').remove();
-			}
-
-			var row_n = getRowNumber(this);
-
-			if($(this).hasClass('file'))
-			{
-				if($(this).parents('.field_input_file').find('.shopsTitles').length > 0)
-				{
-					$(this).parents('.field_input_file').find('.shopsTitles').trigger('mouseenter');
-				}
-				else if($(this).parents('.field_input_file').find('.distrTitles').length > 0)
-				{
-					$(this).parents('.field_input_file').find('.distrTitles').trigger('mouseenter');
-				}
-				return;
-			}
-
-			var tmp = $(this).parents('.field_input_file').find('.shopsTitles').val();
-			if(!tmp || tmp == '')
-			{
-				tmp = $(this).parents('.field_input_file').find('.distrTitles').val();
-				if(!tmp || tmp == '')
-				{
-					return;
-				}
-			}
-			var d = $(this).find('> div');
-			if(d.length == 0)
-			{
-				var d = $('<div />');
-				d.addClass('file_hint');
-			}
-
-			tmp = tmp.split('; ');
-			d.html(tmp.join('<br>'));
-			d.css('top', $(this).offset().top+23);
-			d.css('left', $(this).offset().left);
-			d.css('z-index', 100);
-			d.show();
-			d.hover(function(){
-				$('body').find('> div.file_hint').show();
-				$('body').find('> div.file_hint').addClass('nodel');
-			}, function(){
-				$('body').find('> div.file_hint').remove();
-			});
-			$('body').append(d);
-		},
-		function()
-		{
-			if($('body').find('> div.file_hint.nodel').length == 0)
-			{
-				$('body').find('> div.file_hint').hide();
-			}
-		}
-	);
-
-	if($.fn.mask)
-	{
-		$('.maskProcent').mask('ZZZZZ', {
-		    placeholder: "0 %",
-			onKeyPress: function(cep, event, currentField, options){
-
-				var reg2 = new RegExp("[^\.\,0-9]+");
-				var reg = new RegExp("[0-9]{1,3}[(\.|\,)]*[0-9]{0,2}");
-
-				if(parseFloat(cep) >= 100 || parseFloat(cep) < 0 || !reg.test(cep) || reg2.test(cep))
-				{
-					$(currentField).val('');
-				}
-			},
-			translation:{
-      			'Z': {
-        			pattern: /[\.\,0-9]*/
-      			}
-    		}
-		});
-
-		$('.maskPrice').on('keyup', function(e){
-
-			var str = $(this).val();
-			var reg = /[^\.\,0-9]+/g;
-
-			if( reg.test(str) )
-			{
-				str = str.replace(reg, '');
-			}
-
-			var result = '';
-			str = str.replace(/[\.\,]+/g, '.');
-			
-			var point_ind = str.indexOf('.');
-			if(point_ind > 0)
-			{
-				var result_st = str.slice(0, point_ind)
-				var result_end = str.slice(point_ind);
-			}
-			else
-			{
-				var result_st = str;
-				var result_end = '';
-			}
-
-			var arr = result_st.split('');
-			arr.reverse();
-
-			$.each(arr, function(index){
-
-				if(index%3 == 0)
-				{
-					result = this+' '+result;
-				}
-				else
-				{
-					result = this + result;
-				}
-			});
-
-			result += result_end;
-			result = result.replace(/[ ]*\.[ ]*/g, '.').trim();
-			$(this).val(result);
-		});
-
-		$('.maskDate').mask('ZZ-ZZ-ZZZZ', {
-		    placeholder: "01-01-2001",
-			onKeyPress: function(cep, event, currentField, options){
-
-				var tmp = cep.split('-');
-				if(parseInt(tmp[0]) > 31 || parseInt(tmp[1]) > 12)
-				{
-				 	$(currentField).val('');
-				}
-			},
-			translation:{
-      			'Z': {
-					pattern: /[0-9]/
-      			}
-			}
-		});
-	}
-
-	$('.on_invoice, .off_invoice, .roznica_new, .roznica_old').on('change', function(){
-
-		var row_n = getRowNumber(this);
-
-		var roznica_new = $('input.roznica_new:eq('+row_n+')').val().replace(/ /g, '');;
-		var roznica_old = $('input.roznica_old:eq('+row_n+')').val().replace(/ /g, '');;
-
-		var on_invoice = $('input.on_invoice:eq('+row_n+')').val().replace(/ /g, '');;
-		var off_invoice = $('input.off_invoice:eq('+row_n+')').val().replace(/ /g, '');;
-
-		if(parseInt(roznica_new) > parseInt(roznica_old))
-		{
-			showMessage('error', false, 'Новая розничная цена не должна быть больше старой');
-		}
-		var itogo = 0;
-		// поле итого
-		if(roznica_new == 0 || roznica_old == 0)
-		{
-			if(off_invoice != '' && on_invoice != '')
-			{
-				let sum = (parseInt(off_invoice) + parseInt(on_invoice));
-				if(sum < 100)
-					itogo = sum;
-				else
-					itogo = 0;
-			}
-			else if(off_invoice != '')
-			{
-				itogo = off_invoice;
-			}
-			else if(on_invoice != '')
-			{
-				itogo = on_invoice;
-			}
-		}
-		else if(roznica_new > 0 && roznica_old > 0)
-		{
-			itogo = (1 - (parseInt(roznica_new)/parseInt(roznica_old)))*100;
-			itogo = itogo.toFixed(1);
-		}
-		$('input.skidka_itogo:eq('+row_n+')').val(itogo);
-
-		setTimeout(function (){
-			illumination($('input.skidka_itogo:eq('+row_n+')'), 0);
-		}, 300);
-	});
-
-	if($.fn.datepicker)
-	{
-		//Даты ON INVOICE в табличной части
-		$('.start_on_invoice_date').datepicker({
-			minDate: new Date(),
-			dateFormat: "dd-mm-y"
-		})
-		.change(function() {
-
-			var dateObj = $.datepicker.parseDate( "dd-mm-y", this.value);
-			dateObj.setTime(dateObj.getTime() + 86400000);
-
-			var row_n = getRowNumber(this);
-			var end_date = $('input[name^=end_date_on_invoice]:eq('+row_n+')');
-			end_date.datepicker( "option", "minDate",  dateObj);
-
-			prepareDate(this);
-        });
-
-		$('.end_on_invoice_date').datepicker({
-			minDate: new Date(),
-			dateFormat: "dd-mm-y"
-		})
-		.change(function() {
-			prepareDate(this);
-		});
-	}
-
-	$('.select').select2(select2Option).change(function(){
-		hideHint();
-	});
-	$('.select').on('select2:close', function (e) {
-	  hideHint();
-	});
-
-	$("input.distrTitles").autocomplete({
-		source: function( request, response ){
-			var term = request.term;
-			if ( term in cache_avtocomplete_contr )
-			{
-				response(cache_avtocomplete_contr[term]);
-				return;
-			}
-			$.getJSON( "/sys/getContragentsForAvtocomplete", request, function( data, status, xhr ) {
-				cache_avtocomplete_contr[term] = data;
-				response(data);
-			});
-		},
-		minLength: 2,
-		change:function()
-		{
-			var n = getRowNumber(this);
-			if($(this).val() != $("input.chDistr:eq("+n+")").val())
-			{
-				$(this).val($("input.chDistr:eq("+n+")").val());
-			}
-			$("input.distrTitles:eq("+n+")").trigger('change');
-		},
-		select: function(event, ui) {
-
-			var n = getRowNumber(this);
-
-			$('input.distr:eq('+n+')').val(ui.item.val);
-			$('input.chDistr:eq('+n+')').val(ui.item.label);
-		}
-	});
-
-	$("input.tovsTitles").hover(function(){
-
-			if($(this).val() == '')
-				return;
-
-			var h = $('div.tov_hint');
-			if(h.length > 0)
-			{
-				h.html($(this).val());
-				h.css('top', $(this).offset().top + $(this).outerHeight());
-				h.css('left', $(this).offset().left);
-				h.show();
-			}
-			else
-			{
-				var d = $('<div />');
-				d.addClass('tov_hint');
-				d.css('position', 'absolute');
-				d.css('background', '#fff');
-				d.css('width', '550px');
-				d.css('padding', '5px');
-				d.css('z-index', '100');
-				d.css('border', '1px solid #ccc');
-				d.css('min-height', '27px');
-				d.css('height', 'auto');
-				d.css('top', $(this).offset().top + $(this).outerHeight());
-				d.css('left', $(this).offset().left);
-				d.on('click', function(){
-					$('.tov_hint').hide();
-				});
-				d.html($(this).val());
-				$(this).before(d);
-			}
-		},
-		function(){
-			$('.tov_hint').hide();
-		});
-
-	$('input.kodTov').autocomplete({
-		source: function( request, response ){
-			var term = request.term;
-			request.kod = true;
-
-			if ( term in cache_avtocomplete_tovs )
-			{
-				response( cache_avtocomplete_tovs[term]);
-				return;
-			}
-			$.getJSON( "/sys/getTovarForAvtoComplete", request, function( data, status, xhr ) {
-				cache_avtocomplete_tovs[term] = data;
-				response(data);
-			});
-		},
-		minLength:2,
-		change:function()
-		{
-			var n = getRowNumber(this);
-			if($(this).val() != $("input.chKod:eq("+n+")").val())
-			{
-				$(this).val($("input.chKod:eq("+n+")").val());
-			}
-			$("input.tovsTitles:eq("+n+")").trigger('change');
-		},
-		select: function( event, ui )
-		{
-			var n = getRowNumber(this);
-
-			$(this).val(ui.item.value);
-
-			$('input.chKod:eq('+n+')').val(ui.item.value);
-			$('.tovsTitles:eq('+n+')').val(ui.item.val);
-			$('.chTitle:eq('+n+')').val(ui.item.val);
-		}
-	});
-
-	$("input.tovsTitles").autocomplete({
-		source: function( request, response ){
-			var term = request.term;
-			if ( term in cache_avtocomplete_tovs )
-			{
-				response( cache_avtocomplete_tovs[term]);
-				return;
-			}
-			$.getJSON( "/sys/getTovarForAvtoComplete", request, function( data, status, xhr ) {
-				cache_avtocomplete_tovs[term] = data;
-				response(data);
-			});
-		},
-		minLength: 2,
-		change:function()
-		{
-			var n = getRowNumber(this);
-			if($(this).val() != $("input.chTitle:eq("+n+")").val())
-			{
-				$(this).val($("input.chTitle:eq("+n+")").val());
-			}
-			$("input.kodTov:eq("+n+")").trigger('change');
-		},
-		select: function( event, ui )
-		{
-			var n = getRowNumber(this);
-
-			$("input.chTitle:eq("+n+")").val(ui.item.label);
-			$('.kodTov:eq('+n+')').val(ui.item.val);
-			$('input.chKod:eq('+n+')').val(ui.item.val);
-		}
-	});
-
-	$("input.shopsTitles").autocomplete({
-		source: function( request, response ){
-
-			if(request.term.length > 100)
-			{
-				return;
-			}
-
-			var term = request.term;
-			if ( term in cache_avtocomplete_shops )
-			{
-				response( cache_avtocomplete_shops[term]);
-				return;
-			}
-			$.getJSON( "/sys/getShops", request, function( data, status, xhr ) {
-				cache_avtocomplete_shops[term] = data;
-				response(data);
-			});
-		},
-		minLength: 2,
-		select: function( event, ui )
-		{
-			var n = getRowNumber(this);
-
-			$("#tableTovs input.shops:eq("+n+")").val(ui.item.value);
-			$("#tableTovs input.chShop:eq("+n+")").val(ui.item.value);
-			$("#tableTovs input.shops:eq("+n+")").val(ui.item.val);
-		},
-		change: function( event, ui )
-		{
-			var n = getRowNumber(this);
-			if($(this).val() != $("#tableTovs input.chShop:eq("+n+")").val())
-			{
-				$(this).val($("#tableTovs input.chShop:eq("+n+")").val());
-			}
-		}
-	});
-}
 
 function fillCategsSelect2Filter(id, data)
 {
@@ -1621,7 +1098,7 @@ function change_select2_cats(evt, this_el, params)
 			if($(this_el).val() > 0)
 			{
 				$.ajax({
-					url: "/sys/getBrendsForCategs/"+$(this_el).val(),
+					url: "/brends/getBrendsForCategs/"+$(this_el).val(),
 					dataType:'json',
 					success: function(data){
 						cache[$(this_el).val()] = data;
@@ -1822,48 +1299,61 @@ function hideHint()
 {
 	$('.type_descr').remove();
 }
-function addJqGridRow()
+function addJqGridRow(initData)
 {
-
 	var r = grid.jqGrid('getGridParam','records');
 	var parameters =
 	{
 		rowID:++r,
-	    initdata: {},
+	    initdata: initData,
 	    position :"last",
 	    useDefValues : true,
 	    useFormatter : false,
 	    addRowParams : {extraparam:{}}
 	}
-
 	grid.jqGrid('addRow',parameters);
+	return r;
+}
+function addJqGridRowFromPanel()
+{
+	let r = addJqGridRow();
 	grid.editRow(r);
-	eventsJqGridRow();
 	grid.setSelection(r);
+	eventsJqGridRow();
 }
 
 function addJqGridSubmit()
 {
 	grid.find('tr[editable=1]').each(function(){
 
-		grid.saveRow(this.id, false, 'clientArray', 'ttttt=rrrrr');
+		grid.saveRow(this.id, false, 'clientArray');
 
 	});
-	let json = JSON.stringify(grid.getRowData());
+
+	var arrData = grid.getRowData();
+	// arrData.push(['dopData']);
+
+	let json = JSON.stringify(arrData);
+
+	$vars = '&process_type='+$('#process_type').val()+'&'
+	'process_title='+$('#process_title').val()+'&'
+	'start_date='+$('#start_date').val()+'&'
+	'end_date='+$('#end_date').val();
 
 	$.ajax({
 		url:'/processes/ajaxAdd',
 		type:'post',
 		dataType:'json',
-		data:'d='+json,
+		data:'d='+json+$vars,
 		success:function(d){
 
-
+// TODO
 
 		}
 	});
-
 }
+
+
 
 function setFrozenColumns()
 {
@@ -1948,8 +1438,14 @@ function scrollLeftActionOnFrozen(){
 	}, 200);
 }
 
-function delJqGridRows()
+function delJqGridRows(id)
 {
+	if(id)
+	{
+		grid.jqGrid('delRowData', id);
+		return;
+	}
+
 	let ids = grid.jqGrid('getGridParam','selarrrow');
 	for (var i = ids.length - 1; i >= 0; i--) {
 
@@ -2057,7 +1553,7 @@ function eventsJqGridRow()
 		}
 	});
 
-	$('input[id$=_shops]').autocomplete({
+	$('input[id$=_shopsTitles]').autocomplete({
 		source: function( request, response ){
 			if(request.term.length > 100)
 			{
@@ -2078,6 +1574,8 @@ function eventsJqGridRow()
 		select: function( event, ui )
 		{
 			checkAddField(getJqGridRowNumber(this), 'chShop', ui.item.value);
+			var n = getJqGridRowNumber(this);
+			addDopData(n, 'shops', ui.item.val);
 		},
 		change: function( event, ui )
 		{
@@ -2091,7 +1589,7 @@ function eventsJqGridRow()
 		}
 	});
 
-	$('input[id$=_distr]').autocomplete({
+	$('input[id$=_distrTitles]').autocomplete({
 		source: function( request, response ){
 			var term = request.term;
 			if ( term in cache_avtocomplete_contr )
@@ -2109,19 +1607,48 @@ function eventsJqGridRow()
 		{
 			var n = getJqGridRowNumber(this);
 
-
-			if($(this).val() != $("input.chDistr:eq("+n+")").val())
+			if(checkFields[n] &&
+				checkFields[n]['chDistr'] &&
+				$(this).val() != checkFields[n]['chDistr'])
 			{
-				$(this).val($("input.chDistr:eq("+n+")").val());
+				$(this).val(checkFields[n]['chDistr']);
 			}
-			$("input.distrTitles:eq("+n+")").trigger('change');
 		},
 		select: function(event, ui) {
 			var n = getJqGridRowNumber(this);
 			checkAddField(n, 'chDistr', ui.item.label);
+			addDopData(n, 'distr', ui.item.val);
+		}
+	});
 
-			$('input.distr:eq('+n+')').val(ui.item.val);
-			$('input.chDistr:eq('+n+')').val(ui.item.label);
+	$('input[id$=_brendTitles]').autocomplete({
+		source: function( request, response ){
+			var term = request.term;
+			if ( term in cache_avtocomplete_brends )
+			{
+				response(cache_avtocomplete_brends[term]);
+				return;
+			}
+			$.getJSON( "/brends/getBrendsForAvtocomplete", request, function( data, status, xhr ) {
+				cache_avtocomplete_brends[term] = data;
+				response(data);
+			});
+		},
+		minLength: 2,
+		change:function()
+		{
+			var n = getJqGridRowNumber(this);
+			if(checkFields[n] &&
+				checkFields[n]['chBrendTitles'] &&
+				$(this).val() != checkFields[n]['chBrendTitles'])
+			{
+				$(this).val(checkFields[n]['chBrendTitles']);
+			}
+		},
+		select: function(event, ui) {
+			var n = getJqGridRowNumber(this);
+			checkAddField(n, 'chBrendTitles', ui.item.label);
+			addDopData(n, 'brend', ui.item.val);
 		}
 	});
 
@@ -2244,113 +1771,122 @@ function eventsJqGridRow()
 		});
 	}
 
+	$('input[id$=_shopsTitles]').off('copy');
+	$('input[id$=_shopsTitles]').on('copy', function(e){
 
+		copied_index = getJqGridRowNumber(this);
+	});
+	$('input[id$=_shopsTitles]').off('paste');
+	$('input[id$=_shopsTitles]').on('paste', function(e){
 
-return;
-
-	$('.shopsTitles, .tovsTitles, .distrTitles, .maskProcent, .maskPrice, .maskDate, .kodTov, .select').off('change');
-	$('.shopsTitles, .tovsTitles, .distrTitles, .maskProcent, .maskPrice, .maskDate, .kodTov, .select').on('change', function()
-	{
-		$(this).parents('td').find('.error_message').remove();
+		let copied = dopData['shops'][copied_index];
+		let targetIndex = getJqGridRowNumber(this);
+		addDopData(targetIndex, 'shops', copied);
 	});
 
-	$('.shopsTitles').off('copy');
-	$('.shopsTitles').on('copy', function(e){
-		copied_shops_index = getRowNumber(this);
+	$('input[id$=_distrTitles]').off('copy');
+	$('input[id$=_distrTitles]').on('copy', function(e){
+		copied_index = getJqGridRowNumber(this);
 	});
-	$('.shopsTitles').off('paste');
-	$('.shopsTitles').on('paste', function(e){
-		let copied = $('.shops:eq(' + copied_shops_index + ')').val();
-		$('.shops:eq(' + getRowNumber(this) + ')').val(copied);
-	});
+	$('input[id$=_distrTitles]').off('paste');
+	$('input[id$=_distrTitles]').on('paste', function(e){
 
-	$('.distrTitles').off('copy');
-	$('.distrTitles').on('copy', function(e){
-		copied_shops_index = getRowNumber(this);
-	});
-	$('.distrTitles').off('paste');
-	$('.distrTitles').on('paste', function(e){
-		let copied = $('.distr:eq(' + copied_shops_index + ')').val();
-		$('.distr:eq(' + getRowNumber(this) + ')').val(copied);
+		let copied = dopData['distr'][copied_index];
+		let targetIndex = getJqGridRowNumber(this);
+		addDopData(targetIndex, 'distr', copied);
 	});
 
+	$('input[id$=_brendTitles]').off('copy');
+	$('input[id$=_brendTitles]').on('copy', function(e){
+		copied_index = getJqGridRowNumber(this);
+	});
+	$('input[id$=_brendTitles]').off('paste');
+	$('input[id$=_brendTitles]').on('paste', function(e){
 
-	$('.field_input_file > .file, .field_input_file > .shopsTitles, .field_input_file > .distrTitles').off("mouseenter mouseleave");
-	$('.field_input_file > .file, .field_input_file > .shopsTitles, .field_input_file > .distrTitles').hover(function(e){
+		let copied = dopData['brend'][copied_index];
+		let targetIndex = getJqGridRowNumber(this);
+		addDopData(targetIndex, 'brend', copied);
+	});
 
-			if($('body').find('> div.file_hint').length > 0)
-			{
-				$('body').find('> div.file_hint').remove();
-			}
+	setTimeout(function(){
+		$('td > .dialog, input[id$=_shopsTitles], input[id$=_distrTitles]').hover(function(e){
 
-			var row_n = getRowNumber(this);
-
-			if($(this).hasClass('file'))
-			{
-				if($(this).parents('.field_input_file').find('.shopsTitles').length > 0)
+				if($('body').find('> div.file_hint').length > 0)
 				{
-					$(this).parents('.field_input_file').find('.shopsTitles').trigger('mouseenter');
+					$('body').find('> div.file_hint').remove();
 				}
-				else if($(this).parents('.field_input_file').find('.distrTitles').length > 0)
-				{
-					$(this).parents('.field_input_file').find('.distrTitles').trigger('mouseenter');
-				}
-				return;
-			}
 
-			var tmp = $(this).parents('.field_input_file').find('.shopsTitles').val();
-			if(!tmp || tmp == '')
-			{
-				tmp = $(this).parents('.field_input_file').find('.distrTitles').val();
+				var row_n = getJqGridRowNumber(this);
+				if($(this).hasClass('dialog'))
+				{
+					if($(this).parents('td').find('#'+row_n+'_shopsTitles').length > 0)
+					{
+						$(this).parents('td').find('#'+row_n+'_shopsTitles').trigger('mouseenter');
+					}
+					else if($(this).parents('td').find('#'+row_n+'_distrTitles').length > 0)
+					{
+						$(this).parents('td').find('#'+row_n+'_distrTitles').trigger('mouseenter');
+					}
+					return;
+				}
+
+				if($(this).parents('td').find('#'+row_n+'_shopsTitles').length > 0)
+				{
+					var tmp = $(this).parents('td').find('#'+row_n+'_shopsTitles').val();
+				}
+				else if($(this).parents('td').find('#'+row_n+'_distrTitles').length > 0)
+				{
+					var tmp = $(this).parents('td').find('#'+row_n+'_distrTitles').val();
+				}
+
 				if(!tmp || tmp == '')
 				{
 					return;
 				}
-			}
-			var d = $(this).find('> div');
-			if(d.length == 0)
-			{
+
+				tmp = tmp.split('; ');
+
 				var d = $('<div />');
 				d.addClass('file_hint');
-			}
-
-			tmp = tmp.split('; ');
-			d.html(tmp.join('<br>'));
-			d.css('top', $(this).offset().top+23);
-			d.css('left', $(this).offset().left);
-			d.css('z-index', 100);
-			d.show();
-			d.hover(function(){
-				$('body').find('> div.file_hint').show();
-				$('body').find('> div.file_hint').addClass('nodel');
-			}, function(){
-				$('body').find('> div.file_hint').remove();
-			});
-			$('body').append(d);
-		},
-		function()
-		{
-			if($('body').find('> div.file_hint.nodel').length == 0)
+				d.html(tmp.join('<br>'));
+				d.css('top', $(this).offset().top+23);
+				d.css('left', $(this).offset().left);
+				d.css('z-index', 100);
+				d.show();
+				d.hover(function(){
+					$('body').find('> div.file_hint').show();
+					$('body').find('> div.file_hint').addClass('nodel');
+				}, function(){
+					$('body').find('> div.file_hint').remove();
+				});
+				$('body').append(d);
+			},
+			function()
 			{
-				$('body').find('> div.file_hint').hide();
+				if($('body').find('> div.file_hint.nodel').length == 0)
+				{
+					$('body').find('> div.file_hint').hide();
+				}
 			}
-		}
-	);
+		);
+	}, 200);
 
+	$('input[id$=_skidka_on_invoice], input[id$=_kompensaciya_off_invoice], input[id$=_roznica_old], input[id$=_roznica_new]').on('change', function(){
 
-	$('.on_invoice, .off_invoice, .roznica_new, .roznica_old').on('change', function(){
-		var row_n = getRowNumber(this);
+		var row_n = getJqGridRowNumber(this);
+		removeErrorMessage(this);
 
-		var roznica_new = $('input.roznica_new:eq('+row_n+')').val().replace(/ /g, '');;
-		var roznica_old = $('input.roznica_old:eq('+row_n+')').val().replace(/ /g, '');;
+		var roznica_new = $('#'+row_n+'_roznica_new').val().replace(/ /g, '');
+		var roznica_old = $('#'+row_n+'_roznica_old').val().replace(/ /g, '');
 
-		var on_invoice = $('input.on_invoice:eq('+row_n+')').val().replace(/ /g, '');;
-		var off_invoice = $('input.off_invoice:eq('+row_n+')').val().replace(/ /g, '');;
+		var on_invoice = $('#'+row_n+'_skidka_on_invoice').val().replace(/ /g, '');
+		var off_invoice = $('#'+row_n+'_kompensaciya_off_invoice').val().replace(/ /g, '');
 
 		if(parseInt(roznica_new) > parseInt(roznica_old))
 		{
 			showMessage('error', false, 'Новая розничная цена не должна быть больше старой');
 		}
+
 		var itogo = 0;
 		// поле итого
 		if(roznica_new == 0 || roznica_old == 0)
@@ -2377,16 +1913,15 @@ return;
 			itogo = (1 - (parseInt(roznica_new)/parseInt(roznica_old)))*100;
 			itogo = itogo.toFixed(1);
 		}
-		$('input.skidka_itogo:eq('+row_n+')').val(itogo);
+
+		$('#'+row_n+'_skidka_itogo').val(itogo);
 
 		setTimeout(function (){
-			illumination($('input.skidka_itogo:eq('+row_n+')'), 0);
+			illumination($('#'+row_n+'_skidka_itogo'), 0);
 		}, 300);
 	});
 
-
-
-	$("input.tovsTitles").hover(function(){
+	$("input[id$=_tovsTitles]").hover(function(){
 
 		if($(this).val() == '')
 			return;
@@ -2413,25 +1948,34 @@ return;
 			d.css('height', 'auto');
 			d.css('top', $(this).offset().top + $(this).outerHeight());
 			d.css('left', $(this).offset().left);
+			d.css('display', 'block');
 			d.on('click', function(){
 				$('.tov_hint').hide();
 			});
 			d.html($(this).val());
-			$(this).before(d);
+			// $(this).before(d);
+			$('body').append(d);
 		}
 	},
 	function(){
 		$('.tov_hint').hide();
 	});
+	let selector = 'input[id$=_shopsTitles], input[id$=_tovsTitles], input[id$=_articulSK], input[id$=_zakup_new], input[id$=_zakup_old], input[id$=_distrTitles], input[id$=_brendTitles], input[id$=_skidka_itogo], .maskDate, input[id$=_kodTov], .selectInRow';
 
-
-
-
-
-
-
+	$(selector).off('change');
+	$(selector).on('change', function()
+	{
+		removeErrorMessage(this);
+	});
 }
-
+function addDopData(rowNum, field, value)
+{
+	if(!dopData[field])
+	{
+		dopData[field] = [];
+	}
+	dopData[field][rowNum] = value;
+}
 function checkAddField(rowNum, index, value)
 {
 	if(!checkFields[rowNum])
@@ -2442,11 +1986,17 @@ function checkAddField(rowNum, index, value)
 }
 function attachDialogBtn(elem, type)
 {
-	$(elem).after('<div class="dialog" style="top:'+
-		$(elem).position().top+'px;'
-		+'left:'+
-		($(elem).position().left + $(elem).outerWidth()-22)
-		+'px;height:'+
-		$(elem).outerHeight()
-		+'px" data-type="'+type+'">...</div>');
+	setTimeout(function(){
+		$(elem).after('<div class="dialog" style="top:'+
+			$(elem).position().top+'px;'
+			+'left:'+
+			($(elem).position().left + $(elem).outerWidth()-22)
+			+'px;height:'+
+			$(elem).outerHeight()
+			+'px" data-type="'+type+'">...</div>');
+	}, 150);
+}
+function removeErrorMessage(el)
+{
+	$(el).parents('td').find('.error_message').remove();
 }

@@ -2,7 +2,7 @@
 
 @section('content')
 
-	<form action="" onSubmit="return checkValues();" method="post" enctype="multipart/form-data" clas="form">
+	<form action="" onSubmit="return checkValues();" method="post" enctype="multipart/form-data" class="form">
 		@csrf
 		<div class="content-panel">
 			<div class="content-panel-block">
@@ -40,7 +40,7 @@
 					            <label>Наименование</label>
 					        </div>
 					        <div>
-					            <input name="process_title" type="text" value="{{ old('process_title') }}">
+					            <input name="process_title" id="process_title" type="text" value="{{ old('process_title') }}">
 							</div>
 						</div>
 					</div>
@@ -73,10 +73,22 @@
 						    </div>
 						</div>
 					</div>
+
+					<div class="form-field-cell">
+					    <div class="form-field-input">
+						    <div>
+								<label>Автор</label>
+						    </div>
+					    	<div>
+								{{$user->name}}
+						    </div>
+						</div>
+					</div>
+
 				</div>
 				<div class="content-panel-inputs">
 					<input type="button" onclick="addJqGridSubmit();" value="Сохранить акцию">
-					<input type="button" onclick="addJqGridRow();" value="Добавить строку">
+					<input type="button" onclick="addJqGridRowFromPanel();" value="Добавить строку">
 					<input type="button" onclick="delJqGridRows();" value="Удалить строки">
 
 					<input type="button" onclick="showPanel(this, '#fillTablePanel');" value="Заполнить/добавить товары">
@@ -217,7 +229,7 @@
 		   						<div class="field_input_file" style="width:180px;">
 									<input type="text" value="" class="shopsTitles" style="width:180px;" id="shopsIskluchTitle"/>
 									<input type="hidden" value="" class="shops" id="shopsIskluch"/>
-									<div class="file" data-type="getShopsErarhi">...</div>
+									<div class="file" data-type="getShopsErarhiIsk">...</div>
 								</div>
 						    </div>
 						</div>
@@ -242,7 +254,7 @@
 						            <input id="file" type="file" class="" name="file" value="{{ old('file') }}" autofocus accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
 						        </div>
 						        <div class="right">
-						            <label>Загрузите файл в формате xsl/xslx со <a style="text-decoration:underline;" 
+						            <label>Загрузите файл в формате xslx со <a style="text-decoration:underline;" 
 						            	href="/upload/action_upload_form.xlsx">следующей структурой</a>
 						            </label>
 						        </div>

@@ -98,7 +98,18 @@ return [
             'prefix' => '',
         ],
 
+        'sqlsrv_td_dev' => [
+            'driver' => 'sqlsrv',
+            'host' => env('DB_HOST', 'localhost'),
+            'port' => env('DB_PORT', '64741'),
+            'database' => 'TDDev',
+            'username' => 'portal_Td_Dev_reader',
+            'password' => 'f_fh547834fDs_dRfS_dfd',
+            'charset' => 'utf8',
+            'prefix' => '',
+        ],
     ],
+
     /*
     |--------------------------------------------------------------------------
     | Migration Repository Table

@@ -62,5 +62,10 @@ class AuthServiceProvider extends ServiceProvider
         $gate->define('ucenkaapp-create', function ($user) {
             return $this->checkRole($user, 'ucenkaapp-create');
         });
+
+        $gate->define('avtodefectura-read', function ($user) {
+            return $this->checkRole($user, 'avtodefectura-read');
+        });
+
     }
 }

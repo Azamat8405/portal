@@ -20,6 +20,8 @@ class TestController extends Controller
     public function index(Request $request)
     {
 
+exit();
+
 //         $validator = Validator::make(
 //             [
 //                 'proc_field' => '100%',

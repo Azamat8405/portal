@@ -56,7 +56,6 @@
                 <nav>
                     <div class="handrail"><div></div></div>
                     <ul>
-
                         @php
                         if(Gate::allows('processes-read') || Gate::allows('processes-create') || Gate::allows('admin'))
                         {
@@ -65,7 +64,6 @@
                         @php
                         }
                         @endphp
-                        
 
                         @php
                         if(Gate::allows('ucenkaapp-read') || Gate::allows('ucenkaapp-create') || Gate::allows('admin'))
@@ -76,6 +74,14 @@
                         }
                         @endphp
 
+                        @php
+                        if(Gate::allows('avtodefectura-read'))
+                        {
+                        @endphp
+                            <li><a href="{{ route('avtodefectura.list') }}">Автодефектура</a></li>
+                        @php
+                        }
+                        @endphp
 
                     </ul>
                 </nav>
