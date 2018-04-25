@@ -39,7 +39,7 @@ class ProcessController extends Controller
 	public function ajaxList(Request $request)
 	{
 		$perPage = 20;
-		$processes = Process::paginate($perPage);
+		$processes = Process::orderBy('created_at', 'desc')->paginate($perPage);
 
 		$responce=[];
 		$responce['page'] = $processes->currentPage();
@@ -103,7 +103,6 @@ class ProcessController extends Controller
 			$action_types[] = $type->id.':'.$type->title;
 			$action_types_descr[$type->id] = $type->description;
 		}
-
 		return view('processes/add', [
 			'tov_categs_lvl1' => TovCategs::where('level', 1)->orderBy('title')->get(),
 			'shop_regions_lvl1' => ShopRegion::where('level', 1)->orderBy('title')->get(),
@@ -122,7 +121,6 @@ class ProcessController extends Controller
 		//	Валидация даты
 		$start_date = strtotime(Request::input('start_date'));
 		$proc_type = ProcessType::find(Request::input('process_type'));
-
 		if($proc_type)
 		{
 			// ПОКА убираем проверку
@@ -329,29 +327,12 @@ class ProcessController extends Controller
 
 	public function ajaxAdd(Request $request)
 	{
-
-// print_r(json_decode(Request::input('d')));
-// exit();
-
-		$err = false;
+		$returnData = [];
+		$dataToInsert = [];
 
 		//	Валидация даты
 		$start_date = strtotime(Request::input('start_date'));
 		$proc_type = ProcessType::find(Request::input('process_type'));
-
-		if($proc_type)
-		{
-			// ПОКА убираем проверку
-			// $cur_date = mktime(0, 0, 0, date("n"), date("j"), date("Y"));
-			// if($proc_type->dedlain + $cur_date > $start_date)
-			// {
-			// 	$this->validate_errors['form'][0]['start_date'] = 'Дата начала акции должна быть больше либо равна '.strftime('%d-%m-%Y', $proc_type->dedlain + time());
-			// }
-		}
-		else
-		{
-			$this->validate_errors['form'][0]['process_type'] = 'Нет Акций указанного типа';
-		}
 
 		$end_date = '';
 		if($proc_type)
@@ -362,58 +343,60 @@ class ProcessController extends Controller
 				$this->validate_errors['form'][0]['end_date'] = 'Дата окончания акции должна быть больше даты начала.';
 			}
 		}
-
-		if(!$request::has('kodTov'))
+		else
 		{
-			$this->validate_errors['form'][0]['kodTov'] = 'Не указан товар или указан не верно.';
+			$this->validate_errors['form'][0]['process_type'] = 'Нет Акций указанного типа';
+		}
+
+		if(!$request::has('rows'))
+		{
+			$this->validate_errors['form'][0]['kodTov'] = 'Не указано ни одного товара или указаны не верно.';
 		}
 
 		// Если в шапке есть ошибки покаызваем их пока.
 		if(!empty($this->validate_errors['form']))
 		{
-			// return redirect()->back()
-			// 	->with('errors', $this->validate_errors)
-			// 	->withInput();
+			$returnData['errors'] = $this->validate_errors['form'] ?? [];
+			echo json_encode($returnData);
+			return;
 		}
-		$dataToInsert = [];
+
+		$rows = json_decode(Request::input('rows'));
+
+		if(Request::has('rowsDopData'))
+		{
+			$rowsDopData = [];
+			foreach (Request::input('rowsDopData') as $key => $value)
+			{
+				$rowsDopData[$key] = json_decode($value);
+			}
+		}
 
 		// Проверка полей формы
-		foreach($request::input('kodTov') as $key => $value)
+		foreach($rows as $key => &$value)
 		{
-			if(trim($value) == '' && count($request::input('kodTov')) == 1)
+			if($value->kodTov == '' && $value->shopsTitles == '')
 			{
-				break;
-			}
-			$dataToInsert[$key]['kodTov'] = $value;
-			$dataToInsert[$key]['tovsTitles'] = $request::input('tovsTitles')[$key] ?? null;
-
-			if(isset($request::input('shops')[$key]))
-			{
-				$dataToInsert[$key]['shops'] = explode(';', $request::input('shops')[$key]);
+				$this->validate_errors['form'][$key]['kodTov'] = 'Не указан товар в строке ('.$key.'), либо строка пустая.';
+				// break;
 			}
 
-			$dataToInsert[$key]['distr'] = $request::input('distr')[$key] ?? null;
-			$dataToInsert[$key]['type'] = $request::input('type')[$key] ?? null;
-			$dataToInsert[$key]['skidka_on_invoice'] = $request::input('skidka_on_invoice')[$key] ?? null;
-			$dataToInsert[$key]['kompensaciya_off_invoice'] = $request::input('kompensaciya_off_invoice')[$key] ?? null;
-			$dataToInsert[$key]['skidka_itogo'] = $request::input('skidka_itogo')[$key] ?? null;
-			$dataToInsert[$key]['zakup_old'] = $request::input('zakup_old')[$key] ?? null;
-			$dataToInsert[$key]['zakup_new'] = $request::input('zakup_new')[$key] ?? null;
-			$dataToInsert[$key]['start_date_on_invoice'] = $request::input('start_date_on_invoice')[$key] ?? null;
-			$dataToInsert[$key]['end_date_on_invoice'] = $request::input('end_date_on_invoice')[$key] ?? null;
-			$dataToInsert[$key]['roznica_old'] = $request::input('roznica_old')[$key] ?? null;
-			$dataToInsert[$key]['roznica_new'] = $request::input('roznica_new')[$key] ?? null;
-			$dataToInsert[$key]['descr'] = $request::input('descr')[$key] ?? null;
-			$dataToInsert[$key]['marks'] = $request::input('marks')[$key] ?? null;
+			$value->distr = ($rowsDopData['distr'][$key] ?? '');
+			$value->shops = ($rowsDopData['shops'][$key] ?? '');
+			$value->brend = ($rowsDopData['brend'][$key] ?? '');
 
-			$this->validateData($dataToInsert[$key], 'form', $start_date, $end_date, $key);
+			$value = (array)$value;
+			if($this->validateData($value, 'form', $start_date, $end_date, $key))
+			{
+				$dataToInsert[$key] = $value;
+			}
 		}
 
-		if($err || !empty($this->validate_errors['form']) || !empty($this->validate_errors['file']))
+		if(isset($returnData['errors']) && count($returnData['errors']) > 0)
 		{
-			return redirect()->back()
-				->with('errors', $this->validate_errors)
-				->withInput();
+			$returnData['errors'] = $this->validate_errors['form'] ?? [];
+			echo json_encode($returnData);
+			return;
 		}
 
 		try
@@ -433,6 +416,7 @@ class ProcessController extends Controller
 				$pr->process_type_id = Request::input('process_type');
 				$pr->start_date = $start_date;
 				$pr->end_date = $end_date;
+				$pr->user_id = Auth::id();
 				$pr->save();
 
 				// $step_title = 'Данные';
@@ -451,52 +435,73 @@ class ProcessController extends Controller
 					$doc->process_type_id = Request::input('process_type');
 					$doc->title = 'Документ '.$pr->title;
 					$doc->save();
-
-					//TODO перенести в миграцию
-					if(!\Schema::hasTable('document_action_first_datas'))
-					{
-						$res = \Schema::create('document_action_first_datas', function ($table) {
-							$table->increments('id');
-
-							$table->integer('doc_id')->unsigned();
-				            $table->integer('shop_id')->unsigned();
-				            $table->integer('process_id')->unsigned();
-				            $table->integer('process_type_id')->unsigned();
-
-				            $table->string('kod_dis')->comment('код ДиС Ном. Номер');
-				            $table->string('articule_sk')->comment('Артикул ШК это артикул по базе поставщика');
-
-							$table->string('action_types_ids')->comment('Артикул ШК это артикул по базе поставщика');
-
-				            $table->string('on_invoice')->nullable();
-				            $table->string('off_invoice')->nullable();
-				            $table->string('skidka_itogo')->nullable();
-
-				            $table->string('old_zakup_price')->nullable();
-				            $table->string('new_zakup_price')->nullable();
-
-				            $table->string('on_invoice_start')->nullable()->comment('Дата начала предоставления скидки он инвойс');
-				            $table->string('on_invoice_end')->nullable()->comment('Дата окончания предоставления скидки он инвойс');
-
-				            $table->string('old_roznica_price')->nullable();
-				            $table->string('new_roznica_price')->nullable();
-
-				            $table->text('description')->comment('подписи, слоганы, расшифровки и пояснения, которые Вы хотели бы видеть к своим товарам.')->nullable();
-				            $table->text('metka')->comment('Хит, Новинка, Суперцена, Выгода 0000  рублей...')->nullable();
-				            //TODO внешний ключ ???
-
-							$table->timestamps();
-				            $table->softDeletes();
-						});
-					}
 				}
 				else
 				{
 					$doc = $doc[0];
 				}
 
+				//TODO перенести в миграцию
+				if(!\Schema::hasTable('document_action_first_datas'))
+				{
+					$res = \Schema::create('document_action_first_datas', function ($table) {
+
+						$table->increments('id');
+
+						$table->integer('doc_id')->unsigned();
+			            $table->integer('shop_id')->unsigned();
+			            $table->integer('process_id')->unsigned();
+			            $table->integer('process_type_id')->unsigned();
+
+			            $table->integer('brend_id')->nullable();
+
+			            $table->string('start_action_date')->nullable()->comment('Дата начала акции');
+			            $table->string('end_action_date')->nullable()->comment('Дата окончания акции');
+
+			            $table->string('kod_dis')->comment('код ДиС Ном. Номер');
+			            $table->string('articule_sk')->comment('Артикул ШК это артикул по базе поставщика');
+
+						$table->string('action_types_ids')->comment('Артикул ШК это артикул по базе поставщика');
+
+			            $table->string('on_invoice')->nullable();
+			            $table->string('off_invoice')->nullable();
+			            $table->string('skidka_itogo')->nullable();
+
+			            $table->string('old_zakup_price')->nullable();
+			            $table->string('new_zakup_price')->nullable();
+
+			            $table->string('on_invoice_start')->nullable()->comment('Дата начала предоставления скидки он инвойс');
+			            $table->string('on_invoice_end')->nullable()->comment('Дата окончания предоставления скидки он инвойс');
+
+			            $table->string('old_roznica_price')->nullable();
+			            $table->string('new_roznica_price')->nullable();
+
+			            $table->string('razmesh_price')->nullable();
+
+			            $table->text('description')->comment('подписи, слоганы, расшифровки и пояснения, которые Вы хотели бы видеть к своим товарам.')->nullable();
+			            $table->text('metka')->comment('Хит, Новинка, Суперцена, Выгода 0000  рублей...')->nullable();
+			            //TODO внешний ключ ???
+
+						$table->timestamps();
+			            $table->softDeletes();
+					});
+				}
+
 				foreach ($dataToInsert as $key => $value)
 				{
+					// if(!is_array($value['shops']))
+					// {
+					// 	echo $key;
+
+// print_r($value);
+
+					// 	continue;
+					// }
+					// else
+					// {
+					// 	// print_r($dataToInsert);
+					// }
+
 					foreach ($value['shops'] as $value2)
 					{
 						\DB::table('document_action_first_datas')->insert(
@@ -508,7 +513,7 @@ class ProcessController extends Controller
 					            'kod_dis' => $value['kodTov'],
 					            'articule_sk' => $value['articule_sk'] ?? 0,
 								'action_types_ids' => $value['type'],
-					            'on_invoice' => $this->parseProcenteFromExcelToInt($value['skidka_on_invoice']),
+					            'on_invoice' => $value['skidka_on_invoice'],//$this->parseProcenteFromExcelToInt()
 					            'off_invoice' => $value['kompensaciya_off_invoice'],
 					            'skidka_itogo' => $value['skidka_itogo'],
 					            'old_zakup_price' => $value['zakup_old'],
@@ -517,6 +522,10 @@ class ProcessController extends Controller
 					            'on_invoice_end' => $value['end_date_on_invoice'],
 					            'old_roznica_price' => $value['roznica_old'],
 					            'new_roznica_price' => $value['roznica_new'],
+								'start_action_date' => $value['start_action_date'],
+								'end_action_date' => $value['end_action_date'],
+								'brend_id' => $value['brend'],
+								'razmesh_price' => $value['razmesh_price'],
 					            'description' => $value['descr'],
 					            'metka' => $value['marks'],
 					            'created_at' => date('Y-m-d H:i:s')
@@ -531,15 +540,16 @@ class ProcessController extends Controller
 			$this->validate_errors['form'][0]['error_db_save'] = 'Не удалось сохранить данные. Попробуйте еще раз либо обратитесь к администратору системы.';
 		}
 
-		if($err || !empty($this->validate_errors['form']) || !empty($this->validate_errors['file']))
+		if(count($this->validate_errors['form']) > 0)
 		{
-			return redirect()->back()
-				->with('errors', $this->validate_errors)
-				->withInput();
+			$returnData['errors'] = $this->validate_errors['form'] ?? [];
+			echo json_encode($returnData);
+			return;
 		}
 		else
 		{
-			return redirect()->back()->with('ok', 'Добавление прошло успешно');
+			echo json_encode(['success' => 1]);
+			return;
 		}
 	}
 
@@ -571,27 +581,27 @@ class ProcessController extends Controller
 		}
 
 		// если данные из файла, то дата старта процесса(акции) будет находитя в файла. Ее нужно проверить для каждой строки
-		if(isset($data['start_date']))
+		if(isset($data['start_action_date']))
 		{
-			if(!$this->validateDataStartProcessDate($data['start_date'], $start_date))
+			if(!$this->validateDataStartProcessDate($data['start_action_date'], $start_date))
 			{
-				$this->validate_errors[$source][$row_num]['start_date'] = 'Дата начала акции должна быть в формате dd-mm-yyyy. Дата должна быть больше даты начала процесса.';
+				$this->validate_errors[$source][$row_num]['start_action_date'] = 'Дата начала акции должна быть в формате dd-mm-yyyy. Дата должна быть больше даты начала процесса.';
 			}
 		}
 		// если данные из файла, то дата окончания процесса(акции) будет находитя в файла. Ее нужно проверить для каждой строки
-		if(isset($data['end_date']))
+		if(isset($data['end_action_date']))
 		{
-			if(!$this->validateDataEndProcessDate($data['end_date'], $end_date))
+			if(!$this->validateDataEndProcessDate($data['end_action_date'], $end_date))
 			{
-				$this->validate_errors[$source][$row_num]['end_date'] = 'Дата окончания акции должна быть в формате dd-mm-yyyy. Дата должна быть меньше даты окончания процесса.';
+				$this->validate_errors[$source][$row_num]['end_action_date'] = 'Дата окончания акции должна быть в формате dd-mm-yyyy. Дата должна быть меньше даты окончания процесса.';
 			}
 		}
 
 		if($source == 'file' && 
-			!isset($this->validate_errors[$source][$row_num]['end_date']) &&
-			strtotime($data['start_date']) >= strtotime($data['end_date']))
+			!isset($this->validate_errors[$source][$row_num]['end_action_date']) &&
+			strtotime($data['start_action_date']) >= strtotime($data['end_action_date']))
 		{
-			$this->validate_errors[$source][$row_num]['end_date'] = 'Дата окончания акции должна быть меньше даты начала акции. Неверно ('.$data['start_date'] .' - '. $data['end_date'].')';
+			$this->validate_errors[$source][$row_num]['end_date'] = 'Дата окончания акции должна быть меньше даты начала акции. Неверно ('.$data['start_action_date'] .' - '. $data['end_action_date'].')';
 		}
 
 		// Проверяем список магазинов,
@@ -611,27 +621,15 @@ class ProcessController extends Controller
 
 		if($source == 'form')
 		{
-			if(isset($data['shops']))
+			if(isset($data['shops']) && trim($data['shops']) != '')
 			{
-				$tmp = [];
-				foreach ($data['shops'] as $value)
-				{
-					$exist = false;
-					foreach ($this->cache_shops as $val)
-					{
-						if(in_array(Shop::prepareShopName($value), $val))
-						{
-							$tmp[] = $val['id'];
-							$exist = true;
-							break;
-						}
-					}
-
-					if(!$exist)
-					{
-						$this->validate_errors[$source][$row_num]['shops'] = 'Указанный магазин не найден "'.$value.'"';
-					}
-				}
+				$tmp = $this->searchShop($data['shopsTitles'], $source, $row_num);
+				$data['shops'] = array_keys($tmp);
+			}
+			elseif(isset($data['shopsTitles']) && trim($data['shopsTitles']) != '')
+			{
+				$tmp = $this->searchShop($data['shopsTitles'], $source, $row_num);
+				$data['shops'] = array_keys($tmp);
 			}
 			else
 			{
@@ -643,38 +641,20 @@ class ProcessController extends Controller
 			//	магазины исключения отбрасываем все остальные магазины добавляем
 			$tmp = [];
 			$tmpTitles = [];
-			$tmp_arr = [];
+			$found_shops = [];
 
 			if(isset($data['shops_exception']))
 			{
-				//смотрим есть ли такие магазины вообще?
-				foreach ($data['shops_exception'] as $value)
-				{
-					$exist = false;
-					foreach ($this->cache_shops as $val)
-					{
-						$value = Shop::prepareShopName($value);
-						if(in_array($value, $val))
-						{
-							$tmp_arr[] = $value;
-							$exist = true;
-							break;
-						}
-					}
-					if(!$exist)
-					{
-						$this->validate_errors[$source][$row_num]['shops'] = 'Указанный магазин-исключение не найден "'.$value.'"';
-					}
-				}
+				$found_shops = $this->searchShop($data['shops_exception'], $source, $row_num);
 			}
 
-			$c_tmp = count($tmp_arr);
+			$c_tmp = count($found_shops);
 			// убираем магазины-исключения из списка
 			foreach ($this->cache_shops as $val)
 			{
 				if($c_tmp > 0)
 				{
-					if(in_array($val['title'], $tmp_arr))
+					if(in_array($val['title'], $found_shops))
 					{
 						continue;
 					}
@@ -774,6 +754,7 @@ class ProcessController extends Controller
 			$this->validate_errors[$source][$row_num]['kodTov'] = 'Не указан код товара';
 		}
 
+
 		if(isset($data['tovsTitles']) && trim($data['tovsTitles']) != '')
 		{
 			$tmp = DB::connection('sqlsrv_imported_data')->select('select [ArtName], [BrandName], [ArtArticle], [ArtCode]
@@ -792,20 +773,30 @@ class ProcessController extends Controller
 
 				// если бренд пришел, проверяем его. если не правильный игнорируем ))
 				// если верный бренд то возвращаем еще и id бренда
-				if(isset($data['brend']) && $tmp[0]->BrandName == $data['brend'])
+				if(isset($data['brendTitles']) && strtolower($tmp[0]->BrandName) == strtolower($data['brendTitles']))
 				{
 					$br = Brend::where('name', $tmp[0]->BrandName)->get();
 					if($br->count() > 0)
 					{
-						$data['brendId'] = $br[0]->id;
+						$data['brend'] = $br[0]->id;
 					}
+				}
+				else
+				{
+					$data['brendTitles'] = '';
+					$data['brend'] = '';
 				}
 			}
 		}
 		else
 		{
+			$data['brendTitles'] = '';
+			$data['brend'] = '';
+
 			$this->validate_errors[$source][$row_num]['tovsTitles'] = 'Не указано наименование товара.';
 		}
+
+
 
 		// Проверка типа маркетинговой акции
 		if(isset($data['type']))
@@ -1050,11 +1041,12 @@ class ProcessController extends Controller
 			$this->validate_errors[$source][$row_num]['roznica_new'] = 'Новая розничная цена должны быть меньше старой розничной цены.';
 		}
 
+
+
 		if (!empty($this->validate_errors[$source][$row_num]))
 		{
 			return false;
 		}
-
 		return true;
 	}
 
@@ -1098,14 +1090,14 @@ class ProcessController extends Controller
 					$excel = PHPExcel_IOFactory::load($move); // подключить Excel-файл
 					$excel->setActiveSheetIndex(0); // получить данные из указанного листа
 					$sheet = $excel->getActiveSheet();
-					$i = 0;
+
 
 					foreach ($sheet->getRowIterator() as $row_num => $row)
 					{
-						$i++;
 						//	Первые две строки - заголовки, пропускаем.
-						if($i <= 2)
+						if($row_num <= 2)
 							continue;
+
 
 						if(trim($sheet->getCell('F'.$row_num)->getValue()) == '' AND
 							trim($sheet->getCell('G'.$row_num)->getValue()) == '')
@@ -1124,13 +1116,14 @@ class ProcessController extends Controller
 							switch($key)
 							{
 								case 'A': //Дата начала акции
-									$dataToInsert[$row_num]['start_date'] = $this->parseDateFromExcelToInt($cell);
+									$dataToInsert[$row_num]['start_action_date'] = $this->parseDateFromExcelToInt($cell);
 									break;
 								case 'B': //Дата окончания акции
-									$dataToInsert[$row_num]['end_date'] = $this->parseDateFromExcelToInt($cell);
+									$dataToInsert[$row_num]['end_action_date'] = $this->parseDateFromExcelToInt($cell);
 									break;
 								case 'C': //Бренд
 									$dataToInsert[$row_num]['brend'] = $cell->getCalculatedValue();
+									$dataToInsert[$row_num]['brendTitles'] = $cell->getCalculatedValue();
 									break;
 								case 'D'://Магазины-исключения
 									$v = $cell->getCalculatedValue();
@@ -1197,11 +1190,7 @@ class ProcessController extends Controller
 									break;
 							}
 						}
-
-						if(!$this->validateData($dataToInsert[$row_num], 'file', $start_date, $end_date, $row_num))
-						{
-							$err = true;
-						}
+						$this->validateData($dataToInsert[$row_num], 'file', $start_date, $end_date, $row_num);
 					}
 				}
 				else
@@ -1315,23 +1304,55 @@ class ProcessController extends Controller
 			return false;
 		}
 	}
-	private function parseProcenteFromExcelToInt($proc)
+
+	// private function parseProcenteFromExcelToInt($proc)
+	// {
+	// 	$value = preg_replace('/[\%\-]/', '', $proc);
+	// 	$value = preg_replace('/[\,]/', '.', $value);
+
+ //        if(trim($value) != '')
+ //        {
+	// 		if(floatval($value) <= 1)
+ //        	{
+	// 			$value = $value * 100;
+	// 		}
+
+	// 		if(floatval($value) < 100 && floatval($value) >= 0)
+ //            {
+	// 			return $value;
+ //            }
+	// 	}
+	//	return false;
+	//}
+
+	private function searchShop($shops, $source, $row_num)
 	{
-		$value = preg_replace('/[\%\-]/', '', $proc);
-		$value = preg_replace('/[\,]/', '.', $value);
-
-        if(trim($value) != '')
-        {
-			if(floatval($value) <= 1)
-        	{
-				$value = $value * 100;
-			}
-
-			if(floatval($value) < 100 && floatval($value) >= 0)
-            {
-				return $value;
-            }
+		if(!is_array($shops))
+		{
+			$shops = explode(';', $shops);
 		}
-		return false;
+
+		$tmp_arr = [];
+		//смотрим есть ли такие магазины вообще?
+		foreach ($shops as $value)
+		{
+			$exist = false;
+			foreach ($this->cache_shops as $val)
+			{
+				$value = Shop::prepareShopName($value);
+				if(in_array($value, $val))
+				{
+					$tmp_arr[$val['id']] = $value;
+					$exist = true;
+					break;
+				}
+			}
+			if(!$exist)
+			{
+				$this->validate_errors[$source][$row_num]['shops'] = 'Указанный магазин не найден "'.$value.'"';
+			}
+		}
+
+		return $tmp_arr;
 	}
 }

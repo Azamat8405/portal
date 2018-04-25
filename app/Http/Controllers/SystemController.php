@@ -32,7 +32,6 @@ class SystemController extends Controller
 			echo json_encode($result);
 		}
 	}
-
 	public function ajaxGetContragentsAvtocomplete(Request $request)
 	{
 		if(trim($request->get('term')) == '')
@@ -61,7 +60,7 @@ class SystemController extends Controller
 			{
 				$result[] = [
 					'label'=> $value->{'Наименование'}.' ('.$value->{'Код'}.')',
-					'value' => $value->{'Наименование'}.' ('.$value->{'Код'}.')',
+					'value' => $value->{'Наименование'},//.' ('.$value->{'Код'}.')',
 					'val' => $value->{'Код'}
 				];
 			}

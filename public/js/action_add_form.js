@@ -214,7 +214,6 @@ $(function(){
 			},
 	   		{label:'Товар <sup>*</sup>',
 		   		name:'tovsTitles',
-		   		align:"center",
 		   		width:250,
 		   		edittype:'text',
 				editable:true,
@@ -247,13 +246,32 @@ $(function(){
 				},
 		   		title:false,
 		   		frozen:true},
-	   		{label:'Бренд',
-		   		name:'brendTitles',
+
+	   		{label:'Дата начала акции <sup>*</sup>',
+		   		name:'start_action_date',
 		   		align:"center",
-		   		width:250,
+		   		width:200,
 		   		edittype:'text',
 				editable:true,
 		   		title:false,
+				editoptions:{
+					dataInit:function(elem){
+						$(elem).addClass('maskDate').addClass('start_action_date');
+					}
+				},
+		   		fixed:true},
+	   		{label:'Дата окончания акции <sup>*</sup>',
+		   		name:'end_action_date',
+		   		align:"center",
+		   		width:200,
+		   		edittype:'text',
+				editable:true,
+		   		title:false,
+				editoptions:{
+					dataInit:function(elem){
+						$(elem).addClass('maskDate').addClass('end_action_date');
+					}
+				},
 		   		fixed:true},
 	   		{label:'Дистрибьютор',
 		   		name:'distrTitles',
@@ -267,6 +285,14 @@ $(function(){
 						attachDialogBtn(elem, 'getContagentsErarhi')
 					}
 				},
+		   		fixed:true},
+	   		{label:'Бренд',
+		   		name:'brendTitles',
+		   		align:"center",
+		   		width:250,
+		   		edittype:'text',
+				editable:true,
+		   		title:false,
 		   		fixed:true},
 	   		{label:'Артикул ШК',
 		   		name:'articule_sk',
@@ -758,13 +784,16 @@ $(function(){
 					}
 				}
 
-console.log(data['data']);
-
-
 				for(ind in data['data'])
 				{
-					data['data'][ind]['shopsTitles'] = data['data'][ind]['shopsTitles'].join('; ');
-					data['data'][ind]['brendTitles'] = data['data'][ind]['brend'];
+					if(data['data'][ind]['shopsTitles'])
+					{
+						data['data'][ind]['shopsTitles'] = data['data'][ind]['shopsTitles'].join('; ');						
+					}
+					if(data['data'][ind]['brend'])
+					{
+						data['data'][ind]['brendTitles'] = data['data'][ind]['brendTitles'];
+					}
 
 					var r = addJqGridRow(data['data'][ind]);
 					if(r)
@@ -911,27 +940,45 @@ function getTovsToFillTable(arr, page)
 
 			for(ind in data.items)
 			{
-				if($('.kodTov[value='+data.items[ind].c+']').length == 0)
-				{
-					dataToFill = [];
+				// if($('.kodTov[value='+data.items[ind].c+']').length == 0)
+				// {
+					dataToFill = {};
 
-					dataToFill['shops'] = [];
-					dataToFill['shopsTitles'] = [];
-
-					dataToFill['kodTov'] = data.items[ind].c;
-					dataToFill['tovsTitles'] = data.items[ind].n;
+					// dataToFill['shops'] = [];
+					dataToFill.shopsTitles = [];
+					dataToFill.kodTov = data.items[ind].c;
+					dataToFill.tovsTitles = data.items[ind].n;
+					dataToFill.start_action_date = '';
+			   		dataToFill.end_action_date = '';
+			   		dataToFill.distrTitles = '';
+			   		dataToFill.brendTitles = '';
+			   		dataToFill.articule_sk = '';
+			   		dataToFill.type = '';
+			   		dataToFill.skidka_on_invoice = '';
+			   		dataToFill.kompensaciya_off_invoice = '';
+			   		dataToFill.skidka_itogo = '';
+			   		dataToFill.roznica_old = '';
+			   		dataToFill.roznica_new = '';
+			   		dataToFill.zakup_old = '';
+			   		dataToFill.zakup_new = '';
+			   		dataToFill.start_date_on_invoice = '';
+			   		dataToFill.end_date_on_invoice = '';
+			   		dataToFill.razmesh_price = '';
+			   		dataToFill.descr = '';
+			   		dataToFill.marks = '';
 
 					for(ind2 in data.shop)
 					{
-						dataToFill['shops'][ind2] = data.shop[ind2].id;
-						dataToFill['shopsTitles'][ind2] = data.shop[ind2].title;
+						dataToFill.shopsTitles[ind2] = data.shop[ind2].title;
 					}
-					addRow(dataToFill);
-				}
+					dataToFill.shopsTitles = dataToFill.shopsTitles.join('; ');
+					addJqGridRow(dataToFill);
+			// }
 			}
-			delRows(true);
+
+			// delRows(true);
 			clearFilter();
-			events();
+			eventsJqGridRow();
 			$(window).trigger('resize');
 		}
 	});
@@ -1299,19 +1346,52 @@ function hideHint()
 {
 	$('.type_descr').remove();
 }
+
 function addJqGridRow(initData)
 {
-	var r = grid.jqGrid('getGridParam','records');
+	var  r = 0;
+	if($(grid).find('tr.jqgrow:last').length > 0)
+	{
+		r = parseInt($(grid).find('tr.jqgrow:last').attr('id'));
+	}
+
 	var parameters =
 	{
 		rowID:++r,
-	    initdata: initData,
-	    position :"last",
-	    useDefValues : true,
-	    useFormatter : false,
-	    addRowParams : {extraparam:{}}
+	    initdata:initData,
+	    position:"last",
+	    useDefValues:true,
+	    useFormatter:false,
+	    addRowParams:{extraparam:{}}
 	}
 	grid.jqGrid('addRow',parameters);
+
+	if(initData)
+	{
+		if( typeof(initData.shopsTitles) != 'undefined')
+		{
+			checkAddField(r, 'chShop', initData.shopsTitles);
+		}
+		if(typeof(initData.shops) != 'undefined')
+		{
+			addDopData(r, 'shops', initData.shops);
+		}
+
+		if(typeof(initData.kodTov) != 'undefined')
+		{
+			checkAddField(r, 'chKod', initData.kodTov);
+		}
+
+		if(typeof(initData.tovsTitles) != 'undefined')
+		{
+			checkAddField(r, 'chTitle', initData.tovsTitles);
+		}
+
+		if(typeof(initData.distrTitles) != 'undefined')
+		{
+			checkAddField(r, 'chDistr', initData.distrTitles);
+		}
+	}
 	return r;
 }
 function addJqGridRowFromPanel()
@@ -1324,30 +1404,66 @@ function addJqGridRowFromPanel()
 
 function addJqGridSubmit()
 {
+	show_load();
+
 	grid.find('tr[editable=1]').each(function(){
-
 		grid.saveRow(this.id, false, 'clientArray');
-
 	});
 
-	var arrData = grid.getRowData();
-	// arrData.push(['dopData']);
-
-	let json = JSON.stringify(arrData);
-
-	$vars = '&process_type='+$('#process_type').val()+'&'
-	'process_title='+$('#process_title').val()+'&'
-	'start_date='+$('#start_date').val()+'&'
-	'end_date='+$('#end_date').val();
+	let arrData = '';
+	arrData += 'rows='+JSON.stringify( grid.getRowData() );
+	for(ind in dopData)
+	{
+		arrData += '&rowsDopData['+ind+']=' + JSON.stringify(dopData[ind]);
+	}
+	arrData += '&process_type='+ $('#process_type').val();
+	arrData += '&process_title=' + $('#process_title').val();
+	arrData += '&start_date=' + $('#start_date').val();
+	arrData += '&end_date=' + $('#end_date').val();
 
 	$.ajax({
 		url:'/processes/ajaxAdd',
 		type:'post',
 		dataType:'json',
-		data:'d='+json+$vars,
-		success:function(d){
+		data:arrData,
+		success:function(data){
 
-// TODO
+			hide_load();
+
+			if(data['errors'])
+			{
+				var str = '';
+				var tr_str = [];
+				for(ind in data['errors'])
+				{
+					str += '<br><b>В строке "'+ind+'" обнаружены следующие ошибки:</b> <br>';
+					for(index in data['errors'][ind])
+					{
+						str += data['errors'][ind][index] + '<br>';
+						if($.inArray(ind, tr_str) < 0)
+						{
+							tr_str.push(ind);
+						}
+					}
+					delete(data['data'][ind]);
+				}
+
+				if(tr_str.length > 0)
+				{
+					str = 'Не загружены строки из файла с номерами: '+tr_str.join(', ')+'<br><br>'+str;
+				}
+
+				if(str != '')
+				{
+					showMessage('error', false, str, {
+						width:800
+					});
+				}
+			}
+			else if(data['success'] && data['success'] == 1)
+			{
+				window.location.href = '/processes';
+			}
 
 		}
 	});
@@ -1573,8 +1689,8 @@ function eventsJqGridRow()
 		minLength: 2,
 		select: function( event, ui )
 		{
-			checkAddField(getJqGridRowNumber(this), 'chShop', ui.item.value);
 			var n = getJqGridRowNumber(this);
+			checkAddField(n, 'chShop', ui.item.value);
 			addDopData(n, 'shops', ui.item.val);
 		},
 		change: function( event, ui )
@@ -1606,7 +1722,6 @@ function eventsJqGridRow()
 		change:function()
 		{
 			var n = getJqGridRowNumber(this);
-
 			if(checkFields[n] &&
 				checkFields[n]['chDistr'] &&
 				$(this).val() != checkFields[n]['chDistr'])
@@ -1616,7 +1731,7 @@ function eventsJqGridRow()
 		},
 		select: function(event, ui) {
 			var n = getJqGridRowNumber(this);
-			checkAddField(n, 'chDistr', ui.item.label);
+			checkAddField(n, 'chDistr', ui.item.value);
 			addDopData(n, 'distr', ui.item.val);
 		}
 	});
@@ -1684,7 +1799,7 @@ function eventsJqGridRow()
 			var str = $(this).val();
 			var reg = /[^\.\,0-9]+/g;
 
-			if( reg.test(str) )
+			if(reg.test(str))
 			{
 				str = str.replace(reg, '');
 			}
@@ -1744,31 +1859,61 @@ function eventsJqGridRow()
 
 	if($.fn.datepicker)
 	{
-		//Даты ON INVOICE в табличной части
-		$('.start_on_invoice_date').datepicker({
-			minDate: new Date(),
-			dateFormat: "dd-mm-y"
-		})
-		.change(function() {
+		setTimeout(function(){
 
-			if(this.value.length >= 10)
-				return;
+			//Даты ON INVOICE в табличной части
+			$('.start_on_invoice_date').datepicker({
+				minDate: new Date(),
+				dateFormat: "dd-mm-y"
+			})
+			.change(function() {
 
-			var dateObj = $.datepicker.parseDate( "dd-mm-y", this.value);
-			dateObj.setTime(dateObj.getTime() + 86400000);
+				if(this.value.length >= 10)
+					return;
 
-			var row_n = getJqGridRowNumber(this);
-			$('#'+row_n+'_end_date_on_invoice').datepicker( "option", "minDate",  dateObj);
-			prepareDate(this);
-        });
+				var dateObj = $.datepicker.parseDate( "dd-mm-y", this.value);
+				dateObj.setTime(dateObj.getTime() + 86400000);
 
-		$('.end_on_invoice_date').datepicker({
-			minDate: new Date(),
-			dateFormat: "dd-mm-y"
-		})
-		.change(function() {
-			prepareDate(this);
-		});
+				var row_n = getJqGridRowNumber(this);
+				$('#'+row_n+'_end_date_on_invoice').datepicker( "option", "minDate",  dateObj);
+				prepareDate(this);
+	        });
+
+			$('.end_on_invoice_date').datepicker({
+				minDate: new Date(),
+				dateFormat: "dd-mm-y"
+			})
+			.change(function() {
+				prepareDate(this);
+			});
+
+
+			$('.start_action_date').datepicker({
+				minDate: new Date(),
+				dateFormat: "dd-mm-y"
+			})
+			.change(function() {
+
+				if(this.value.length >= 10)
+					return;
+
+				var dateObj = $.datepicker.parseDate( "dd-mm-y", this.value);
+				dateObj.setTime(dateObj.getTime() + 86400000);
+
+				var row_n = getJqGridRowNumber(this);
+
+				$('#'+row_n+'_end_action_date').datepicker( "option", "minDate",  dateObj);
+				prepareDate(this);
+			});
+
+			$('.end_action_date').datepicker({
+				minDate: new Date(),
+				dateFormat: "dd-mm-y"
+			})
+			.change(function() {
+				prepareDate(this);
+			});
+		}, 150);
 	}
 
 	$('input[id$=_shopsTitles]').off('copy');
@@ -1972,7 +2117,7 @@ function addDopData(rowNum, field, value)
 {
 	if(!dopData[field])
 	{
-		dopData[field] = [];
+		dopData[field] = new Array();
 	}
 	dopData[field][rowNum] = value;
 }
