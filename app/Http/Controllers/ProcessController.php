@@ -34,7 +34,7 @@ class ProcessController extends Controller
 	private $validate_errors = [];
 
 	/**
-	* Подгрузка списка для таблицы jqGrid
+	* Подгрузка списка акции для таблицы jqGrid
 	**/
 	public function ajaxList(Request $request)
 	{
@@ -74,16 +74,107 @@ class ProcessController extends Controller
 
 	public function ajaxGetTovList(Request $request, $procId)
 	{
-		$tovs = Process::find($procId)->processTovs;
+		//достаем все магазины
+		$tmp = Shop::orderBy('title')->get();
+		foreach ($tmp as $key => $value)
+		{
+			$value->title = Shop::prepareShopName($value->title);
+			if(!isset($this->cache_shops[$value->code]))
+			{
+				$this->cache_shops[$value->id] = ['code' => $value->code, 'title' => $value->title];
+			}
+		}
+
+		//обязательно сортируем по магазинам, чтобы в цикле ниже быть уверенным, что записи по магазину идут подряд
+		$tovs = DocumentActionFirstData::where('process_id', $procId)->orderBy('shop_id')->get();
+
+		// $tovs = Process::find($procId)->processTovs->orderBy('title');
+		$responce = [];
+		$kod_dis = [];
+		$data = [];
 		foreach ($tovs as $key => $value)
 		{
+			if($key > 100)
+			{
+				break;
+			}
+
+			$data[$key]['tovsTitles'] = '';
+			$data[$key]['kodTov'] = $value->kod_dis;
+			$data[$key]['shopsTitles'] = '';
+			$data[$key]['start_action_date'] = $value->start_action_date;
+			$data[$key]['end_action_date'] = $value->end_action_date;
+			$data[$key]['distrTitles'] = 
+			$data[$key]['brendTitles'] = $value->brend->title;
+			$data[$key]['articule_sk'] = $value->articule_sk;
+			$data[$key]['type'] = $value->processType->title;
+			$data[$key]['skidka_on_invoice'] = $value->on_invoice;
+			$data[$key]['kompensaciya_off_invoice'] = $value->off_invoice;
+			$data[$key]['skidka_itogo'] = $value->skidka_itogo;
+			$data[$key]['roznica_old'] = $value->old_roznica_price;
+			$data[$key]['roznica_new'] = $value->new_roznica_price;
+			$data[$key]['zakup_old'] = $value->old_zakup_price;
+			$data[$key]['zakup_new'] = $value->new_zakup_price;
+			$data[$key]['start_date_on_invoice'] = $value->on_invoice_start;
+			$data[$key]['end_date_on_invoice'] = $value->on_invoice_end;
+			$data[$key]['razmesh_price'] = $value->razmesh_price;
+			$data[$key]['descr'] = $value->description;
+			$data[$key]['marks'] = $value->metka;
+
+print_r($data[$key]);
+exit();
+
+			//в базе информация дублируется для каждого магазина. поэтому. данные для товара берем один раз, дальше для текущего кода товара все пропускаем
+			if(isset($kod_dis[$value->kod_dis]))
+			{
+				continue;
+			}
+			$kod_dis[$value->kod_dis]=1;
+
+			$shops = DocumentActionFirstData::select('id', 'shop_id')
+				->where('process_id', $procId)
+				->where('kod_dis', $value->kod_dis)->get();
+
+			$shop_ids = [];
+			foreach ($shops as $key => $value)
+			{
+				if(!in_array($value->shop_id, $shop_ids))
+				{
+					$shop_ids[] = $value->shop_id;
+				}
+			}
+		}
+
+exit();
+
 			$responce['rows'][$key]['id'] = $value->id;
 		    $responce['rows'][$key]['cell'] = 
 		    	[
-					1, $value->id, $value->id, $value->id, $value->id
+			   		'tovsTitles' => '',
+			   		'kodTov' => '',
+			   		'shopsTitles' => '',
+			   		'start_action_date' => '',
+			   		'end_action_date' => '',
+			   		'distrTitles' => '',
+			   		'brendTitles' => '',
+			   		'articule_sk' => '',
+			   		'type' => '',
+			   		'skidka_on_invoice' => '',
+			   		'kompensaciya_off_invoice' => '',
+			   		'skidka_itogo' => '',
+			   		'roznica_old' => '',
+			   		'roznica_new' => '',
+			   		'zakup_old' => '',
+			   		'zakup_new' => '',
+			   		'start_date_on_invoice' => '',
+			   		'end_date_on_invoice' => '',
+			   		'razmesh_price' => '',
+			   		'descr' => '',
+			   		'marks' => ''
 				];
-		}
-		echo json_encode($responce);
+
+
+		// echo json_encode($responce);
 	}
 
 	public function list()
@@ -458,6 +549,7 @@ class ProcessController extends Controller
 			            $table->string('start_action_date')->nullable()->comment('Дата начала акции');
 			            $table->string('end_action_date')->nullable()->comment('Дата окончания акции');
 
+			            $table->string('tovsTitles')->comment('Наименование товара');
 			            $table->string('kod_dis')->comment('код ДиС Ном. Номер');
 			            $table->string('articule_sk')->comment('Артикул ШК это артикул по базе поставщика');
 
@@ -510,6 +602,7 @@ class ProcessController extends Controller
 								'shop_id' => $value2,
 								'process_id' => $pr->id,
 								'process_type_id' => $doc->process_type_id,
+								'tovsTitles' => $value['tovsTitles'],
 					            'kod_dis' => $value['kodTov'],
 					            'articule_sk' => $value['articule_sk'] ?? 0,
 								'action_types_ids' => $value['type'],
@@ -556,12 +649,25 @@ class ProcessController extends Controller
 
 	public function edit(Request $request, $id)
 	{
-		return view('processes/edit', ['process' => Process::find($id),
+		$action_types = [];
+		$action_types[] = '0:Не выбрано';
+		$action_types_descr = [];
+
+		$types = ActionType::orderBy('title')->get();
+		foreach ($types as $type)
+		{
+			$action_types[] = $type->id.':'.$type->title;
+			$action_types_descr[$type->id] = $type->description;
+		}
+		return view('processes/edit', [
 			'tov_categs_lvl1' => TovCategs::where('level', 1)->orderBy('title')->get(),
 			'shop_regions_lvl1' => ShopRegion::where('level', 1)->orderBy('title')->get(),
 			'process_types' => ProcessType::all(),
-			'action_types' => ActionType::all(),
-			'action_marks' => ActionMark::all()
+			'action_types' => implode(';', $action_types),
+			'action_types_descr' => $action_types_descr,
+			'action_marks' => ActionMark::all(),
+			'user' => User::find(Auth::id()),
+			'process' => Process::find($id),
 		]);
 	}
 
@@ -1091,20 +1197,22 @@ class ProcessController extends Controller
 					$excel->setActiveSheetIndex(0); // получить данные из указанного листа
 					$sheet = $excel->getActiveSheet();
 
-
+					$emptyRow = [];
 					foreach ($sheet->getRowIterator() as $row_num => $row)
 					{
 						//	Первые две строки - заголовки, пропускаем.
 						if($row_num <= 2)
 							continue;
 
-
 						if(trim($sheet->getCell('F'.$row_num)->getValue()) == '' AND
 							trim($sheet->getCell('G'.$row_num)->getValue()) == '')
 						{
+							$emptyRow[] = $row_num;
 							$this->validate_errors['file'][$row_num]['kodTov'] = 'Не указан товар в строке ('.$row_num.'), либо строка пустая.';
 							continue;
 						}
+						// если сюда прошли, значит пошли непустые строки. забываем предыдущие пустые, по ним мы выведем ошибку
+						$emptyRow = [];
 
 						$returnData['data'][$row_num] = [];
 						$cellIterator = $row->getCellIterator();
@@ -1191,6 +1299,12 @@ class ProcessController extends Controller
 							}
 						}
 						$this->validateData($dataToInsert[$row_num], 'file', $start_date, $end_date, $row_num);
+					}
+
+					//если в массиве есть что-то, значит это последние строки в файле. по ним не выводим сообщения
+					foreach($emptyRow as $v)
+					{
+						unset($this->validate_errors['file'][$v]);
 					}
 				}
 				else
@@ -1286,7 +1400,12 @@ class ProcessController extends Controller
 	 		try{
 		 		if (PHPExcel_Shared_Date::isDateTime($cell))
 				{
-					$v = PHPExcel_Shared_Date::ExcelToPHP($cell->getCalculatedValue());
+					$val = $cell->getCalculatedValue();
+					if(preg_match('/[^0-9]/', $val))
+					{
+						return false;
+					}
+					$v = PHPExcel_Shared_Date::ExcelToPHP($val);
 				}
 	 		}
 	 		catch(Exception $e)

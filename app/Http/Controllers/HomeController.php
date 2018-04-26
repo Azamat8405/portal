@@ -29,7 +29,11 @@ class HomeController extends Controller
         $user = User::find(Auth::id());
 
         // Если пользователь КМ или директор магазина
-        if($user->user_group_id == 4 || $user->user_group_id == 5)
+        if($user->user_group_id == 5)
+        {
+            return redirect('/avtodefectura');
+        }
+        elseif($user->user_group_id == 4 || $user->user_group_id == 5)
         {
             return redirect('/ucenka/list');
         }

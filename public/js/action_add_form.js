@@ -48,12 +48,10 @@ var select2OptionBrends = {
 };
 
 $(function(){
-
 	$('#tabs').tabs();
 	// events();
 
-/* head start */
-
+	/* head start */
 	$('.addProcessForm').keydown(function(e)
 	{
 		if(e.keyCode == 13)
@@ -182,11 +180,28 @@ $(function(){
 		}
 	});
 
+	var url_ = null;
+	var datatype_ = null;
+	var rowNum_ = null;
+	if(typeof(processId) != 'undefined')
+	{
+		url_ = '/processes/ajaxGetTovList/'+processId;
+		datatype_ = "json";
+		rowNum_ = 2000;
+	}
+
 	grid = $("#jqGridAdd");
 	grid.jqGrid({
+
+		// url:url_,
+		// datatype:datatype_,
+		// rowNum:rowNum_,
+
 		height:300,
 		width:500,
-		shrinkToFit:true,
+		// multiSort: true,
+		// sortname: 'tovsTitles',
+		// sortorder: "asc",
 		colModel:[
 			{label:'Действия',
 				name:'actions',
@@ -214,17 +229,21 @@ $(function(){
 			},
 	   		{label:'Товар <sup>*</sup>',
 		   		name:'tovsTitles',
-		   		width:250,
+		   		width:230,
 		   		edittype:'text',
 				editable:true,
 		   		fixed:true,
 		   		resizable:false,
+				// index:'tovsTitles',
+				// sortable:true,
+				// sorttype:'int',
 		   		title:false,
 		   		frozen:true},
 	   		{label:'Код товара <sup>*</sup>',
 		   		name:'kodTov',
 		   		align:"center",
-		   		width:150,
+				sortable:true,
+		   		width:120,
 		   		edittype:'text',
 				editable:true,
 		   		fixed:true,
@@ -233,8 +252,7 @@ $(function(){
 		   		frozen:true},
 	   		{label:'Магазин <sup>*</sup>',
 		   		name:'shopsTitles',
-		   		align:"center",
-		   		width:250,
+		   		width:230,
 		   		edittype:'text',
 				editable:true,
 		   		fixed:true,
@@ -244,10 +262,9 @@ $(function(){
 						attachDialogBtn(elem, 'getShopsErarhi')
 					}
 				},
-		   		title:false,
-		   		frozen:true},
-
-	   		{label:'Дата начала акции <sup>*</sup>',
+				title:false,
+				frozen:true},
+			{label:'Дата начала акции <sup>*</sup>',
 		   		name:'start_action_date',
 		   		align:"center",
 		   		width:200,
@@ -275,7 +292,6 @@ $(function(){
 		   		fixed:true},
 	   		{label:'Дистрибьютор',
 		   		name:'distrTitles',
-		   		align:"center",
 		   		width:250,
 		   		edittype:'text',
 				editable:true,
@@ -455,7 +471,6 @@ $(function(){
 		   		fixed:true},
 	   		{label:'Подписи, слоганы, расшифровки и пояснения к товарам в рекламе.',
 		   		name:'descr',
-		   		align:"center",
 		   		width:200,
 		   		edittype:'text',
 				editable:true,
@@ -465,7 +480,6 @@ $(function(){
 		   		width:150,
 		   		edittype:'text',
 				editable:true,
-		   		align:"center",
 		   		fixed:true},
 		],
 		multiselect:true,
@@ -475,8 +489,10 @@ $(function(){
 			grid.editRow(rowid);
 			eventsJqGridRow();
 		},
+		beforeSelectRow:function(){
+			return false;
+		},
 		onCellSelect: function(rowId, colId, c, event){
-
 			if(colId == 2)
 			{
 				setTimeout(function(){
@@ -494,13 +510,9 @@ $(function(){
 			}
 		},
 	});
-	grid.on('jqGridDelRowBeforeSubmit', function(e,id){
-		delJqGridRows(id);
-	});
 
 	let r = addJqGridRow();
 	grid.editRow(r);
-	grid.setSelection(r);
 	eventsJqGridRow();
 
 	// только при скроле замораживаем столбцы
@@ -521,7 +533,6 @@ $(function(){
 			destroyFrozenColumns();
 		}
 	});
-
 /* таблица конец */
 
 	// выбор чекбоксов во всплывающем окне выбора
@@ -1354,7 +1365,6 @@ function addJqGridRow(initData)
 	{
 		r = parseInt($(grid).find('tr.jqgrow:last').attr('id'));
 	}
-
 	var parameters =
 	{
 		rowID:++r,
@@ -1365,6 +1375,11 @@ function addJqGridRow(initData)
 	    addRowParams:{extraparam:{}}
 	}
 	grid.jqGrid('addRow',parameters);
+	grid.saveRow(r, false, 'clientArray');
+
+	setTimeout(function(){
+		grid.jqGrid('resetSelection',r);
+	}, 1);
 
 	if(initData)
 	{
@@ -1405,7 +1420,6 @@ function addJqGridRowFromPanel()
 function addJqGridSubmit()
 {
 	show_load();
-
 	grid.find('tr[editable=1]').each(function(){
 		grid.saveRow(this.id, false, 'clientArray');
 	});
@@ -1445,7 +1459,6 @@ function addJqGridSubmit()
 							tr_str.push(ind);
 						}
 					}
-					delete(data['data'][ind]);
 				}
 
 				if(tr_str.length > 0)
@@ -1462,14 +1475,14 @@ function addJqGridSubmit()
 			}
 			else if(data['success'] && data['success'] == 1)
 			{
-				window.location.href = '/processes';
+				showMessage('success', false, 'Акция успешно сохранена.');
+				setTimeout(function(){
+					window.location.href = '/processes';
+				}, 1000);
 			}
-
 		}
 	});
 }
-
-
 
 function setFrozenColumns()
 {
@@ -1518,7 +1531,6 @@ function scrollLeftAction()
 function scrollLeftActionOnFrozen(){
 
 	setTimeout(function(){
-
 		if($('#frozen_cb_' + grid.attr('id')).length > 0)
 		{
 			$('#frozen_cb_' + grid.attr('id')).click(function(){
@@ -1551,7 +1563,7 @@ function scrollLeftActionOnFrozen(){
 				});
 			});
 		}
-	}, 200);
+	}, 150);
 }
 
 function delJqGridRows(id)
@@ -1795,6 +1807,28 @@ function eventsJqGridRow()
     		}
 		});
 
+		$('.maskPrice').on('blur', function(e){
+			let v = $(this).val();
+			if(v.indexOf('.') < 0)
+			{
+				$(this).val(v+'.00');
+			}
+			else if(v.indexOf('.') >= 0)
+			{
+				v = v.split('.');
+
+				if(v[1].length == 0)
+				{
+					v[1] += '00';
+				}
+				else if (v[1].length == 1)
+				{
+					v[1] += '0';
+				}
+				$(this).val(v.join('.'));
+			}
+		});
+
 		$('.maskPrice').on('keyup', function(e){
 			var str = $(this).val();
 			var reg = /[^\.\,0-9]+/g;
@@ -1956,11 +1990,6 @@ function eventsJqGridRow()
 	setTimeout(function(){
 		$('td > .dialog, input[id$=_shopsTitles], input[id$=_distrTitles]').hover(function(e){
 
-				if($('body').find('> div.file_hint').length > 0)
-				{
-					$('body').find('> div.file_hint').remove();
-				}
-
 				var row_n = getJqGridRowNumber(this);
 				if($(this).hasClass('dialog'))
 				{
@@ -1990,28 +2019,11 @@ function eventsJqGridRow()
 				}
 
 				tmp = tmp.split('; ');
-
-				var d = $('<div />');
-				d.addClass('file_hint');
-				d.html(tmp.join('<br>'));
-				d.css('top', $(this).offset().top+23);
-				d.css('left', $(this).offset().left);
-				d.css('z-index', 100);
-				d.show();
-				d.hover(function(){
-					$('body').find('> div.file_hint').show();
-					$('body').find('> div.file_hint').addClass('nodel');
-				}, function(){
-					$('body').find('> div.file_hint').remove();
-				});
-				$('body').append(d);
+				show_input_hint(this, tmp);
 			},
 			function()
 			{
-				if($('body').find('> div.file_hint.nodel').length == 0)
-				{
-					$('body').find('> div.file_hint').hide();
-				}
+				hide_input_hint();
 			}
 		);
 	}, 200);
@@ -2071,40 +2083,12 @@ function eventsJqGridRow()
 		if($(this).val() == '')
 			return;
 
-		var h = $('div.tov_hint');
-		if(h.length > 0)
-		{
-			h.html($(this).val());
-			h.css('top', $(this).offset().top + $(this).outerHeight());
-			h.css('left', $(this).offset().left);
-			h.show();
-		}
-		else
-		{
-			var d = $('<div />');
-			d.addClass('tov_hint');
-			d.css('position', 'absolute');
-			d.css('background', '#fff');
-			d.css('width', '550px');
-			d.css('padding', '5px');
-			d.css('z-index', '100');
-			d.css('border', '1px solid #ccc');
-			d.css('min-height', '27px');
-			d.css('height', 'auto');
-			d.css('top', $(this).offset().top + $(this).outerHeight());
-			d.css('left', $(this).offset().left);
-			d.css('display', 'block');
-			d.on('click', function(){
-				$('.tov_hint').hide();
-			});
-			d.html($(this).val());
-			// $(this).before(d);
-			$('body').append(d);
-		}
+		show_input_hint(this, $(this).val());
 	},
 	function(){
-		$('.tov_hint').hide();
+		hide_input_hint(this, $(this).val());
 	});
+
 	let selector = 'input[id$=_shopsTitles], input[id$=_tovsTitles], input[id$=_articulSK], input[id$=_zakup_new], input[id$=_zakup_old], input[id$=_distrTitles], input[id$=_brendTitles], input[id$=_skidka_itogo], .maskDate, input[id$=_kodTov], .selectInRow';
 
 	$(selector).off('change');
@@ -2144,4 +2128,36 @@ function attachDialogBtn(elem, type)
 function removeErrorMessage(el)
 {
 	$(el).parents('td').find('.error_message').remove();
+}
+
+function show_input_hint(el, value)
+{
+	hide_input_hint();
+	if(Array.isArray(value))
+	{
+		value = value.join('<br>');
+	}
+
+	var d = $('<div />');
+	d.addClass('input_hint');
+	d.html(value);
+	d.css('top', $(el).offset().top+$(el).outerHeight());
+	d.css('left', $(el).offset().left);
+	d.show();
+	d.hover(function(){
+		$('body').find('> div.input_hint').show();
+	}, function(){
+		$('body').find('> div.input_hint').remove();
+	});
+	$('body').append(d);
+
+	if(($(el).offset().top + d.outerHeight()) > $(window).height())
+	{
+		d.css('top', $(el).offset().top - d.outerHeight());
+	}
+}
+
+function hide_input_hint()
+{
+	$('body').find('> div.input_hint').hide();
 }

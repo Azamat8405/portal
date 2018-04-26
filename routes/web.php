@@ -66,6 +66,7 @@ Route::group(['middleware' => 'auth'], function () {
 	Route::get('/brends/getBrendsForCategs/{categId}',		'BrendController@ajaxGetBrendsForCategs');
 
 	Route::get('/avtodefectura',				'AvtodefecturaController@list')->name('avtodefectura.list');
+	Route::get('/avtodefectura/ajaxList',		'AvtodefecturaController@ajaxList');
 
 
 });

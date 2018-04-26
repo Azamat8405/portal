@@ -26,11 +26,11 @@ function resizeHeightjqGrid(grid)
 }
 function resizeWidthjqGrid(grid)
 {
-	grid.jqGrid("setGridWidth", $('.content_body').width());
+	grid.jqGrid("setGridWidth", $('.content_body').width()-5);
 }
 function setFrozenHeightTd()
 {
-	setTimeout(function(){
+	// setTimeout(function(){
 		if($('#'+grid.attr('id')+'_frozen tr.jqgrow').length == 0)
 		{
 			setFrozenHeightTd();
@@ -46,5 +46,5 @@ function setFrozenHeightTd()
 		});
 
 		$('.frozen-div.ui-jqgrid-hdiv').height($('.ui-jqgrid-hdiv').height());
-	}, 20);
+	// }, 20);
 }

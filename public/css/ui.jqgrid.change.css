@@ -20,3 +20,10 @@ position:relative;
 .fm-button{
 height:25px;
 }
+.ui-jqgrid-btable td input{
+text-align:inherit;
+font-size:inherit;
+}
+.ui-jqgrid .inline-edit-cell{
+	padding:4px 0px 4px 0px;
+}

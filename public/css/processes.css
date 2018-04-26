@@ -1,0 +1,41 @@
+.div_table{
+	display:table;
+	width:620px;
+}
+.div_table .left, .div_table .right{
+	display: table-cell;
+}
+.div_table .right{
+	padding: 0 0 0 10px;
+}
+input.maskProcent, input.maskPrice, input.maskDate{
+	text-align: center;
+}
+textarea
+{
+	border:1px solid #ccc;
+	background:#f5f5f5;
+	border-radius:4px;
+}
+ul.tree{
+	margin:5px;
+}
+ul.tree ul{
+	margin:0px;
+	display:none;
+}
+ul.tree li{
+	padding:2px;
+	padding: 2px 2px 2px 20px;
+	background:url(/img/folder_plus.png) no-repeat 5px 5px;
+}
+ul.tree li.active
+{
+	background:url(/img/folder_minus.png) no-repeat 5px 5px;
+}
+ul.tree li.no_icon{
+	background:none;
+}
+ul.tree li.active > ul{
+	display:block;
+}
