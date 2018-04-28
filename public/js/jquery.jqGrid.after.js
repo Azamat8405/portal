@@ -30,7 +30,7 @@ function resizeWidthjqGrid(grid)
 }
 function setFrozenHeightTd()
 {
-	// setTimeout(function(){
+	setTimeout(function(){
 		if($('#'+grid.attr('id')+'_frozen tr.jqgrow').length == 0)
 		{
 			setFrozenHeightTd();
@@ -45,6 +45,7 @@ function setFrozenHeightTd()
 			$(this).css('height',h);
 		});
 
+		$('.frozen-bdiv').css('top', parseInt($('.frozen-bdiv').css('top'))+1);
 		$('.frozen-div.ui-jqgrid-hdiv').height($('.ui-jqgrid-hdiv').height());
-	// }, 20);
+	}, 40);
 }

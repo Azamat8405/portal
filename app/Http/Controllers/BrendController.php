@@ -35,10 +35,12 @@ class BrendController extends Controller
 		{
 			$ids[] = $categId;
 		}
+
 		$brends = DB::table('brends as br')
 			->join('brends_categs_links as l', 'br.id', '=', 'l.brend_id')
 			->whereIn('l.categ_id', $ids)
             ->select('br.name as title', 'br.id')
+            ->orderBy('br.name', 'desc')
             ->get();
         if($brends)
         {

@@ -10,15 +10,12 @@ class DocumentActionFirstData extends Model
     {
 		return $this->belongsTo('App\Shop');
 	}
-
 	public function processType()
     {
 		return $this->belongsTo('App\ProcessType');
 	}
-
 	public function brend()
     {
 		return $this->belongsTo('App\Brend');
 	}
-
 }

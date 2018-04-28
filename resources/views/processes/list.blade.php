@@ -7,7 +7,7 @@
             <div class="form-fields-row">
                 <div class="form-field-cell">
                     <div class="form-field-input">
-                        <input type="button" onclick="window.location.href='/processes/add'" name="" value="Добавить акцию">
+                        <input type="button" onclick='window.location.href="{{ route('processes.add') }}"' name="" value="Добавить акцию">
                     </div>
                 </div>
             </div>

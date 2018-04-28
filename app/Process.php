@@ -23,13 +23,19 @@ class Process extends Model
 
 	public function getStartDateAttribute($value)
     {
-		return date('d.m.Y', $value);
+    	if($value > 0)
+    	{
+			return date('d.m.Y', $value);
+    	}
+		return '';
 	}
 
 	public function getEndDateAttribute($value)
     {
-		return date('d.m.Y', $value);
+    	if($value > 0)
+    	{
+			return date('d.m.Y', $value);
+    	}
+    	return '';
 	}
-
-
 }

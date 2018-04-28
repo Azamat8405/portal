@@ -1,5 +1,7 @@
 var grid;
 var dopData = [];
+var kodTovArr = [];
+var hoverElement;
 var cache_avtocomplete_contr = {};
 var cache_avtocomplete_tovs = {};
 var cache_avtocomplete_shops = {};
@@ -18,6 +20,7 @@ var selectsBrens = ['#division','#oblast','#city','#shop'];
 var select2Option = {
 	width:'180',
 	minimumResultsForSearch:Infinity,
+	language: "ru",
 };
 
 var copied_index = null;
@@ -49,7 +52,6 @@ var select2OptionBrends = {
 
 $(function(){
 	$('#tabs').tabs();
-	// events();
 
 	/* head start */
 	$('.addProcessForm').keydown(function(e)
@@ -227,9 +229,10 @@ $(function(){
 					url:'clientArray',
 				}
 			},
+
 	   		{label:'Товар <sup>*</sup>',
 		   		name:'tovsTitles',
-		   		width:230,
+		   		width:150,
 		   		edittype:'text',
 				editable:true,
 		   		fixed:true,
@@ -243,7 +246,7 @@ $(function(){
 		   		name:'kodTov',
 		   		align:"center",
 				sortable:true,
-		   		width:120,
+		   		width:90,
 		   		edittype:'text',
 				editable:true,
 		   		fixed:true,
@@ -252,7 +255,7 @@ $(function(){
 		   		frozen:true},
 	   		{label:'Магазин <sup>*</sup>',
 		   		name:'shopsTitles',
-		   		width:230,
+		   		width:130,
 		   		edittype:'text',
 				editable:true,
 		   		fixed:true,
@@ -273,7 +276,7 @@ $(function(){
 		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
-						$(elem).addClass('maskDate').addClass('start_action_date');
+						$(elem).addClass('maskDate').addClass('start_action_date').attr('autocomplete', 'off');
 					}
 				},
 		   		fixed:true},
@@ -286,13 +289,13 @@ $(function(){
 		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
-						$(elem).addClass('maskDate').addClass('end_action_date');
+						$(elem).addClass('maskDate').addClass('end_action_date').attr('autocomplete', 'off');
 					}
 				},
 		   		fixed:true},
 	   		{label:'Дистрибьютор',
 		   		name:'distrTitles',
-		   		width:250,
+		   		width:220,
 		   		edittype:'text',
 				editable:true,
 		   		title:false,
@@ -305,7 +308,7 @@ $(function(){
 	   		{label:'Бренд',
 		   		name:'brendTitles',
 		   		align:"center",
-		   		width:250,
+		   		width:220,
 		   		edittype:'text',
 				editable:true,
 		   		title:false,
@@ -315,6 +318,11 @@ $(function(){
 		   		align:"center",
 		   		width:250,
 		   		edittype:'text',
+				editoptions:{
+					dataInit:function(elem){
+						$(elem).attr('autocomplete', 'off');
+					}
+				},
 				editable:true,
 		   		title:false,
 		   		fixed:true},
@@ -347,7 +355,7 @@ $(function(){
 		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
-						$(elem).addClass('maskProcent');
+						$(elem).addClass('maskProcent').attr('autocomplete', 'off');
 					}
 				},
 		   		fixed:true},
@@ -360,7 +368,7 @@ $(function(){
 		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
-						$(elem).addClass('maskProcent');
+						$(elem).addClass('maskProcent').attr('autocomplete', 'off');
 					}
 				},
 		   		fixed:true},
@@ -373,7 +381,7 @@ $(function(){
 		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
-						$(elem).addClass('maskProcent');
+						$(elem).addClass('maskProcent').attr('autocomplete', 'off');
 					}
 				},
 		   		fixed:true},
@@ -386,7 +394,7 @@ $(function(){
 		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
-						$(elem).addClass('maskPrice');
+						$(elem).addClass('maskPrice').attr('autocomplete', 'off');
 					}
 				},
 		   		fixed:true},
@@ -399,7 +407,7 @@ $(function(){
 		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
-						$(elem).addClass('maskPrice');
+						$(elem).addClass('maskPrice').attr('autocomplete', 'off');
 					}
 				},
 		   		fixed:true},
@@ -412,7 +420,7 @@ $(function(){
 		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
-						$(elem).addClass('maskPrice');
+						$(elem).addClass('maskPrice').attr('autocomplete', 'off');
 					}
 				},
 		   		fixed:true},
@@ -425,7 +433,7 @@ $(function(){
 		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
-						$(elem).addClass('maskPrice');
+						$(elem).addClass('maskPrice').attr('autocomplete', 'off');
 					}
 				},
 		   		fixed:true},
@@ -438,7 +446,7 @@ $(function(){
 		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
-						$(elem).addClass('maskDate').addClass('start_on_invoice_date');
+						$(elem).addClass('maskDate').addClass('start_on_invoice_date').attr('autocomplete', 'off');
 					}
 				},
 		   		fixed:true},
@@ -451,7 +459,7 @@ $(function(){
 		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
-						$(elem).addClass('maskDate').addClass('end_on_invoice_date');
+						$(elem).addClass('maskDate').addClass('end_on_invoice_date').attr('autocomplete', 'off');
 					}
 				},
 		   		fixed:true},
@@ -465,7 +473,7 @@ $(function(){
 		   		title:false,
 				editoptions:{
 					dataInit:function(elem){
-						$(elem).addClass('maskPrice');
+						$(elem).addClass('maskPrice').attr('autocomplete', 'off');
 					}
 				},
 		   		fixed:true},
@@ -489,8 +497,12 @@ $(function(){
 			grid.editRow(rowid);
 			eventsJqGridRow();
 		},
-		beforeSelectRow:function(){
-			return false;
+		beforeSelectRow:function(rowId){
+
+			if($(event.target).closest('#jqg_'+grid.attr('id')+'_'+rowId).length == 0)
+			{
+				return false;
+			}
 		},
 		onCellSelect: function(rowId, colId, c, event){
 			if(colId == 2)
@@ -515,6 +527,10 @@ $(function(){
 	grid.editRow(r);
 	eventsJqGridRow();
 
+	grid.on('jqGridDelRowBeforeSubmit', function(e,id){
+		delJqGridRows(id);
+	});
+
 	// только при скроле замораживаем столбцы
 	$('#' + grid.attr('id')).parents('.ui-jqgrid-bdiv').scroll(function(){
 
@@ -533,7 +549,7 @@ $(function(){
 			destroyFrozenColumns();
 		}
 	});
-/* таблица конец */
+	/* таблица конец */
 
 	// выбор чекбоксов во всплывающем окне выбора
 	$('#shops_dialog').on('click', 'input[type=checkbox]', function(e){
@@ -763,7 +779,6 @@ $(function(){
 			success:function(data)
 			{
 				hide_load();
-
 				if(data['errors'])
 				{
 					var str = '';
@@ -794,41 +809,90 @@ $(function(){
 						});
 					}
 				}
-
+				var row = [];
+				row['data'] = [];
 				for(ind in data['data'])
 				{
-					if(data['data'][ind]['shopsTitles'])
+					row['data'][ind] = {};
+					if(data['data'][ind]['sh'])
 					{
-						data['data'][ind]['shopsTitles'] = data['data'][ind]['shopsTitles'].join('; ');						
+						v = data['data'][ind]['sh'];
+						tmp = [];
+						tmp2 = [];
+						for(ind2 in v)
+						{
+							tmp[ind2] = shops[v[ind2]]['t'];
+							tmp2[ind2] = shops[v[ind2]]['c'];
+						}
+						row['data'][ind].shopsTitles = tmp.join('; ');
+						// row['data'][ind]['shops'] = tmp2.join('; ');
 					}
+
+					row['data'][ind].marks = data['data'][ind]['marks'];
+					row['data'][ind].descr = data['data'][ind]['descr'];
+					row['data'][ind].razmesh_price = data['data'][ind]['razmesh'];
+					row['data'][ind].zakup_new = data['data'][ind]['zak_new'];
+					row['data'][ind].zakup_old = data['data'][ind]['zak_old'];
+					row['data'][ind].type = data['data'][ind]['t'];
+					row['data'][ind].articule_sk = data['data'][ind]['art_sk'];
+
+					row['data'][ind].start_action_date = data['data'][ind]['sad'];
+					row['data'][ind].end_action_date = data['data'][ind]['ead'];
+					// row['data'][ind]['shops_exception'] = data['data'][ind]['sh_ex'];
+					row['data'][ind].distrTitles = data['data'][ind]['distr_ttl'];
+					row['data'][ind].kodTov = data['data'][ind]['kT'];
+					row['data'][ind].tovsTitles = data['data'][ind]['tTtl'];
+					row['data'][ind].brendTitles = data['data'][ind]['brTtl'];
+					// row['data'][ind]['brend'] = data['data'][ind]['br'];
+					row['data'][ind].skidka_on_invoice = data['data'][ind]['on_inv'];
+					row['data'][ind].kompensaciya_off_invoice = data['data'][ind]['off_inv'];
+					row['data'][ind].skidka_itogo = data['data'][ind]['itog'];
+					row['data'][ind].start_date_on_invoice = data['data'][ind]['s_d_on_inv'];
+					row['data'][ind].end_date_on_invoice = data['data'][ind]['e_d_on_inv'];
+					row['data'][ind].roznica_old = data['data'][ind]['roz_old'];
+					row['data'][ind].roznica_new = data['data'][ind]['roz_new'];
+
 					if(data['data'][ind]['brend'])
 					{
-						data['data'][ind]['brendTitles'] = data['data'][ind]['brendTitles'];
+						row['data'][ind].brendTitles = data['data'][ind]['brendTitles'];
 					}
 
-					var r = addJqGridRow(data['data'][ind]);
+					if(kodTovArr[row['data'][ind].kodTov])
+					{
+						let el = $('#'+grid.attr('id')+' td').filter(function(){
+							if(row['data'][ind].kodTov == $(this).text())
+								return true;
+							return false;
+						});
+
+						let n = getJqGridRowNumber(el);
+						delJqGridRows(n);
+					}
+
+					var r = addJqGridRow(row['data'][ind]);
 					if(r)
 					{
-						checkAddField(r, 'chTitle', data['data'][ind]['tovsTitles']);
-						checkAddField(r, 'chKod', data['data'][ind]['kodTov']);
-						checkAddField(r, 'chShop', data['data'][ind]['shopsTitles']);
-						checkAddField(r, 'chDistr', data['data'][ind]['distrTitles']);
-						checkAddField(r, 'chBrendTitles', data['data'][ind]['brend']);
+						checkAddField(r, 'chTitle', row['data'][ind]['tovsTitles']);
+						checkAddField(r, 'chKod', row['data'][ind]['kodTov']);
+						checkAddField(r, 'chShop', row['data'][ind]['shopsTitles']);
+						checkAddField(r, 'chDistr', row['data'][ind]['distrTitles']);
+						checkAddField(r, 'chBrendTitles', row['data'][ind]['brend']);
 
-						if(typeof(data['data'][ind]['shops']) != 'undefined')
+						if(typeof(row['data'][ind]['shops']) != 'undefined')
 						{
-							addDopData(r, 'shops', data['data'][ind]['shops'].join(';'));
+							// addDopData(r, 'shops', row['data'][ind]['shops']);
 						}
 						if(typeof(data['data'][ind]['distr']) != 'undefined')
 						{
-							addDopData(r, 'distr', data['data'][ind]['distr']);
+							// addDopData(r, 'distr', data['data'][ind]['distr']);
 						}
 						if(typeof(data['data'][ind]['brendId']) != 'undefined')
 						{
-							addDopData(r, 'brend', data['data'][ind]['brendId']);
+							// addDopData(r, 'brend', data['data'][ind]['brendId']);
 						}
 					}
 				}
+
 				eventsJqGridRow();
 
 				$(window).trigger('resize');
@@ -983,6 +1047,7 @@ function getTovsToFillTable(arr, page)
 						dataToFill.shopsTitles[ind2] = data.shop[ind2].title;
 					}
 					dataToFill.shopsTitles = dataToFill.shopsTitles.join('; ');
+
 					addJqGridRow(dataToFill);
 			// }
 			}
@@ -1383,6 +1448,10 @@ function addJqGridRow(initData)
 
 	if(initData)
 	{
+		if( typeof(initData.kodTov) != 'undefined')
+		{
+			kodTovArr[initData.kodTov] = 1;
+		}
 		if( typeof(initData.shopsTitles) != 'undefined')
 		{
 			checkAddField(r, 'chShop', initData.shopsTitles);
@@ -1424,6 +1493,15 @@ function addJqGridSubmit()
 		grid.saveRow(this.id, false, 'clientArray');
 	});
 
+	let is_empty_first = grid.getRowData(1);
+	if(is_empty_first.distrTitles == '' &&
+		is_empty_first.kodTov == '' &&
+		is_empty_first.skidka_itogo == '' &&
+		(is_empty_first.type == '' || is_empty_first.type == '0'))
+	{
+		grid.jqGrid('delRowData', 1);
+	}
+
 	let arrData = '';
 	arrData += 'rows='+JSON.stringify( grid.getRowData() );
 	for(ind in dopData)
@@ -1436,16 +1514,15 @@ function addJqGridSubmit()
 	arrData += '&end_date=' + $('#end_date').val();
 
 	$.ajax({
-		url:'/processes/ajaxAdd',
+		url: '/processes/ajaxAdd',
 		type:'post',
 		dataType:'json',
 		data:arrData,
 		success:function(data){
-
 			hide_load();
-
 			if(data['errors'])
 			{
+
 				var str = '';
 				var tr_str = [];
 				for(ind in data['errors'])
@@ -1563,7 +1640,7 @@ function scrollLeftActionOnFrozen(){
 				});
 			});
 		}
-	}, 150);
+	}, 200);
 }
 
 function delJqGridRows(id)
@@ -1573,10 +1650,8 @@ function delJqGridRows(id)
 		grid.jqGrid('delRowData', id);
 		return;
 	}
-
 	let ids = grid.jqGrid('getGridParam','selarrrow');
 	for (var i = ids.length - 1; i >= 0; i--) {
-
 		grid.jqGrid('delRowData', ids[i]);
 	}
 }
@@ -1588,23 +1663,62 @@ function getJqGridRowNumber(el)
 
 function eventsJqGridRow()
 {
-	// $('input[id$=_kod]').autocomplete(kodNomenkaturAvtocomplete);
+	$('#'+grid.attr('id')+' td, .ui-jqgrid-labels th').off("mouseenter mouseleave");
+	$('#'+grid.attr('id')+' td, .ui-jqgrid-labels th').hover(function(event){
 
-	// let d = new Date();
-	// let min = new Date();
-	// min.setTime(d.getTime() + 86400000);
-	// let max = new Date();
-	// max.setTime(d.getTime() + 6048000000);
-	// $('input[id$=_srok]').datepicker({
-	// 	minDate:min,
-	// 	maxDate:max,
-	// });
+		let this_ = this;
+		hoverElement = this_;
+		setTimeout(function(){
 
-	// $('input[type=text]').on('change', function(){
-	// 	$(this).parents('td').find('.error_message').remove();
-	// });
+			if(hoverElement != this_)
+			{
+				return;
+			}
+
+			if($(event.target).closest($(this_)).length == 0)
+			{
+				return;
+			}
+
+			let isHeader = $(this_).find('.ui-th-div').length;
+			if($(this_).find('input,select,textarea,div').length > 0 && isHeader == 0)
+			{
+				return;
+			}
+
+			if(isHeader > 0)
+			{
+				var val = $(this_).find('.ui-th-div').html().replace(/<\/?[^>]+>/gi, '');
+			}
+			else
+			{
+				var val = $(this_).html();
+			}
+
+			if((val.length * 7) < $(this_).width())
+			{
+				return;
+			}
+
+			if(val.indexOf(';') > 0)
+			{
+				val = val.split('; ');
+			}
+			show_input_hint(this_, val);
+
+		}, 500);
+
+	}, function(){
+		hide_input_hint();
+	});
 
 	$('input[id$=_kodTov]').autocomplete({
+		position:{
+			collision:'none',
+			using :function(s,e){
+				autocompletePosition(s,e, this);
+			}
+		},
 		source: function( request, response ){
 			var term = request.term;
 			request.kod = true;
@@ -1639,12 +1753,21 @@ function eventsJqGridRow()
 
 			checkAddField(n, 'chTitle', ui.item.val);
 			checkAddField(n, 'chKod', ui.item.value);
+			checkAddField(n, 'chBrendTitles', ui.item.brend);
+			addDopData(n, 'brend', ui.item.brend);
 
-			$('#'+n+'_tovsTitles').val(ui.item.val);
+			$('#'+n+'_brendTitles').val( ui.item.brend );
+			$('#'+n+'_tovsTitles').val( ui.item.val );
 		}
 	});
 
 	$('input[id$=_tovsTitles]').autocomplete({
+		position:{
+			collision:'none',
+			using :function(s,e){
+				autocompletePosition(s,e, this);
+			}
+		},
 		source: function( request, response ){
 			var term = request.term;
 			if ( term in cache_avtocomplete_tovs )
@@ -1676,12 +1799,21 @@ function eventsJqGridRow()
 			var n = getJqGridRowNumber(this);
 			checkAddField(n, 'chTitle', ui.item.label);
 			checkAddField(n, 'chKod', ui.item.val);
+			checkAddField(n, 'chBrendTitles', ui.item.brend);
+			addDopData(n, 'brend', ui.item.brend);
 
+			$('#'+n+'_brendTitles').val( ui.item.brend );
 			$('#'+n+'_kodTov').val(ui.item.val);
 		}
 	});
 
 	$('input[id$=_shopsTitles]').autocomplete({
+		position:{
+			collision:'none',
+			using :function(s,e){
+				autocompletePosition(s,e, this);
+			}
+		},
 		source: function( request, response ){
 			if(request.term.length > 100)
 			{
@@ -1718,6 +1850,13 @@ function eventsJqGridRow()
 	});
 
 	$('input[id$=_distrTitles]').autocomplete({
+		position:{
+			collision:'none',
+			using :function(s,e){
+				autocompletePosition(s,e, this);
+			}
+		},
+
 		source: function( request, response ){
 			var term = request.term;
 			if ( term in cache_avtocomplete_contr )
@@ -1749,6 +1888,13 @@ function eventsJqGridRow()
 	});
 
 	$('input[id$=_brendTitles]').autocomplete({
+		position:{
+			collision:'none',
+			using :function(s,e){
+				autocompletePosition(s,e, this);
+			}
+		},
+
 		source: function( request, response ){
 			var term = request.term;
 			if ( term in cache_avtocomplete_brends )
@@ -1783,7 +1929,8 @@ function eventsJqGridRow()
 		hideHint();
 	});
 	$('.selectInRow').on('select2:close', function (e) {
-	  hideHint();
+		$('.selectInRow').select2(select2Option).trigger('change');
+		hideHint();
 	});
 
 	if($.fn.mask)
@@ -1809,6 +1956,11 @@ function eventsJqGridRow()
 
 		$('.maskPrice').on('blur', function(e){
 			let v = $(this).val();
+			if(v == '')
+			{
+				return;
+			}
+
 			if(v.indexOf('.') < 0)
 			{
 				$(this).val(v+'.00');
@@ -2132,7 +2284,7 @@ function removeErrorMessage(el)
 
 function show_input_hint(el, value)
 {
-	hide_input_hint();
+	hide_input_hint(true);
 	if(Array.isArray(value))
 	{
 		value = value.join('<br>');
@@ -2157,7 +2309,12 @@ function show_input_hint(el, value)
 	}
 }
 
-function hide_input_hint()
+function hide_input_hint(hard)
 {
-	$('body').find('> div.input_hint').hide();
+	if(hard)
+	{
+		$('body').find('div.input_hint').remove();
+		return;
+	}
+	$('body').find('div.input_hint').hide();
 }

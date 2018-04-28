@@ -267,6 +267,7 @@
 			<div id="tovs_dialog" style="display:none;"></div>
 			<div id="contragent_dialog" style="display:none;"></div>
 			<script>
+				{!!$shops_for_js!!}
 				var action_types = "{{$action_types}}";
 				var action_types_descr = [];
 				@foreach($action_types_descr as $key => $value)

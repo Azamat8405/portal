@@ -39,7 +39,7 @@ class TovController extends Controller
 
 		if($request->get('kod'))
 		{
-			$tovs = DB::connection('sqlsrv_imported_data')->select('SELECT TOP 30 [ArtName], [ArtCode]
+			$tovs = DB::connection('sqlsrv_imported_data')->select('SELECT TOP 30 [ArtName], [ArtCode], [BrandName]
 				FROM [Imported_Data].[dbo].[Assortment]
 				WHERE [ArtCode] LIKE \'%'.$request->get('term').'%\'');
 		}
@@ -59,7 +59,7 @@ class TovController extends Controller
 			$str2 = '('.mb_substr($str2, 0, -4).')';
 			$str3 = '('.mb_substr($str3, 0, -4).')';
 
-			$tovs = DB::connection('sqlsrv_imported_data')->select('SELECT TOP 30 [ArtName], [ArtCode]
+			$tovs = DB::connection('sqlsrv_imported_data')->select('SELECT TOP 30 [ArtName], [ArtCode], [BrandName]
 				FROM [Imported_Data].[dbo].[Assortment]
 				WHERE
 					'.$str1.' OR '.$str2.' OR '.$str3);
@@ -72,11 +72,18 @@ class TovController extends Controller
 			{
 				if($request->get('kod'))
 				{
-					$result[] = ['label'=> $value->ArtCode.' '.$value->ArtName, 'value' => $value->ArtCode, 'val' => $value->ArtName];
+					$result[] = ['label'=> $value->ArtCode.' '.$value->ArtName, 
+							'value' => $value->ArtCode,
+							'val' => $value->ArtName,
+							'brend' => $value->BrandName,
+						];
 				}
 				else
 				{
-					$result[] = ['label'=> $value->ArtName, 'val' => $value->ArtCode];
+					$result[] = ['label'=> $value->ArtName,
+							'val' => $value->ArtCode,
+							'brend' => $value->BrandName,
+						];
 				}
 
 			}

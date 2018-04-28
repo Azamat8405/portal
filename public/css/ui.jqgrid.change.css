@@ -27,3 +27,16 @@ font-size:inherit;
 .ui-jqgrid .inline-edit-cell{
 	padding:4px 0px 4px 0px;
 }
+.ui-jqgrid .ui-icon-desc {
+	margin-left: 0px;
+}
+.ui-jqgrid td.ui-search-input input{
+padding-top:3px;
+padding-bottom:3px;
+}
+.ui-jqgrid .ui-jqgrid-htable .ui-search-toolbar th div{
+margin:0;
+}
+.ui-jqgrid .ui-search-table{
+margin:2px 0;
+}

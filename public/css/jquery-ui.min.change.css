@@ -33,3 +33,9 @@ width: 15em;
 .ui-datepicker table {
 	font-size: .8em;
 }
+.ui-autocomplete {
+    max-height: 200px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+}

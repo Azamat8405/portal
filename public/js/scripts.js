@@ -1,5 +1,4 @@
 $(function(){
-
 	//высчитываем высоту общей панели
 	var sum = 0;
 	setTimeout(function(){
@@ -25,7 +24,6 @@ $(function(){
 			$('.hideBlock').hide();
 		}
 	});
-
 
 	//перетаскиваем левую панель
 	if($('nav .handrail > div').length > 0)
@@ -171,7 +169,7 @@ function showMessage(type, source, message, params)
 	$('#'+type+'_dialog_messages').dialog({
 		autoOpen: true,
 		width:params.width,
-		maxHeight:$(window).height()-50,
+		maxHeight:($(window).height()-100) < 500 ? 500 : ($(window).height()-100),
 		resizable:true,
 		title:'Внимание!',
 		position:{
@@ -181,6 +179,10 @@ function showMessage(type, source, message, params)
 		},
 		classes: {
 			'ui-dialog-titlebar':type+'_dialog',
+		},
+		resize( event, ui )
+		{
+			$('#'+type+'_dialog_messages').dialog( "option", "width", ui.size.width);
 		},
 		open:function()
 		{
@@ -261,4 +263,18 @@ function show_load(target)
 function hide_load()
 {
 	$('.load_img').remove();
+}
+
+function autocompletePosition( s,e,this_)
+{
+	var el = $(e.target.element[0]);
+	if(($(this_).outerHeight()+s.top) > $(window).height())
+	{
+		$(this_).css('top', el.offset().top - $(this_).outerHeight());
+	}
+	else
+	{
+		$(this_).css('top', el.offset().top + el.outerHeight());
+	}
+	$(this_).css('left', el.offset().left);
 }

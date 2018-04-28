@@ -31,6 +31,7 @@ class ProcessController extends Controller
 {
 	// хешируем сюда список магазинов
 	private $cache_shops = [];
+	private $cache_distr = [];
 	private $validate_errors = [];
 
 	/**
@@ -39,7 +40,94 @@ class ProcessController extends Controller
 	public function ajaxList(Request $request)
 	{
 		$perPage = 20;
-		$processes = Process::orderBy('created_at', 'desc')->paginate($perPage);
+		if(Request::has('rows'))
+		{
+			$perPage = Request::get('rows');
+		}
+
+		$sord = 'desc';
+		$sidx = 'created_at';
+
+		if(Request::get('sidx') != '')
+		{
+			$sidx = Request::get('sidx');
+			switch($sidx)
+			{
+				case 'type':
+					$sidx = 'process_types.title';
+					break;
+				case 'author':
+					$sidx = 'users.name';
+					break;
+				case 'status':
+				case 'title':
+				case 'start_date':
+				case 'end_date':
+				case 'created_at':
+				default:
+					$sidx = 'processes.'.$sidx;
+					break;
+			}
+		}
+
+		if(Request::get('sord') != '')
+		{
+			$sord = Request::get('sord');
+		}
+
+		$processes = new Process();
+
+		if(Request::get('_search'))
+		{
+			//ниже в этом случае должны быть подключена таблица типов
+			if(Request::get('type') != '')
+			{
+				$processes = $processes->where('process_types.title', 'LIKE', '%'.Request::get('type').'%');
+			}
+			//ниже в этом случае должны быть подключена таблица пользователей
+			if(Request::get('author') != '')
+			{
+				$processes = $processes->where('users.name', 'LIKE', '%'.Request::get('author').'%');
+			}
+			if(Request::get('title') != '')
+			{
+				$processes = $processes->where('processes.title', 'LIKE', '%'.Request::get('title').'%');
+			}
+			if(Request::get('stDate') != '')
+			{
+				$processes = $processes->where('processes.start_date', '=', strtotime(Request::get('stDate')));
+			}
+			if(Request::get('enDate') != '')
+			{
+				$processes = $processes->where('processes.end_date', '=', strtotime(Request::get('enDate')));
+			}
+			if(Request::get('status') != '')
+			{
+				$processes = $processes->where('processes.status', 'LIKE', '%'.Request::get('status').'%');
+			}
+			if(Request::get('created_at') != '')
+			{
+				$processes = $processes->where('processes.created_at', 'LIKE', '%'.Request::get('created_at').'%');
+			}
+		}
+
+		//связываем таблицу типов если нужно фильтровать по типу или сортировать
+		if( Request::get('_search') && Request::get('type') != '' || Request::get('sidx') == 'type')
+		{
+			$processes = $processes->leftJoin('process_types', function($join){
+				$join->on('process_types.id', '=', 'processes.process_type_id');
+    		});
+		}
+
+		//связываем таблицу пользователей если нужно фильтровать по автору или сортировать
+		if( Request::get('_search') && Request::get('author') != '' || Request::get('sidx') == 'author')
+		{
+			$processes = $processes->leftJoin('users', function($join){
+					$join->on('users.id', '=', 'processes.user_id');
+	    		});
+		}
+
+		$processes = $processes->select('processes.*')->orderBy($sidx, $sord)->paginate($perPage);
 
 		$responce=[];
 		$responce['page'] = $processes->currentPage();
@@ -54,6 +142,7 @@ class ProcessController extends Controller
 		{
 			$number = 0;
 		}
+
 		foreach ($processes as $key => $value)
 		{
 			$responce['rows'][$key]['id'] = $value->id;
@@ -61,9 +150,9 @@ class ProcessController extends Controller
 		    	[
 					++$number,
 					$value->title,
-					$value->start_date,
-					$value->end_date,
-					$value->processType->title,
+					($value->start_date != '' ? $value->start_date : ''),
+					($value->end_date != '' ? $value->end_date : ''),
+					($value->processType ? $value->processType->title : ''),
 					$value->status,
 					($value->user ? $value->user->name : ''),
 					date('d.m.Y', $value->created_at->timestamp)
@@ -194,6 +283,17 @@ exit();
 			$action_types[] = $type->id.':'.$type->title;
 			$action_types_descr[$type->id] = $type->description;
 		}
+
+		$shops_for_js = ['var shops=[];'];
+		$shops = Shop::all();
+		if($shops)
+		{
+			foreach($shops as $value)
+			{
+				$shops_for_js[] = 'shops["'.$value->id.'"]=[];shops["'.$value->id.'"]["t"] = "'.$value->title.'";shops["'.$value->id.'"]["c"] = "'.$value->code.'";';
+			}
+		}
+
 		return view('processes/add', [
 			'tov_categs_lvl1' => TovCategs::where('level', 1)->orderBy('title')->get(),
 			'shop_regions_lvl1' => ShopRegion::where('level', 1)->orderBy('title')->get(),
@@ -202,6 +302,7 @@ exit();
 			'action_types_descr' => $action_types_descr,
 			'action_marks' => ActionMark::all(),
 			'user' => User::find(Auth::id()),
+			'shops_for_js' => implode('', $shops_for_js),
 		]);
 	}
 
@@ -633,7 +734,7 @@ exit();
 			$this->validate_errors['form'][0]['error_db_save'] = 'Не удалось сохранить данные. Попробуйте еще раз либо обратитесь к администратору системы.';
 		}
 
-		if(count($this->validate_errors['form']) > 0)
+		if(isset($this->validate_errors['form']) && count($this->validate_errors['form']) > 0)
 		{
 			$returnData['errors'] = $this->validate_errors['form'] ?? [];
 			echo json_encode($returnData);
@@ -685,29 +786,28 @@ exit();
 		{
 			$this->validate_errors[$source] = [];
 		}
-
 		// если данные из файла, то дата старта процесса(акции) будет находитя в файла. Ее нужно проверить для каждой строки
-		if(isset($data['start_action_date']))
+		if(isset($data['sad']))
 		{
-			if(!$this->validateDataStartProcessDate($data['start_action_date'], $start_date))
+			if(!$this->validateDataStartProcessDate($data['sad'], $start_date))
 			{
-				$this->validate_errors[$source][$row_num]['start_action_date'] = 'Дата начала акции должна быть в формате dd-mm-yyyy. Дата должна быть больше даты начала процесса.';
+				$this->validate_errors[$source][$row_num]['sad'] = 'Дата начала акции должна быть в формате dd-mm-yyyy. Дата должна быть больше даты начала процесса.';
 			}
 		}
 		// если данные из файла, то дата окончания процесса(акции) будет находитя в файла. Ее нужно проверить для каждой строки
-		if(isset($data['end_action_date']))
+		if(isset($data['ead']))
 		{
-			if(!$this->validateDataEndProcessDate($data['end_action_date'], $end_date))
+			if(!$this->validateDataEndProcessDate($data['ead'], $end_date))
 			{
-				$this->validate_errors[$source][$row_num]['end_action_date'] = 'Дата окончания акции должна быть в формате dd-mm-yyyy. Дата должна быть меньше даты окончания процесса.';
+				$this->validate_errors[$source][$row_num]['ead'] = 'Дата окончания акции должна быть в формате dd-mm-yyyy. Дата должна быть меньше даты окончания процесса.';
 			}
 		}
 
 		if($source == 'file' && 
-			!isset($this->validate_errors[$source][$row_num]['end_action_date']) &&
-			strtotime($data['start_action_date']) >= strtotime($data['end_action_date']))
+			!isset($this->validate_errors[$source][$row_num]['ead']) &&
+			strtotime($data['sad']) >= strtotime($data['ead']))
 		{
-			$this->validate_errors[$source][$row_num]['end_date'] = 'Дата окончания акции должна быть меньше даты начала акции. Неверно ('.$data['start_action_date'] .' - '. $data['end_action_date'].')';
+			$this->validate_errors[$source][$row_num]['end_date'] = 'Дата окончания акции должна быть меньше даты начала акции. Неверно ('.$data['sad'] .' - '. $data['ead'].')';
 		}
 
 		// Проверяем список магазинов,
@@ -727,15 +827,15 @@ exit();
 
 		if($source == 'form')
 		{
-			if(isset($data['shops']) && trim($data['shops']) != '')
+			if(isset($data['sh']) && trim($data['sh']) != '')
 			{
-				$tmp = $this->searchShop($data['shopsTitles'], $source, $row_num);
-				$data['shops'] = array_keys($tmp);
+				$tmp = $this->searchShop($data['sh_Ttl'], $source, $row_num);
+				$data['sh'] = array_keys($tmp);
 			}
-			elseif(isset($data['shopsTitles']) && trim($data['shopsTitles']) != '')
+			elseif(isset($data['sh_Ttl']) && trim($data['sh_Ttl']) != '')
 			{
-				$tmp = $this->searchShop($data['shopsTitles'], $source, $row_num);
-				$data['shops'] = array_keys($tmp);
+				$tmp = $this->searchShop($data['sh_Ttl'], $source, $row_num);
+				$data['sh'] = array_keys($tmp);
 			}
 			else
 			{
@@ -749,9 +849,9 @@ exit();
 			$tmpTitles = [];
 			$found_shops = [];
 
-			if(isset($data['shops_exception']))
+			if(isset($data['sh_ex']))
 			{
-				$found_shops = $this->searchShop($data['shops_exception'], $source, $row_num);
+				$found_shops = $this->searchShop($data['sh_ex'], $source, $row_num);
 			}
 
 			$c_tmp = count($found_shops);
@@ -765,81 +865,113 @@ exit();
 						continue;
 					}
 				}
-				$tmp[] = $val['code'];
-				$tmpTitles[] = $val['title'];
+				$tmp[] = $val['id'];
 			}
-			$data['shops'] = $tmp;
-			$data['shopsTitles'] = $tmpTitles;
+			$data['sh'] = $tmp;
 		}
 
 		if($source == 'form' && isset($data['distr']) && trim($data['distr']) != '')
 		{
-			$postavshik = DB::connection('sqlsrv_imported_data')->select('
-				SELECT TOP 2 [Наименование], [Код], [ИНН]
-				FROM [Imported_Data].[dbo].[Действующие_Поставщики]
-				WHERE 
-					(
-						[Наименование] LIKE \''.$data['distr'].'\'
-						OR
-						[Код] LIKE \''.$data['distr'].'\'
-					)');
-			$tmp = count($postavshik);
-			if($tmp > 1 || $tmp == 0)
+			if(in_array($data['distr_ttl'], $this->cache_distr))
 			{
-				$this->validate_errors[$source][$row_num]['distr'] = 'Не удалось определить поставщика(Дистрибьютора) указан "'.$data['distr'].'"';
+				$tmp = array_keys($this->cache_distr, $data['distr_ttl']);
+				$data['distr'] = $tmp[0];
+			}
+			else
+			{
+				$postavshik = DB::connection('sqlsrv_imported_data')->select('
+					SELECT TOP 2 [Наименование], [Код], [ИНН]
+					FROM [Imported_Data].[dbo].[Действующие_Поставщики]
+					WHERE [Наименование] = \''.$data['distr'].'\'
+						OR
+							[Код] = \''.$data['distr'].'\'  ');
+				$tmp = count($postavshik);
+				if($tmp > 1 || $tmp == 0)
+				{
+					$data['distr_ttl'] = '';
+					// $this->validate_errors[$source][$row_num]['distr'] = 'Не удалось определить поставщика(Дистрибьютора) указан "'.$data['distr'].'"';
+				}
+				else
+				{
+					// Кешируем, чтобы за этим постащиком больше в базу не ходить
+					$this->cache_distr[$postavshik[0]->{'Код'}] = $postavshik[0]->{'Наименование'};
+				}
 			}
 		}
 
 		// если дистрибьютер оределелился, то берем его, если нет то игнорируем. т.е. в базу вносим только проверенные данные.
 		// дистрибьютер на текущий момент не обязательное поле
-		if(isset($data['distrTitles']) && trim($data['distrTitles']) != '')
+		if(isset($data['distr_ttl']) && trim($data['distr_ttl']) != '')
 		{
-			$postavshik = DB::connection('sqlsrv_imported_data')->select('
-				SELECT TOP 2 [Наименование], [Код], [ИНН]
-				FROM [Imported_Data].[dbo].[Действующие_Поставщики]
-				WHERE [Наименование] LIKE \'%'.$data['distrTitles'].'%\' ');
-
-			if(count($postavshik) != 1)
+			if(in_array($data['distr_ttl'], $this->cache_distr))
 			{
-				$data['distrTitles'] = '';
-//				$this->validate_errors[$source][$row_num]['distr'] = 'Не удалось определить поставщика(Дистрибьютора) указан "'.$data['distrTitles'].'"';
+				$tmp = array_keys($this->cache_distr, $data['distr_ttl']);
+				$data['distr'] = $tmp[0];
 			}
 			else
 			{
-				$data['distr'] = $postavshik[0]->{'Код'};
+				$postavshik = DB::connection('sqlsrv_imported_data')->select('
+					SELECT TOP 2 [Наименование], [Код], [ИНН]
+					FROM [Imported_Data].[dbo].[Действующие_Поставщики]
+					WHERE [Наименование] LIKE \'%'.$data['distr_ttl'].'%\' ');
+
+				if(count($postavshik) != 1)
+				{
+					$data['distr_ttl'] = '';
+				}
+				else
+				{
+					// Кешируем, чтобы за этим постащиком больше в базу не ходить
+					$data['distr'] = $postavshik[0]->{'Код'};
+					$this->cache_distr[$postavshik[0]->{'Код'}] = $postavshik[0]->{'Наименование'};
+				}
+
 			}
 		}
 
-		if(isset($data['kodTov']) && $data['kodTov'] != '')
+		if(isset($data['kT']) && $data['kT'] != '')
 		{
-			$data['kodTov'] = trim($data['kodTov']);
+			$data['kT'] = trim($data['kT']);
 
+			//сначала ищем по полному соответсвуию кода.
 			$tmp = DB::connection('sqlsrv_imported_data')->select('select [ArtName], [BrandName], [ArtArticle]
 				FROM [Imported_Data].[dbo].[Assortment] 
-				WHERE ArtCode = ? ', [$data['kodTov']]);
+				WHERE ArtCode = ? ', [$data['kT']]);
 			if(!$tmp)
 			{
 				// Если нет точного соответствия, то ищем по вхождению. т.к. может быть что код пришел без ведущих нулей.
 				$searched = false;
 				$tmp = DB::connection('sqlsrv_imported_data')->select('SELECT [ArtName], [BrandName], [ArtArticle], [ArtCode]
 					FROM [Imported_Data].[dbo].[Assortment] 
-					WHERE ArtCode LIKE \'%'.$data['kodTov'].'\' ');
+					WHERE ArtCode LIKE \'%'.$data['kT'].'\' ');
 				if($tmp)
 				{
 					foreach($tmp as $key => $value)
 					{
 						// удаляем из кода(из базы) код который пришел. если остались только нули. значит это тот самый код.мы его нашли по вхождению
-						$t_ = str_replace($data['kodTov'], '', $value->ArtCode);
+						$t_ = str_replace($data['kT'], '', $value->ArtCode);
                 		if(preg_match('/^[0]+$/', $t_))
 						{
 							$searched = true;
-							$data['tovsTitles'] = $value->ArtName;
+							$data['tTtl'] = $value->ArtName;
+							// заменяем код на корректный(с ведущими нулями. если мы дошли до сюда, значит искали код без ведущих нулей)
+							$data['kT'] = $value->ArtCode;
 
-							// заменяем код на корректный
-							$data['kodTov'] = $value->ArtCode;
+							// берем бренд из товара
+							$br = Brend::where('name', $tmp[0]->BrandName)->get();
+							if($br->count() > 0)
+							{
+								$data['brTtl'] = $value->BrandName;
+								$data['br'] = $br[0]->id;
+							}
+							else
+							{								
+								$data['brTtl'] = '';
+								$data['br'] = '';
+							}
+							break;
 						}
 					}
-
 					if(!$searched)
 					{
 						$this->validate_errors[$source][$row_num]['kodTov'] = 'Не найден товар с указанным кодом "'.$data['kodTov'].'"';
@@ -852,64 +984,28 @@ exit();
 			}
 			else
 			{
-				$data['tovsTitles'] = $tmp[0]->ArtName;
+				$data['tTtl'] = $tmp[0]->ArtName;
+				$br = Brend::where('name', $tmp[0]->BrandName)->get();
+				if($br->count() > 0)
+				{
+					$data['brTtl'] = $tmp[0]->BrandName;
+					$data['br'] = $br[0]->id;
+				}
 			}
 		}
 		else
 		{
+			$data['brTtl'] = '';
+			$data['br'] = '';
 			$this->validate_errors[$source][$row_num]['kodTov'] = 'Не указан код товара';
 		}
 
-
-		if(isset($data['tovsTitles']) && trim($data['tovsTitles']) != '')
-		{
-			$tmp = DB::connection('sqlsrv_imported_data')->select('select [ArtName], [BrandName], [ArtArticle], [ArtCode]
-				FROM [Imported_Data].[dbo].[Assortment]
-				WHERE ArtName = ? ', [$data['tovsTitles']]);
-			if(!$tmp)
-			{
-				$this->validate_errors[$source][$row_num]['tovsTitles'] = 'Не найден товар с указанным наименованием "'.$data['tovsTitles'].'"';
-			}
-			else
-			{
-				if(!isset($data['kodTov']) || trim($data['kodTov']) == '')
-				{
-					$data['kodTov'] = $tmp[0]->{'ArtCode'};
-				}
-
-				// если бренд пришел, проверяем его. если не правильный игнорируем ))
-				// если верный бренд то возвращаем еще и id бренда
-				if(isset($data['brendTitles']) && strtolower($tmp[0]->BrandName) == strtolower($data['brendTitles']))
-				{
-					$br = Brend::where('name', $tmp[0]->BrandName)->get();
-					if($br->count() > 0)
-					{
-						$data['brend'] = $br[0]->id;
-					}
-				}
-				else
-				{
-					$data['brendTitles'] = '';
-					$data['brend'] = '';
-				}
-			}
-		}
-		else
-		{
-			$data['brendTitles'] = '';
-			$data['brend'] = '';
-
-			$this->validate_errors[$source][$row_num]['tovsTitles'] = 'Не указано наименование товара.';
-		}
-
-
-
 		// Проверка типа маркетинговой акции
-		if(isset($data['type']))
+		if(isset($data['t']))
 		{
-			if(!preg_match('/[^0-9]+/i', $data['type']))
+			if(!preg_match('/[^0-9]+/i', $data['t']))
 			{
-				$action_type = ActionType::find($data['type']);
+				$action_type = ActionType::find($data['t']);
 				if(!$action_type)
 				{
 					$this->validate_errors[$source][$row_num]['type'] = 'Не найден указанный тип маркетинговой акции';
@@ -917,15 +1013,15 @@ exit();
 			}
 			else
 			{
-				$tmp = explode(';', $data['type']);
-				$data['type'] = [];
+				$tmp = explode(';', $data['t']);
+				$data['t'] = [];
 
 				foreach($tmp as $val_)
 				{
 					$action_type = ActionType::where('title', $val_)->get();
 					if(count($action_type) > 0)
 					{
-						$data['type'][] = $action_type[0]->id;
+						$data['t'][] = $action_type[0]->id;
 					}
 					else
 					{
@@ -940,64 +1036,64 @@ exit();
 		}
 
 		// Размер скидки ON INVOICE
-		if(isset($data['skidka_on_invoice']) && trim($data['skidka_on_invoice']) != '')
+		if(isset($data['on_inv']) && trim($data['on_inv']) != '')
 		{
-			if(!$this->validateDataProcent($data['skidka_on_invoice']))
+			if(!$this->validateDataProcent($data['on_inv']))
 			{
-				$this->validate_errors[$source][$row_num]['skidka_on_invoice'] = 'Не верное значение процента в колонке скидка ON INVOICE('.$data['skidka_on_invoice'].'). Значение должно быть от 0 - 100.';
+				$this->validate_errors[$source][$row_num]['skidka_on_invoice'] = 'Не верное значение процента в колонке скидка ON INVOICE('.$data['on_inv'].'). Значение должно быть от 0 - 100.';
 			}
 			elseif($source == 'file')
 			{
-				$data['skidka_on_invoice'] = (float)str_replace([',', '%', '-'], ['.','',''], $data['skidka_on_invoice']);
-				if($data['skidka_on_invoice'] <= 1)
+				$data['on_inv'] = (float)str_replace([',', '%', '-'], ['.','',''], $data['on_inv']);
+				if($data['on_inv'] <= 1)
 				{
-					$data['skidka_on_invoice'] = round($data['skidka_on_invoice'] * 100);
+					$data['on_inv'] = round($data['on_inv'] * 100);
 				}
 				else
 				{
-					$data['skidka_on_invoice'] = round($data['skidka_on_invoice']);
+					$data['on_inv'] = round($data['on_inv']);
 				}
 			}
 		}
 
 		// Процент компенсации OFF INVOICE 
-		if(isset($data['kompensaciya_off_invoice']) && trim($data['kompensaciya_off_invoice']) != '')
+		if(isset($data['off_inv']) && trim($data['off_inv']) != '')
 		{
-			if(!$this->validateDataProcent($data['kompensaciya_off_invoice']))
+			if(!$this->validateDataProcent($data['off_inv']))
 			{
-				$this->validate_errors[$source][$row_num]['kompensaciya_off_invoice'] = 'Не верное значение процента в колонке компенсация OFF INVOICE('.$data['kompensaciya_off_invoice'].'). Значение должно быть от 0 - 100.';
+				$this->validate_errors[$source][$row_num]['kompensaciya_off_invoice'] = 'Не верное значение процента в колонке компенсация OFF INVOICE('.$data['off_inv'].'). Значение должно быть от 0 - 100.';
 			}
 			elseif($source == 'file')
 			{
-				$data['kompensaciya_off_invoice'] = (float)str_replace([',', '%', '-'], ['.','',''], $data['kompensaciya_off_invoice']);
-				if($data['kompensaciya_off_invoice'] <= 1)
+				$data['off_inv'] = (float)str_replace([',', '%', '-'], ['.','',''], $data['off_inv']);
+				if($data['off_inv'] <= 1)
 				{
-					$data['kompensaciya_off_invoice'] = round($data['kompensaciya_off_invoice'] * 100);
+					$data['off_inv'] = round($data['off_inv'] * 100);
 				}
 				else
 				{
-					$data['kompensaciya_off_invoice'] = round($data['kompensaciya_off_invoice']);
+					$data['off_inv'] = round($data['off_inv']);
 				}
 			}
 		}
 
 		// Скидка ИТОГО  (%)
-		if(isset($data['skidka_itogo']) && trim($data['skidka_itogo']) != '')
+		if(isset($data['itog']) && trim($data['itog']) != '')
 		{
-			if(!$this->validateDataProcent($data['skidka_itogo']))
+			if(!$this->validateDataProcent($data['itog']))
 			{
-				$this->validate_errors[$source][$row_num]['skidka_itogo'] = 'Не верное значение процента в колонке скидка итого('.$data['skidka_itogo'].'). Значение должно быть от 0 - 100.';
+				$this->validate_errors[$source][$row_num]['skidka_itogo'] = 'Не верное значение процента в колонке скидка итого('.$data['itog'].'). Значение должно быть от 0 - 100.';
 			}
 			elseif($source == 'file')
 			{
-				$data['skidka_itogo'] = (string)str_replace([',', '%', '-'], ['.','',''], $data['skidka_itogo']);
-				if($data['skidka_itogo'] <= 1)
+				$data['itog'] = (string)str_replace([',', '%', '-'], ['.','',''], $data['itog']);
+				if($data['itog'] <= 1)
 				{
-					$data['skidka_itogo'] = round($data['skidka_itogo'] * 100);
+					$data['itog'] = round($data['itog'] * 100);
 				}
 				else
 				{
-					$data['skidka_itogo'] = round($data['skidka_itogo']);
+					$data['itog'] = round($data['itog']);
 				}
 			}
 		}
@@ -1007,65 +1103,64 @@ exit();
 		}
 
 		//Закупочная цена
-		$data['zakup_old'] = preg_replace('/[ ]+/', '', $data['zakup_old']);
-		if($data['zakup_old'] != '' && !preg_match('/^[0-9\.\,]+$/', $data['zakup_old']))
+		$data['zak_old'] = preg_replace('/[ ]+/', '', $data['zak_old']);
+		if($data['zak_old'] != '' && !preg_match('/^[0-9\.\,]+$/', $data['zak_old']))
 		{
-			$this->validate_errors[$source][$row_num]['zakup_old'] = 'Старая закупочная цена указана неверно.('.$data['zakup_old'].')';
+			$this->validate_errors[$source][$row_num]['zakup_old'] = 'Старая закупочная цена указана неверно.('.$data['zak_old'].')';
 		}
 		elseif($source == 'file')
 		{
-			$data['zakup_old'] = (float)$data['zakup_old'];
-			if(strpos($data['zakup_old'], '.') === false)
+			$data['zak_old'] = (float)$data['zak_old'];
+			if(strpos($data['zak_old'], '.') === false)
 			{
-				$data['zakup_old'] .= '.00';
+				$data['zak_old'] .= '.00';
 			}
 			else
 			{
-				$data['zakup_old'] = round($data['zakup_old'], 2);
+				$data['zak_old'] = round($data['zak_old'], 2);
 			}
 		}
 
-		$data['zakup_new'] = preg_replace('/[ ]+/', '', $data['zakup_new']);
-		if($data['zakup_new'] != '' && !preg_match('/^[0-9\.\,]+$/', $data['zakup_new']))
+		$data['zak_new'] = preg_replace('/[ ]+/', '', $data['zak_new']);
+		if($data['zak_new'] != '' && !preg_match('/^[0-9\.\,]+$/', $data['zak_new']))
 		{
-			$this->validate_errors[$source][$row_num]['zakup_new'] = 'Новая закупочная цена указана неверно.('.$data['zakup_new'].')';
+			$this->validate_errors[$source][$row_num]['zakup_new'] = 'Новая закупочная цена указана неверно.('.$data['zak_new'].')';
 		}
 		elseif($source == 'file')
 		{
-			$data['zakup_new'] = (float)$data['zakup_new'];
-			if(strpos($data['zakup_new'], '.') === false)
+			$data['zak_new'] = (float)$data['zak_new'];
+			if(strpos($data['zak_new'], '.') === false)
 			{
-				$data['zakup_new'] .= '.00';
+				$data['zak_new'] .= '.00';
 			}
 			else
 			{
-				$data['zakup_new'] = round($data['zakup_new'], 2);
+				$data['zak_new'] = round($data['zak_new'], 2);
 			}
 		}
 
-		if(trim($data['zakup_new']) != '' && trim($data['zakup_old']) != '' && intval($data['zakup_new']) > intval($data['zakup_old']))
+		if(trim($data['zak_new']) != '' && trim($data['zak_old']) != '' && intval($data['zak_new']) > intval($data['zak_old']) && intval($data['zak_old']) > 0)
 		{
 			$this->validate_errors[$source][$row_num]['zakup_new'] = 'Новая закупочная цена должны быть меньше старой закупочной цены.
-			(Новая:'.$data['zakup_new'].' Старая:'.$data['zakup_old'].')';
+			(Новая:'.$data['zak_new'].' Старая:'.$data['zak_old'].')';
 		}
-
 		// если предоставляется скидка он-инвойс,
-		if(trim($data['skidka_on_invoice']) != '')
+		if(trim($data['on_inv']) != '')
 		{
 			//дата начала
 			// не пусто
 			// тип данных = дата
-			$is_date = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $data['start_date_on_invoice']);
-			if(trim($data['start_date_on_invoice']) == '')
+			$is_date = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $data['s_d_on_inv']);
+			if(trim($data['s_d_on_inv']) == '')
 			{
 				$this->validate_errors[$source][$row_num]['start_date_on_invoice'] = 'Не указана дата начала предоставления скидки ON INVOICE.';
 			}
 			elseif(!$is_date)
 			{
-				$this->validate_errors[$source][$row_num]['start_date_on_invoice'] = 'Неверный формат даты начала предоставления скидки ON INVOICE.('.$data['start_date_on_invoice'].')';
+				$this->validate_errors[$source][$row_num]['start_date_on_invoice'] = 'Неверный формат даты начала предоставления скидки ON INVOICE.('.$data['s_d_on_inv'].')';
 			}
 			// дата начала предоставления скидки он-инвойс <= дата начала акции
-			elseif(strtotime($data['start_date_on_invoice']) > $start_date)
+			elseif(strtotime($data['s_d_on_inv']) > $start_date)
 			{
 				$this->validate_errors[$source][$row_num]['start_date_on_invoice'] = 'Дата начала предоставления скидки ON INVOICE не должна быть больше даты акции.';
 			}
@@ -1073,15 +1168,15 @@ exit();
 			{
 				if($source == 'form')
 				{
-					$data['start_date_on_invoice'] = strtotime($data['start_date_on_invoice']);
+					$data['s_d_on_inv'] = strtotime($data['s_d_on_inv']);
 				}
 			}
 
 			// дата окончания
 			// тип данных = дата
-			$is_date = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $data['end_date_on_invoice']);
+			$is_date = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $data['e_d_on_inv']);
 			// не пусто
-			if(trim($data['end_date_on_invoice']) == '')
+			if(trim($data['e_d_on_inv']) == '')
 			{
 				$this->validate_errors[$source][$row_num]['end_date_on_invoice'] = 'Не указана дата окончания предоставления скидки ON INVOICE.';
 			}
@@ -1090,7 +1185,7 @@ exit();
 				$this->validate_errors[$source][$row_num]['end_date_on_invoice'] = 'Неверный формат даты окончания предоставления скидки ON INVOICE.';
 			}
 			// дата начала предоставления скидки он-инвойс <= дата начала акции
-			elseif($data['start_date_on_invoice'] > strtotime($data['end_date_on_invoice']))
+			elseif($data['s_d_on_inv'] > strtotime($data['e_d_on_inv']))
 			{
 				$this->validate_errors[$source][$row_num]['end_date_on_invoice'] = 'Дата начала предоставления скидки ON INVOICE не должна быть больше даты окончания скидки.';
 			}
@@ -1099,55 +1194,52 @@ exit();
 				// если из формы пришли данные, то дальше мы их вносим в базу. а значит нам нужне timastamp
 				if($source == 'form')
 				{
-					$data['end_date_on_invoice'] = strtotime($data['end_date_on_invoice']);
+					$data['e_d_on_inv'] = strtotime($data['e_d_on_inv']);
 				}
 				// если же из файла, то мы возвращаем данные обратно в браузер, а соответсвенно не меняем в timestamp. оставляем в формате dd-mm-yyyy
 			}
 		}
-
 		// Розничная цена
-		$data['roznica_old'] = preg_replace('/[ ]+/', '', $data['roznica_old']);
-		if($data['roznica_old'] != '' && !preg_match('/^[0-9\.\,]+$/', $data['roznica_old']))
+		$data['roz_old'] = preg_replace('/[ ]+/', '', $data['roz_old']);
+		if($data['roz_old'] != '' && !preg_match('/^[0-9\.\,]+$/', $data['roz_old']))
 		{
-			$this->validate_errors[$source][$row_num]['roznica_old'] = 'Старая розничная цена указана неверно.('.$data['roznica_old'].')';
+			$this->validate_errors[$source][$row_num]['roznica_old'] = 'Старая розничная цена указана неверно.('.$data['roz_old'].')';
 		}
 		elseif($source == 'file')
 		{
-			$data['roznica_old'] = (float)$data['roznica_old'];
-			if(strpos($data['roznica_old'], '.') === false)
+			$data['roz_old'] = (float)$data['roz_old'];
+			if(strpos($data['roz_old'], '.') === false)
 			{
-				$data['roznica_old'] .= '.00';
+				$data['roz_old'] .= '.00';
 			}
 			else
 			{
-				$data['roznica_old'] = round($data['roznica_old'], 2);
+				$data['roz_old'] = round($data['roz_old'], 2);
 			}
 		}
 
-		$data['roznica_new'] = preg_replace('/[ ]+/', '', $data['roznica_new']);
-		if($data['roznica_new'] != '' && !preg_match('/^[0-9\.\,]+$/', $data['roznica_new']))
+		$data['roz_new'] = preg_replace('/[ ]+/', '', $data['roz_new']);
+		if($data['roz_new'] != '' && !preg_match('/^[0-9\.\,]+$/', $data['roz_new']))
 		{
-			$this->validate_errors[$source][$row_num]['roznica_new'] = 'Новая розничная цена указана неверно.('.$data['roznica_new'].')';
+			$this->validate_errors[$source][$row_num]['roznica_new'] = 'Новая розничная цена указана неверно.('.$data['roz_new'].')';
 		}
 		elseif($source == 'file')
 		{
-			$data['roznica_new'] = (float)$data['roznica_new'];
-			if(strpos($data['roznica_new'], '.') === false)
+			$data['roz_new'] = (float)$data['roz_new'];
+			if(strpos($data['roz_new'], '.') === false)
 			{
-				$data['roznica_new'] .= '.00';
+				$data['roz_new'] .= '.00';
 			}
 			else
 			{
-				$data['roznica_new'] = round($data['roznica_new'], 2);
+				$data['roz_new'] = round($data['roz_new'], 2);
 			}
 		}
 
-		if($data['roznica_new'] != '' && $data['roznica_old'] != '' && $data['roznica_new'] > $data['roznica_old'])
+		if($data['roz_new'] != '' && $data['roz_old'] != '' && $data['roz_new'] > $data['roz_old'] && $data['roz_old'] > 0)
 		{
-			$this->validate_errors[$source][$row_num]['roznica_new'] = 'Новая розничная цена должны быть меньше старой розничной цены.';
+			$this->validate_errors[$source][$row_num]['roz_new'] = 'Новая розничная цена должны быть меньше старой розничной цены.';
 		}
-
-
 
 		if (!empty($this->validate_errors[$source][$row_num]))
 		{
@@ -1223,72 +1315,155 @@ exit();
 						{
 							switch($key)
 							{
+								// case 'A': //Дата начала акции
+								// 	$dataToInsert[$row_num]['start_action_date'] = $this->parseDateFromExcelToInt($cell);
+								// 	break;
+								// case 'B': //Дата окончания акции
+								// 	$dataToInsert[$row_num]['end_action_date'] = $this->parseDateFromExcelToInt($cell);
+								// 	break;
+								// case 'C': //Бренд
+								// 	$dataToInsert[$row_num]['brend'] = $cell->getCalculatedValue();
+								// 	$dataToInsert[$row_num]['brendTitles'] = $cell->getCalculatedValue();
+								// 	break;
+								// case 'D'://Магазины-исключения
+								// 	$v = $cell->getCalculatedValue();
+								// 	if(trim($v) != '')
+								// 	{
+								// 		$dataToInsert[$row_num]['shops_exception'] = explode(';', $v) ?? null;
+								// 	}
+								// 	else
+								// 	{
+								// 		$dataToInsert[$row_num]['shops_exception'] = [];
+								// 	}
+								// 	break;
+								// case 'E':  // Дистрибьютор(Плательщик)
+								// 	$dataToInsert[$row_num]['distrTitles'] = $cell->getCalculatedValue();
+								// 	break;
+								// case 'F':	//наименование
+								// 	$dataToInsert[$row_num]['tovsTitles'] = $cell->getCalculatedValue();
+								// 	break;
+								// case 'G':	//код ДиС
+								// 	$dataToInsert[$row_num]['kodTov'] = $cell->getCalculatedValue();
+								// 	break;
+								// case 'H': // Артикул (ШК)
+								// 	$dataToInsert[$row_num]['articule_sk'] = $cell->getCalculatedValue();
+								// 	break;
+								// case 'I': //Тип Акции (скидка, механика, подарок)
+								// 	$dataToInsert[$row_num]['type'] = $cell->getCalculatedValue();
+								// 	break;
+								// case 'J': // Размер скидки ON INVOICE 
+								// 	$dataToInsert[$row_num]['skidka_on_invoice'] = $cell->getCalculatedValue();
+								// 	break;
+								// case 'K': //
+								// 	$dataToInsert[$row_num]['kompensaciya_off_invoice'] = $cell->getCalculatedValue();
+								// 	break;
+								// case 'L': //Итого
+								// 	$dataToInsert[$row_num]['skidka_itogo'] = $cell->getCalculatedValue();
+								// 	break;
+								// case 'M': //Закупочная цена (руб)
+								// 	$dataToInsert[$row_num]['zakup_old'] = $cell->getCalculatedValue();
+								// 	break;
+								// case 'N':
+								// 	$dataToInsert[$row_num]['zakup_new'] = $cell->getCalculatedValue();
+								// 	break;
+								// case 'O':  //Период действия акционной цены ON INVOICE
+								// 	$dataToInsert[$row_num]['start_date_on_invoice'] = $this->parseDateFromExcelToInt($cell);
+								// 	break;
+								// case 'P':
+								// 	$dataToInsert[$row_num]['end_date_on_invoice'] = $this->parseDateFromExcelToInt($cell);
+								// 	break;
+								// case 'Q': //Розничная Цена
+								// 	$dataToInsert[$row_num]['roznica_old'] = $cell->getCalculatedValue();
+								// 	break;
+								// case 'R':
+								// 	//TODO дробная часть куда девается
+								// 	$dataToInsert[$row_num]['roznica_new'] = $cell->getCalculatedValue();
+								// 	break;
+								// case 'S':
+								// 	$dataToInsert[$row_num]['razmesh_price'] = $cell->getCalculatedValue();
+								// 	break;
+								// case 'T': 
+								// 	$dataToInsert[$row_num]['descr'] = $cell->getCalculatedValue();
+								// 	break;
+								// case 'U': 
+								// 	$dataToInsert[$row_num]['marks'] = $cell->getCalculatedValue();
+								// 	break;
+
 								case 'A': //Дата начала акции
-									$dataToInsert[$row_num]['start_action_date'] = $this->parseDateFromExcelToInt($cell);
+									// start_action_date
+									$dataToInsert[$row_num]['sad'] = $this->parseDateFromExcelToInt($cell);
 									break;
 								case 'B': //Дата окончания акции
-									$dataToInsert[$row_num]['end_action_date'] = $this->parseDateFromExcelToInt($cell);
+									$dataToInsert[$row_num]['ead'] = $this->parseDateFromExcelToInt($cell);
 									break;
 								case 'C': //Бренд
-									$dataToInsert[$row_num]['brend'] = $cell->getCalculatedValue();
-									$dataToInsert[$row_num]['brendTitles'] = $cell->getCalculatedValue();
+									$dataToInsert[$row_num]['br'] = $cell->getCalculatedValue();
+									$dataToInsert[$row_num]['brTtl'] = $cell->getCalculatedValue();
 									break;
 								case 'D'://Магазины-исключения
 									$v = $cell->getCalculatedValue();
 									if(trim($v) != '')
 									{
-										$dataToInsert[$row_num]['shops_exception'] = explode(';', $v) ?? null;
+										$dataToInsert[$row_num]['sh_ex'] = explode(';', $v) ?? null;
 									}
 									else
 									{
-										$dataToInsert[$row_num]['shops_exception'] = [];
+										$dataToInsert[$row_num]['sh_ex'] = [];
 									}
 									break;
 								case 'E':  // Дистрибьютор(Плательщик)
-									$dataToInsert[$row_num]['distrTitles'] = $cell->getCalculatedValue();
+									$dataToInsert[$row_num]['distr_ttl'] = $cell->getCalculatedValue();
 									break;
 								case 'F':	//наименование
-									$dataToInsert[$row_num]['tovsTitles'] = $cell->getCalculatedValue();
+									$dataToInsert[$row_num]['tTtl'] = $cell->getCalculatedValue();
 									break;
 								case 'G':	//код ДиС
-									$dataToInsert[$row_num]['kodTov'] = $cell->getCalculatedValue();
+									$dataToInsert[$row_num]['kT'] = $cell->getCalculatedValue();
 									break;
 								case 'H': // Артикул (ШК)
-									$dataToInsert[$row_num]['articule_sk'] = $cell->getCalculatedValue();
+									$dataToInsert[$row_num]['art_sk'] = $cell->getCalculatedValue();
 									break;
 								case 'I': //Тип Акции (скидка, механика, подарок)
-									$dataToInsert[$row_num]['type'] = $cell->getCalculatedValue();
+									$dataToInsert[$row_num]['t'] = $cell->getCalculatedValue();
 									break;
 								case 'J': // Размер скидки ON INVOICE 
-									$dataToInsert[$row_num]['skidka_on_invoice'] = $cell->getCalculatedValue();
+									$dataToInsert[$row_num]['on_inv'] = $cell->getCalculatedValue();
 									break;
 								case 'K': //
-									$dataToInsert[$row_num]['kompensaciya_off_invoice'] = $cell->getCalculatedValue();
+									$dataToInsert[$row_num]['off_inv'] = $cell->getCalculatedValue();
 									break;
 								case 'L': //Итого
-									$dataToInsert[$row_num]['skidka_itogo'] = $cell->getCalculatedValue();
+									$dataToInsert[$row_num]['itog'] = $cell->getCalculatedValue();
 									break;
-								case 'M': //Закупочная цена (руб)
-									$dataToInsert[$row_num]['zakup_old'] = $cell->getCalculatedValue();
+								case 'M': //Закупочная цена (руб) старая
+									$dataToInsert[$row_num]['zak_old'] = $cell->getCalculatedValue();
 									break;
-								case 'N':
-									$dataToInsert[$row_num]['zakup_new'] = $cell->getCalculatedValue();
+								case 'N'://Закупочная цена (руб) новая
+									$dataToInsert[$row_num]['zak_new'] = $cell->getCalculatedValue();
 									break;
-								case 'O':  //Период действия акционной цены ON INVOICE
-									$dataToInsert[$row_num]['start_date_on_invoice'] = $this->parseDateFromExcelToInt($cell);
+								case 'O':  //Период действия акционной цены ON INVOICE начало
+									$dataToInsert[$row_num]['s_d_on_inv'] = $this->parseDateFromExcelToInt($cell);
+									if($dataToInsert[$row_num]['s_d_on_inv'] === false)
+									{
+										$dataToInsert[$row_num]['s_d_on_inv'] = '';
+									}
 									break;
 								case 'P':
-									$dataToInsert[$row_num]['end_date_on_invoice'] = $this->parseDateFromExcelToInt($cell);
+									$dataToInsert[$row_num]['e_d_on_inv'] = $this->parseDateFromExcelToInt($cell);
+									if($dataToInsert[$row_num]['e_d_on_inv'] === false)
+									{
+										$dataToInsert[$row_num]['e_d_on_inv'] = '';
+									}
 									break;
 								case 'Q': //Розничная Цена
-									$dataToInsert[$row_num]['roznica_old'] = $cell->getCalculatedValue();
+									$dataToInsert[$row_num]['roz_old'] = $cell->getCalculatedValue();
 									break;
 								case 'R':
 									//TODO дробная часть куда девается
-									$dataToInsert[$row_num]['roznica_new'] = $cell->getCalculatedValue();
+									$dataToInsert[$row_num]['roz_new'] = $cell->getCalculatedValue();
 									break;
 								case 'S':
-									$dataToInsert[$row_num]['razmesh_price'] = $cell->getCalculatedValue();
+									$dataToInsert[$row_num]['razmesh'] = $cell->getCalculatedValue();
 									break;
 								case 'T': 
 									$dataToInsert[$row_num]['descr'] = $cell->getCalculatedValue();
@@ -1321,7 +1496,11 @@ exit();
 		{
 			$returnData['errors'][0] = 'Не удалось загрузить файл';
 		}
+
+		array_splice($dataToInsert, 10);
+
 		$returnData['data'] = $dataToInsert;
+
 		$returnData['errors'] = (($returnData['errors'] ?? []) + ($this->validate_errors['file'] ?? []));
 
 		echo json_encode($returnData);

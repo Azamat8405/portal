@@ -8,10 +8,10 @@ $(function () {
 			datatype: "json",
 			height:300,
 			colModel:[
-			   		{label:'Номер',name:'id',width:40,align:"center"},
-			   		{label:'Наименование',name:'name',width:120},
-			   		{label:'Начало акции',name:'stDate',width:70,align:"center"},
-			   		{label:'Конец акции',name:'endDate',width:70,align:"center"},
+			   		{label:'Номер', name:'id',width:40,align:"center", search:false},
+			   		{label:'Наименование',name:'title',width:120, search:true},
+			   		{label:'Начало акции',name:'start_date',width:70,align:"center"},
+			   		{label:'Конец акции',name:'end_date',width:70,align:"center"},
 			   		{label:'Тип',name:'type',width:80,align:"center"},
 			   		{label:'Статус',name:'status',width:80,align:"center"},
 			   		{label:'Автор',name:'author',width:120,align:"center"},
@@ -19,6 +19,7 @@ $(function () {
 			   	],
 			multiselect:false,
 			pager: '#jqGridpager',
+			rowList: [10, 20, 30, 50],
 			ondblClickRow: function(rowid)
 			{
 				if(!rowid)
@@ -27,5 +28,15 @@ $(function () {
 			}
 		});
 		grid.jqGrid('navGrid','#jqGridpager', {edit:false,add:false,del:false,search:false,refresh:false});
+		grid.jqGrid('filterToolbar', {
+				gridModel:true,
+				gridNames:true,
+				formtype:"vertical",
+				enableSearch:true,
+				enableClear:false,
+				searchOnEnter:true,
+				autosearch:true,
+				multipleSearch:false,
+			});
 	}
 });
