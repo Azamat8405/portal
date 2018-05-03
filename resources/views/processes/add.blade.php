@@ -273,6 +273,10 @@
 				@foreach($action_types_descr as $key => $value)
 					action_types_descr[{{$key}}] = "{{$value}}";
 				@endforeach
+
+				@if(isset($process))
+					var processId = "{{$process->id}}";
+				@endif
 			</script>
 	        <table id="jqGridAdd"><tr><td></td></tr></table> 
 	        <div id="jqGridAddPager"></div> 

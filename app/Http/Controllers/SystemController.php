@@ -110,7 +110,7 @@ class SystemController extends Controller
 					continue;
 				}
 				if(trim($value->{'StoreMacroRegion'}) == '')
-					continue;	
+					continue;
 
 				//id-шников у нас нету делаем хеши
 				$hashMacroRegion = $hashRegion = $hashCity = '';

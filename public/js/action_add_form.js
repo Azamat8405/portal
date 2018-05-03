@@ -183,7 +183,7 @@ $(function(){
 	});
 
 	var url_ = null;
-	var datatype_ = null;
+	var datatype_ = '';
 	var rowNum_ = null;
 	if(typeof(processId) != 'undefined')
 	{
@@ -195,9 +195,9 @@ $(function(){
 	grid = $("#jqGridAdd");
 	grid.jqGrid({
 
-		// url:url_,
-		// datatype:datatype_,
-		// rowNum:rowNum_,
+		url:url_,
+		datatype:datatype_,
+		rowNum:rowNum_,
 
 		height:300,
 		width:500,
@@ -210,6 +210,7 @@ $(function(){
 				width:60,
 				fixed:true,
 				frozen:true,
+				search:false,
 				formatter:'actions',
 				formatoptions:{ 
 					keys: true,
@@ -229,7 +230,6 @@ $(function(){
 					url:'clientArray',
 				}
 			},
-
 	   		{label:'Товар <sup>*</sup>',
 		   		name:'tovsTitles',
 		   		width:150,
@@ -243,7 +243,7 @@ $(function(){
 		   		title:false,
 		   		frozen:true},
 	   		{label:'Код товара <sup>*</sup>',
-		   		name:'kodTov',
+		   		name:'kT',
 		   		align:"center",
 				sortable:true,
 		   		width:90,
@@ -254,7 +254,7 @@ $(function(){
 		   		title:false,
 		   		frozen:true},
 	   		{label:'Магазин <sup>*</sup>',
-		   		name:'shopsTitles',
+		   		name:'sh_Ttl',
 		   		width:130,
 		   		edittype:'text',
 				editable:true,
@@ -268,7 +268,7 @@ $(function(){
 				title:false,
 				frozen:true},
 			{label:'Дата начала акции <sup>*</sup>',
-		   		name:'start_action_date',
+		   		name:'sad', //start_action_date
 		   		align:"center",
 		   		width:200,
 		   		edittype:'text',
@@ -281,7 +281,7 @@ $(function(){
 				},
 		   		fixed:true},
 	   		{label:'Дата окончания акции <sup>*</sup>',
-		   		name:'end_action_date',
+		   		name:'ead',// end_action_date
 		   		align:"center",
 		   		width:200,
 		   		edittype:'text',
@@ -294,7 +294,7 @@ $(function(){
 				},
 		   		fixed:true},
 	   		{label:'Дистрибьютор',
-		   		name:'distrTitles',
+		   		name:'distr_ttl',//distrTitles
 		   		width:220,
 		   		edittype:'text',
 				editable:true,
@@ -306,7 +306,7 @@ $(function(){
 				},
 		   		fixed:true},
 	   		{label:'Бренд',
-		   		name:'brendTitles',
+		   		name:'brTtl',
 		   		align:"center",
 		   		width:220,
 		   		edittype:'text',
@@ -327,7 +327,7 @@ $(function(){
 		   		title:false,
 		   		fixed:true},
 	   		{label:'Тип акции <sup>*</sup>',
-		   		name:'type',
+		   		name:'t',
 		   		align:"center",
 		   		width:200,
 		   		edittype:'select',
@@ -347,7 +347,7 @@ $(function(){
 		   		fixed:true,
 			},
 			{label:'Размер скидки ON INVOICE (%)',
-		   		name:'skidka_on_invoice',
+		   		name:'on_inv',
 		   		align:"center",
 		   		width:180,
 		   		edittype:'text',
@@ -360,7 +360,7 @@ $(function(){
 				},
 		   		fixed:true},
 	   		{label:'% компенсации OFF INVOICE (%)',
-		   		name:'kompensaciya_off_invoice',
+		   		name:'off_inv',//kompensaciya_off_invoice
 		   		align:"center",
 		   		width:190,
 		   		edittype:'text',
@@ -373,7 +373,7 @@ $(function(){
 				},
 		   		fixed:true},
 	   		{label:'Итого скидка (%) <sup>*</sup>',
-		   		name:'skidka_itogo',
+		   		name:'itog',
 		   		align:"center",
 		   		width:190,
 		   		edittype:'text',
@@ -386,7 +386,7 @@ $(function(){
 				},
 		   		fixed:true},
 	   		{label:'Старая розничная цена (руб)',
-		   		name:'roznica_old',
+		   		name:'roz_old',
 		   		align:"center",
 		   		width:180,
 		   		edittype:'text',
@@ -399,7 +399,7 @@ $(function(){
 				},
 		   		fixed:true},
 	   		{label:'Новая розничная цена (руб)',
-		   		name:'roznica_new',
+		   		name:'roz_new',
 		   		align:"center",
 		   		width:180,
 		   		edittype:'text',
@@ -412,7 +412,7 @@ $(function(){
 				},
 		   		fixed:true},
 	   		{label:'Старая закупочная цена (руб)',
-		   		name:'zakup_old',
+		   		name:'zak_old',
 		   		align:"center",
 		   		width:190,
 		   		edittype:'text',
@@ -425,7 +425,7 @@ $(function(){
 				},
 		   		fixed:true},
 	   		{label:'Новая закупочная цена (руб)',
-		   		name:'zakup_new',
+		   		name:'zak_new',
 		   		align:"center",
 		   		width:180,
 		   		edittype:'text',
@@ -438,7 +438,7 @@ $(function(){
 				},
 		   		fixed:true},
 	   		{label:'Дата начала скидки ON INVOICE',
-		   		name:'start_date_on_invoice',
+		   		name:'s_d_on_inv', // start_date_on_invoice
 		   		align:"center",
 		   		width:200,
 		   		edittype:'text',
@@ -451,7 +451,7 @@ $(function(){
 				},
 		   		fixed:true},
 	   		{label:'Дата окончания скидки ON INVOICE',
-		   		name:'end_date_on_invoice',
+		   		name:'e_d_on_inv', //end_date_on_invoice
 		   		align:"center",
 		   		width:210,
 		   		edittype:'text',
@@ -521,7 +521,25 @@ $(function(){
 				}, 200);
 			}
 		},
+		loadComplete:function()
+		{
+			eventsJqGridRow();
+		}
 	});
+
+	if(typeof(processId) != 'undefined')
+	{
+		grid.jqGrid('filterToolbar', {
+				gridModel:true,
+				gridNames:true,
+				formtype:"vertical",
+				enableSearch:true,
+				enableClear:false,
+				searchOnEnter:true,
+				autosearch:true,
+				multipleSearch:false,
+			});
+	}
 
 	let r = addJqGridRow();
 	grid.editRow(r);
@@ -650,10 +668,10 @@ $(function(){
 						if(row_n)
 						{
 							//в таблице
-							$('#'+row_n+'_shopsTitles').val(titles);
+							$('#'+row_n+'_sh_Ttl').val(titles);
 							checkAddField(row_n, 'chShop', titles);
 
-							$('#'+row_n+'_shopsTitles').trigger('change');
+							$('#'+row_n+'_sh_Ttl').trigger('change');
 							addDopData(row_n, 'shops', ids.join(';'));
 						}
 						else
@@ -711,7 +729,7 @@ $(function(){
 
 						var row_n = getJqGridRowNumber(el);
 						checkAddField(row_n, 'chDistr', titles.join(';  '));
-						$('#'+row_n+'_distrTitles').val(titles.join(';  '));
+						$('#'+row_n+'_distr_ttl').val(titles.join(';  '));
 						addDopData(row_n, 'distr', ids.join());
 						$("#contragent_dialog").dialog("close");
 					}
@@ -824,43 +842,43 @@ $(function(){
 							tmp[ind2] = shops[v[ind2]]['t'];
 							tmp2[ind2] = shops[v[ind2]]['c'];
 						}
-						row['data'][ind].shopsTitles = tmp.join('; ');
+						row['data'][ind].sh_Ttl = tmp.join('; ');
 						// row['data'][ind]['shops'] = tmp2.join('; ');
 					}
 
 					row['data'][ind].marks = data['data'][ind]['marks'];
 					row['data'][ind].descr = data['data'][ind]['descr'];
 					row['data'][ind].razmesh_price = data['data'][ind]['razmesh'];
-					row['data'][ind].zakup_new = data['data'][ind]['zak_new'];
-					row['data'][ind].zakup_old = data['data'][ind]['zak_old'];
-					row['data'][ind].type = data['data'][ind]['t'];
+					row['data'][ind].zak_new = data['data'][ind]['zak_new'];
+					row['data'][ind].zak_old = data['data'][ind]['zak_old'];
+					row['data'][ind].t = data['data'][ind]['t'];
 					row['data'][ind].articule_sk = data['data'][ind]['art_sk'];
 
-					row['data'][ind].start_action_date = data['data'][ind]['sad'];
-					row['data'][ind].end_action_date = data['data'][ind]['ead'];
+					row['data'][ind].sad = data['data'][ind]['sad'];
+					row['data'][ind].ead = data['data'][ind]['ead'];
 					// row['data'][ind]['shops_exception'] = data['data'][ind]['sh_ex'];
-					row['data'][ind].distrTitles = data['data'][ind]['distr_ttl'];
-					row['data'][ind].kodTov = data['data'][ind]['kT'];
+					row['data'][ind].distr_ttl = data['data'][ind]['distr_ttl'];
+					row['data'][ind].kT = data['data'][ind]['kT'];
 					row['data'][ind].tovsTitles = data['data'][ind]['tTtl'];
-					row['data'][ind].brendTitles = data['data'][ind]['brTtl'];
+					row['data'][ind].brTtl = data['data'][ind]['brTtl'];
 					// row['data'][ind]['brend'] = data['data'][ind]['br'];
-					row['data'][ind].skidka_on_invoice = data['data'][ind]['on_inv'];
-					row['data'][ind].kompensaciya_off_invoice = data['data'][ind]['off_inv'];
-					row['data'][ind].skidka_itogo = data['data'][ind]['itog'];
-					row['data'][ind].start_date_on_invoice = data['data'][ind]['s_d_on_inv'];
-					row['data'][ind].end_date_on_invoice = data['data'][ind]['e_d_on_inv'];
-					row['data'][ind].roznica_old = data['data'][ind]['roz_old'];
-					row['data'][ind].roznica_new = data['data'][ind]['roz_new'];
+					row['data'][ind].on_inv = data['data'][ind]['on_inv'];
+					row['data'][ind].off_inv = data['data'][ind]['off_inv'];
+					row['data'][ind].itog = data['data'][ind]['itog'];
+					row['data'][ind].s_d_on_inv = data['data'][ind]['s_d_on_inv'];
+					row['data'][ind].s_d_on_inv = data['data'][ind]['e_d_on_inv'];
+					row['data'][ind].roz_old = data['data'][ind]['roz_old'];
+					row['data'][ind].roz_new = data['data'][ind]['roz_new'];
 
 					if(data['data'][ind]['brend'])
 					{
-						row['data'][ind].brendTitles = data['data'][ind]['brendTitles'];
+						row['data'][ind].brTtl = data['data'][ind]['brTtl'];
 					}
 
-					if(kodTovArr[row['data'][ind].kodTov])
+					if(kodTovArr[row['data'][ind].kT])
 					{
 						let el = $('#'+grid.attr('id')+' td').filter(function(){
-							if(row['data'][ind].kodTov == $(this).text())
+							if(row['data'][ind].kT == $(this).text())
 								return true;
 							return false;
 						});
@@ -873,9 +891,9 @@ $(function(){
 					if(r)
 					{
 						checkAddField(r, 'chTitle', row['data'][ind]['tovsTitles']);
-						checkAddField(r, 'chKod', row['data'][ind]['kodTov']);
-						checkAddField(r, 'chShop', row['data'][ind]['shopsTitles']);
-						checkAddField(r, 'chDistr', row['data'][ind]['distrTitles']);
+						checkAddField(r, 'chKod', row['data'][ind]['kT']);
+						checkAddField(r, 'chShop', row['data'][ind]['sh_Ttl']);
+						checkAddField(r, 'chDistr', row['data'][ind]['distr_ttl']);
 						checkAddField(r, 'chBrendTitles', row['data'][ind]['brend']);
 
 						if(typeof(row['data'][ind]['shops']) != 'undefined')
@@ -1020,33 +1038,33 @@ function getTovsToFillTable(arr, page)
 					dataToFill = {};
 
 					// dataToFill['shops'] = [];
-					dataToFill.shopsTitles = [];
-					dataToFill.kodTov = data.items[ind].c;
+					dataToFill.sh_Ttl = [];
+					dataToFill.kT = data.items[ind].c;
 					dataToFill.tovsTitles = data.items[ind].n;
-					dataToFill.start_action_date = '';
-			   		dataToFill.end_action_date = '';
-			   		dataToFill.distrTitles = '';
-			   		dataToFill.brendTitles = '';
+					dataToFill.sad = '';
+			   		dataToFill.ead = '';
+			   		dataToFill.distr_ttl = '';
+			   		dataToFill.brTtl = '';
 			   		dataToFill.articule_sk = '';
-			   		dataToFill.type = '';
-			   		dataToFill.skidka_on_invoice = '';
-			   		dataToFill.kompensaciya_off_invoice = '';
-			   		dataToFill.skidka_itogo = '';
-			   		dataToFill.roznica_old = '';
-			   		dataToFill.roznica_new = '';
-			   		dataToFill.zakup_old = '';
-			   		dataToFill.zakup_new = '';
-			   		dataToFill.start_date_on_invoice = '';
-			   		dataToFill.end_date_on_invoice = '';
+			   		dataToFill.t = '';
+			   		dataToFill.on_inv = '';
+			   		dataToFill.off_inv = '';
+			   		dataToFill.itog = '';
+			   		dataToFill.roz_old = '';
+			   		dataToFill.roz_new = '';
+			   		dataToFill.zak_old = '';
+			   		dataToFill.zak_new = '';
+			   		dataToFill.s_d_on_inv = '';
+			   		dataToFill.e_d_on_inv = '';
 			   		dataToFill.razmesh_price = '';
 			   		dataToFill.descr = '';
 			   		dataToFill.marks = '';
 
 					for(ind2 in data.shop)
 					{
-						dataToFill.shopsTitles[ind2] = data.shop[ind2].title;
+						dataToFill.sh_Ttl[ind2] = data.shop[ind2].title;
 					}
-					dataToFill.shopsTitles = dataToFill.shopsTitles.join('; ');
+					dataToFill.sh_Ttl = dataToFill.sh_Ttl.join('; ');
 
 					addJqGridRow(dataToFill);
 			// }
@@ -1448,22 +1466,22 @@ function addJqGridRow(initData)
 
 	if(initData)
 	{
-		if( typeof(initData.kodTov) != 'undefined')
+		if( typeof(initData.kT) != 'undefined')
 		{
-			kodTovArr[initData.kodTov] = 1;
+			kodTovArr[initData.kT] = 1;
 		}
-		if( typeof(initData.shopsTitles) != 'undefined')
+		if( typeof(initData.sh_Ttl) != 'undefined')
 		{
-			checkAddField(r, 'chShop', initData.shopsTitles);
+			checkAddField(r, 'chShop', initData.sh_Ttl);
 		}
 		if(typeof(initData.shops) != 'undefined')
 		{
 			addDopData(r, 'shops', initData.shops);
 		}
 
-		if(typeof(initData.kodTov) != 'undefined')
+		if(typeof(initData.kT) != 'undefined')
 		{
-			checkAddField(r, 'chKod', initData.kodTov);
+			checkAddField(r, 'chKod', initData.kT);
 		}
 
 		if(typeof(initData.tovsTitles) != 'undefined')
@@ -1471,9 +1489,9 @@ function addJqGridRow(initData)
 			checkAddField(r, 'chTitle', initData.tovsTitles);
 		}
 
-		if(typeof(initData.distrTitles) != 'undefined')
+		if(typeof(initData.distr_ttl) != 'undefined')
 		{
-			checkAddField(r, 'chDistr', initData.distrTitles);
+			checkAddField(r, 'chDistr', initData.distr_ttl);
 		}
 	}
 	return r;
@@ -1494,16 +1512,21 @@ function addJqGridSubmit()
 	});
 
 	let is_empty_first = grid.getRowData(1);
-	if(is_empty_first.distrTitles == '' &&
-		is_empty_first.kodTov == '' &&
-		is_empty_first.skidka_itogo == '' &&
-		(is_empty_first.type == '' || is_empty_first.type == '0'))
+	if(is_empty_first.distr_ttl == '' &&
+		is_empty_first.kT == '' &&
+		is_empty_first.itog == '' &&
+		(is_empty_first.t == '' || is_empty_first.t == '0'))
 	{
 		grid.jqGrid('delRowData', 1);
 	}
 
+	let rowData = [];
+	$.each(grid.getDataIDs(), function(){
+		rowData[this] = grid.getRowData(this);
+	});
+
 	let arrData = '';
-	arrData += 'rows='+JSON.stringify( grid.getRowData() );
+	arrData += 'rows='+JSON.stringify( rowData );
 	for(ind in dopData)
 	{
 		arrData += '&rowsDopData['+ind+']=' + JSON.stringify(dopData[ind]);
@@ -1512,6 +1535,11 @@ function addJqGridSubmit()
 	arrData += '&process_title=' + $('#process_title').val();
 	arrData += '&start_date=' + $('#start_date').val();
 	arrData += '&end_date=' + $('#end_date').val();
+
+	if(processId)
+	{
+		arrData += '&prId=' + processId;
+	}
 
 	$.ajax({
 		url: '/processes/ajaxAdd',
@@ -1522,7 +1550,6 @@ function addJqGridSubmit()
 			hide_load();
 			if(data['errors'])
 			{
-
 				var str = '';
 				var tr_str = [];
 				for(ind in data['errors'])
@@ -1554,7 +1581,7 @@ function addJqGridSubmit()
 			{
 				showMessage('success', false, 'Акция успешно сохранена.');
 				setTimeout(function(){
-					window.location.href = '/processes';
+					// window.location.href = '/processes';
 				}, 1000);
 			}
 		}
@@ -1712,7 +1739,7 @@ function eventsJqGridRow()
 		hide_input_hint();
 	});
 
-	$('input[id$=_kodTov]').autocomplete({
+	$('input[id$=_kT]').autocomplete({
 		position:{
 			collision:'none',
 			using :function(s,e){
@@ -1756,7 +1783,7 @@ function eventsJqGridRow()
 			checkAddField(n, 'chBrendTitles', ui.item.brend);
 			addDopData(n, 'brend', ui.item.brend);
 
-			$('#'+n+'_brendTitles').val( ui.item.brend );
+			$('#'+n+'_brTtl').val( ui.item.brend );
 			$('#'+n+'_tovsTitles').val( ui.item.val );
 		}
 	});
@@ -1790,7 +1817,7 @@ function eventsJqGridRow()
 			{
 				$(this).val(checkFields[n]['chTitle']);
 			}
-			$('#'+n+'_kodTov').trigger('change');
+			$('#'+n+'_kT').trigger('change');
 		},
 		select: function( event, ui )
 		{
@@ -1802,12 +1829,12 @@ function eventsJqGridRow()
 			checkAddField(n, 'chBrendTitles', ui.item.brend);
 			addDopData(n, 'brend', ui.item.brend);
 
-			$('#'+n+'_brendTitles').val( ui.item.brend );
-			$('#'+n+'_kodTov').val(ui.item.val);
+			$('#'+n+'_brTtl').val( ui.item.brend );
+			$('#'+n+'_kT').val(ui.item.val);
 		}
 	});
 
-	$('input[id$=_shopsTitles]').autocomplete({
+	$('input[id$=_sh_Ttl]').autocomplete({
 		position:{
 			collision:'none',
 			using :function(s,e){
@@ -1849,7 +1876,7 @@ function eventsJqGridRow()
 		}
 	});
 
-	$('input[id$=_distrTitles]').autocomplete({
+	$('input[id$=_distr_ttl]').autocomplete({
 		position:{
 			collision:'none',
 			using :function(s,e){
@@ -1887,7 +1914,7 @@ function eventsJqGridRow()
 		}
 	});
 
-	$('input[id$=_brendTitles]').autocomplete({
+	$('input[id$=_brTtl]').autocomplete({
 		position:{
 			collision:'none',
 			using :function(s,e){
@@ -2061,7 +2088,7 @@ function eventsJqGridRow()
 				dateObj.setTime(dateObj.getTime() + 86400000);
 
 				var row_n = getJqGridRowNumber(this);
-				$('#'+row_n+'_end_date_on_invoice').datepicker( "option", "minDate",  dateObj);
+				$('#'+row_n+'_e_d_on_inv').datepicker( "option", "minDate",  dateObj);
 				prepareDate(this);
 	        });
 
@@ -2088,7 +2115,7 @@ function eventsJqGridRow()
 
 				var row_n = getJqGridRowNumber(this);
 
-				$('#'+row_n+'_end_action_date').datepicker( "option", "minDate",  dateObj);
+				$('#'+row_n+'_ead').datepicker( "option", "minDate",  dateObj);
 				prepareDate(this);
 			});
 
@@ -2102,37 +2129,37 @@ function eventsJqGridRow()
 		}, 150);
 	}
 
-	$('input[id$=_shopsTitles]').off('copy');
-	$('input[id$=_shopsTitles]').on('copy', function(e){
+	$('input[id$=_sh_Ttl]').off('copy');
+	$('input[id$=_sh_Ttl]').on('copy', function(e){
 
 		copied_index = getJqGridRowNumber(this);
 	});
-	$('input[id$=_shopsTitles]').off('paste');
-	$('input[id$=_shopsTitles]').on('paste', function(e){
+	$('input[id$=_sh_Ttl]').off('paste');
+	$('input[id$=_sh_Ttl]').on('paste', function(e){
 
 		let copied = dopData['shops'][copied_index];
 		let targetIndex = getJqGridRowNumber(this);
 		addDopData(targetIndex, 'shops', copied);
 	});
 
-	$('input[id$=_distrTitles]').off('copy');
-	$('input[id$=_distrTitles]').on('copy', function(e){
+	$('input[id$=_distr_ttl]').off('copy');
+	$('input[id$=_distr_ttl]').on('copy', function(e){
 		copied_index = getJqGridRowNumber(this);
 	});
-	$('input[id$=_distrTitles]').off('paste');
-	$('input[id$=_distrTitles]').on('paste', function(e){
+	$('input[id$=_distr_ttl]').off('paste');
+	$('input[id$=_distr_ttl]').on('paste', function(e){
 
 		let copied = dopData['distr'][copied_index];
 		let targetIndex = getJqGridRowNumber(this);
 		addDopData(targetIndex, 'distr', copied);
 	});
 
-	$('input[id$=_brendTitles]').off('copy');
-	$('input[id$=_brendTitles]').on('copy', function(e){
+	$('input[id$=_brTtl]').off('copy');
+	$('input[id$=_brTtl]').on('copy', function(e){
 		copied_index = getJqGridRowNumber(this);
 	});
-	$('input[id$=_brendTitles]').off('paste');
-	$('input[id$=_brendTitles]').on('paste', function(e){
+	$('input[id$=_brTtl]').off('paste');
+	$('input[id$=_brTtl]').on('paste', function(e){
 
 		let copied = dopData['brend'][copied_index];
 		let targetIndex = getJqGridRowNumber(this);
@@ -2140,29 +2167,29 @@ function eventsJqGridRow()
 	});
 
 	setTimeout(function(){
-		$('td > .dialog, input[id$=_shopsTitles], input[id$=_distrTitles]').hover(function(e){
+		$('td > .dialog, input[id$=_sh_Ttl], input[id$=_distr_ttl]').hover(function(e){
 
 				var row_n = getJqGridRowNumber(this);
 				if($(this).hasClass('dialog'))
 				{
-					if($(this).parents('td').find('#'+row_n+'_shopsTitles').length > 0)
+					if($(this).parents('td').find('#'+row_n+'_sh_Ttl').length > 0)
 					{
-						$(this).parents('td').find('#'+row_n+'_shopsTitles').trigger('mouseenter');
+						$(this).parents('td').find('#'+row_n+'_sh_Ttl').trigger('mouseenter');
 					}
-					else if($(this).parents('td').find('#'+row_n+'_distrTitles').length > 0)
+					else if($(this).parents('td').find('#'+row_n+'_distr_ttl').length > 0)
 					{
-						$(this).parents('td').find('#'+row_n+'_distrTitles').trigger('mouseenter');
+						$(this).parents('td').find('#'+row_n+'_distr_ttl').trigger('mouseenter');
 					}
 					return;
 				}
 
-				if($(this).parents('td').find('#'+row_n+'_shopsTitles').length > 0)
+				if($(this).parents('td').find('#'+row_n+'_sh_Ttl').length > 0)
 				{
-					var tmp = $(this).parents('td').find('#'+row_n+'_shopsTitles').val();
+					var tmp = $(this).parents('td').find('#'+row_n+'_sh_Ttl').val();
 				}
-				else if($(this).parents('td').find('#'+row_n+'_distrTitles').length > 0)
+				else if($(this).parents('td').find('#'+row_n+'_distr_ttl').length > 0)
 				{
-					var tmp = $(this).parents('td').find('#'+row_n+'_distrTitles').val();
+					var tmp = $(this).parents('td').find('#'+row_n+'_distr_ttl').val();
 				}
 
 				if(!tmp || tmp == '')
@@ -2180,25 +2207,25 @@ function eventsJqGridRow()
 		);
 	}, 200);
 
-	$('input[id$=_skidka_on_invoice], input[id$=_kompensaciya_off_invoice], input[id$=_roznica_old], input[id$=_roznica_new]').on('change', function(){
+	$('input[id$=_on_inv], input[id$=_off_inv], input[id$=_roz_old], input[id$=_roz_new]').on('change', function(){
 
 		var row_n = getJqGridRowNumber(this);
 		removeErrorMessage(this);
 
-		var roznica_new = $('#'+row_n+'_roznica_new').val().replace(/ /g, '');
-		var roznica_old = $('#'+row_n+'_roznica_old').val().replace(/ /g, '');
+		var roz_new = $('#'+row_n+'_roz_new').val().replace(/ /g, '');
+		var roz_old = $('#'+row_n+'_roz_old').val().replace(/ /g, '');
 
-		var on_invoice = $('#'+row_n+'_skidka_on_invoice').val().replace(/ /g, '');
-		var off_invoice = $('#'+row_n+'_kompensaciya_off_invoice').val().replace(/ /g, '');
+		var on_invoice = $('#'+row_n+'_on_inv').val().replace(/ /g, '');
+		var off_invoice = $('#'+row_n+'_off_inv').val().replace(/ /g, '');
 
-		if(parseInt(roznica_new) > parseInt(roznica_old))
+		if(parseInt(roz_new) > parseInt(roz_old))
 		{
 			showMessage('error', false, 'Новая розничная цена не должна быть больше старой');
 		}
 
 		var itogo = 0;
 		// поле итого
-		if(roznica_new == 0 || roznica_old == 0)
+		if(roz_new == 0 || roz_old == 0)
 		{
 			if(off_invoice != '' && on_invoice != '')
 			{
@@ -2217,16 +2244,16 @@ function eventsJqGridRow()
 				itogo = on_invoice;
 			}
 		}
-		else if(roznica_new > 0 && roznica_old > 0)
+		else if(roz_new > 0 && roz_old > 0)
 		{
-			itogo = (1 - (parseInt(roznica_new)/parseInt(roznica_old)))*100;
+			itogo = (1 - (parseInt(roz_new)/parseInt(roz_old)))*100;
 			itogo = itogo.toFixed(1);
 		}
 
-		$('#'+row_n+'_skidka_itogo').val(itogo);
+		$('#'+row_n+'_itog').val(itogo);
 
 		setTimeout(function (){
-			illumination($('#'+row_n+'_skidka_itogo'), 0);
+			illumination($('#'+row_n+'_itog'), 0);
 		}, 300);
 	});
 
@@ -2241,7 +2268,7 @@ function eventsJqGridRow()
 		hide_input_hint(this, $(this).val());
 	});
 
-	let selector = 'input[id$=_shopsTitles], input[id$=_tovsTitles], input[id$=_articulSK], input[id$=_zakup_new], input[id$=_zakup_old], input[id$=_distrTitles], input[id$=_brendTitles], input[id$=_skidka_itogo], .maskDate, input[id$=_kodTov], .selectInRow';
+	let selector = 'input[id$=_sh_Ttl], input[id$=_tovsTitles], input[id$=_articulSK], input[id$=_zak_new], input[id$=_zak_old], input[id$=_distr_ttl], input[id$=_brTtl], input[id$=_itog], .maskDate, input[id$=_kT], .selectInRow';
 
 	$(selector).off('change');
 	$(selector).on('change', function()

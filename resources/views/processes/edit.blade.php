@@ -1,12 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
-
 	<form action="" onSubmit="return checkValues();" method="post" enctype="multipart/form-data" class="form">
 		@csrf
 		<div class="content-panel">
 			<div class="content-panel-block">
-				<h2>Добавление акции</h2>
+				<h2>Редактирование акции</h2>
 				<div class="form-fields-row">
 					<div class="form-field-cell">
 						<div class="form-field-input">
@@ -22,7 +21,7 @@
 					            	<option value="0"> Не выбрано </option>
 									@if($process_types)
 										@foreach($process_types as $type)
-											@if(old('process_type') == $type->id)
+											@if($process->process_type_id == $type->id)
 												<option data-dedlain="{{$type->dedlain}}" value="{{$type->id}}" selected="selected">{{$type->title}}</option>
 											@else
 												<option data-dedlain="{{$type->dedlain}}" value="{{$type->id}}">{{$type->title}}</option>
@@ -39,7 +38,7 @@
 					            <label>Наименование</label>
 					        </div>
 					        <div>
-					            <input name="process_title" id="process_title" type="text" value="{{ old('process_title') }}">
+					            <input name="process_title" id="process_title" type="text" value="{{ $process->title }}">
 							</div>
 						</div>
 					</div>
@@ -53,7 +52,8 @@
 								@endif
 					        </div>
 					        <div>
-					            <input id="start_date" type="text" autocomplete="off" name="start_date" value="{{ old('start_date') }}">
+					        	<input id="start_date" type="text" autocomplete="off" name="start_date" value="{{ str_replace('.', '-', $process->start_date) }}">
+
 					        </div>
 						</div>
 					</div>
@@ -67,7 +67,7 @@
 								@endif
 						    </div>
 					    	<div>
-								<input id="end_date" type="text" autocomplete="off" name="end_date" value="{{ old('end_date') }}">
+								<input id="end_date" type="text" autocomplete="off" name="end_date" value="{{ str_replace('.', '-', $process->end_date) }}">
 						    </div>
 						</div>
 					</div>
@@ -81,7 +81,18 @@
 						    </div>
 						</div>
 					</div>
+					<div class="form-field-cell">
+					    <div class="form-field-input">
+						    <div>
+								<label>Дата создания</label>
+						    </div>
+					    	<div>
+								{{ strftime('%d.%m.%Y', $process->created_at->timestamp) }}
+						    </div>
+						</div>
+					</div>
 				</div>
+
 				<div class="content-panel-inputs">
 					<input type="button" onclick="addJqGridSubmit();" value="Сохранить акцию">
 					<input type="button" onclick="addJqGridRowFromPanel();" value="Добавить строку">

@@ -10,14 +10,58 @@ $(function () {
 			colModel:[
 			   		{label:'Номер', name:'id',width:40,align:"center", search:false},
 			   		{label:'Наименование',name:'title',width:120, search:true},
-			   		{label:'Начало акции',name:'start_date',width:70,align:"center"},
-			   		{label:'Конец акции',name:'end_date',width:70,align:"center"},
+			   		{
+			   			label:'Начало акции',
+			   			name:'start_date',
+			   			width:70,
+			   			align:"center",
+	   					searchoptions:{
+	   						dataInit:function(elem){
+			   					$(elem).datepicker({
+ 									onSelect: function () {
+			   							grid[0].triggerToolbar();
+			   						}
+			   					});
+	   						}
+	   					}
+				   	},
+			   		{
+			   			label:'Конец акции',
+			   			name:'end_date',
+			   			width:70,
+			   			align:"center",
+	   					searchoptions:{
+	   						dataInit:function(elem){
+			   					$(elem).datepicker({
+ 									onSelect: function () {
+			   							grid[0].triggerToolbar();
+			   						}
+			   					});
+	   						}
+	   					}
+			   		},
 			   		{label:'Тип',name:'type',width:80,align:"center"},
 			   		{label:'Статус',name:'status',width:80,align:"center"},
 			   		{label:'Автор',name:'author',width:120,align:"center"},
-			   		{label:'Дата создания',name:'created_at',width:90,align:"center"},
+			   		{
+			   			label:'Дата создания',
+			   			name:'created_at',
+			   			width:90,
+			   			align:"center",
+			   			firstsortorder:'desc',
+	   					searchoptions:{
+	   						dataInit:function(elem){
+			   					$(elem).datepicker({
+ 									onSelect: function () {
+			   							grid[0].triggerToolbar();
+			   						}
+			   					});
+	   						}
+	   					}
+	   				},
 			   	],
 			multiselect:false,
+			sortorder:'desc',
 			pager: '#jqGridpager',
 			rowList: [10, 20, 30, 50],
 			ondblClickRow: function(rowid)

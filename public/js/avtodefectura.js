@@ -13,7 +13,7 @@ $(function(){
 		colModel:[
 	   		{label:'Товарная категория',
 		   		name:'LVL1',
-		   		width:200,
+		   		width:170,
 				editable:false,
 		   		fixed:true,
 		   		resizable:true,
@@ -41,7 +41,7 @@ $(function(){
 		   		fixed:true},
 	   		{label:'Наименование',
 		   		name:'name',
-		   		width:300,
+		   		width:330,
 				editable:false,
 		   		resizable:true,
 		   		title:false,

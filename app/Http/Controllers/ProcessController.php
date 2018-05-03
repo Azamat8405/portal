@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Storage;
@@ -93,21 +92,27 @@ class ProcessController extends Controller
 			{
 				$processes = $processes->where('processes.title', 'LIKE', '%'.Request::get('title').'%');
 			}
-			if(Request::get('stDate') != '')
+			if(Request::get('start_date') != '')
 			{
-				$processes = $processes->where('processes.start_date', '=', strtotime(Request::get('stDate')));
+				$processes = $processes->where('processes.start_date', '=', strtotime(Request::get('start_date')));
 			}
-			if(Request::get('enDate') != '')
+			if(Request::get('end_date') != '')
 			{
-				$processes = $processes->where('processes.end_date', '=', strtotime(Request::get('enDate')));
+				$processes = $processes->where('processes.end_date', '=', strtotime(Request::get('end_date')));
 			}
 			if(Request::get('status') != '')
 			{
 				$processes = $processes->where('processes.status', 'LIKE', '%'.Request::get('status').'%');
 			}
+
 			if(Request::get('created_at') != '')
 			{
-				$processes = $processes->where('processes.created_at', 'LIKE', '%'.Request::get('created_at').'%');
+				$created_time = strtotime(Request::get('created_at'));
+				$created_s = date('Y-m-d', $created_time);
+				$created_e = date('Y-m-d', ($created_time + 86400));
+
+				$processes = $processes->where('processes.created_at', '>=', $created_s)
+										->where('processes.created_at', '<', $created_e);
 			}
 		}
 
@@ -163,7 +168,7 @@ class ProcessController extends Controller
 
 	public function ajaxGetTovList(Request $request, $procId)
 	{
-		//достаем все магазины
+		//достаем все магазины и кешируем
 		$tmp = Shop::orderBy('title')->get();
 		foreach ($tmp as $key => $value)
 		{
@@ -175,95 +180,127 @@ class ProcessController extends Controller
 		}
 
 		//обязательно сортируем по магазинам, чтобы в цикле ниже быть уверенным, что записи по магазину идут подряд
-		$tovs = DocumentActionFirstData::where('process_id', $procId)->orderBy('shop_id')->get();
+		$tovs = DocumentActionFirstData::where('process_id', $procId)
+			->leftJoin('shops', function($join){
 
-		// $tovs = Process::find($procId)->processTovs->orderBy('title');
+				$join->on('shops.id', '=', 'document_action_first_datas.shop_id');
+    		})
+			->orderBy('document_action_first_datas.kod_dis')
+			->orderBy('shops.title')
+			->get();
+
 		$responce = [];
 		$kod_dis = [];
 		$data = [];
+
+		$mapArr = [];
+
 		foreach ($tovs as $key => $value)
 		{
-			if($key > 100)
+			if(!isset($mapArr[$value->kod_dis]))
 			{
-				break;
+				$mapArr[$value->kod_dis] = count($mapArr);
+				$key = $mapArr[$value->kod_dis];
+			}
+			else
+			{
+				$key = $mapArr[$value->kod_dis];
 			}
 
-			$data[$key]['tovsTitles'] = '';
-			$data[$key]['kodTov'] = $value->kod_dis;
-			$data[$key]['shopsTitles'] = '';
-			$data[$key]['start_action_date'] = $value->start_action_date;
-			$data[$key]['end_action_date'] = $value->end_action_date;
-			$data[$key]['distrTitles'] = 
-			$data[$key]['brendTitles'] = $value->brend->title;
-			$data[$key]['articule_sk'] = $value->articule_sk;
-			$data[$key]['type'] = $value->processType->title;
-			$data[$key]['skidka_on_invoice'] = $value->on_invoice;
-			$data[$key]['kompensaciya_off_invoice'] = $value->off_invoice;
-			$data[$key]['skidka_itogo'] = $value->skidka_itogo;
-			$data[$key]['roznica_old'] = $value->old_roznica_price;
-			$data[$key]['roznica_new'] = $value->new_roznica_price;
-			$data[$key]['zakup_old'] = $value->old_zakup_price;
-			$data[$key]['zakup_new'] = $value->new_zakup_price;
-			$data[$key]['start_date_on_invoice'] = $value->on_invoice_start;
-			$data[$key]['end_date_on_invoice'] = $value->on_invoice_end;
-			$data[$key]['razmesh_price'] = $value->razmesh_price;
-			$data[$key]['descr'] = $value->description;
-			$data[$key]['marks'] = $value->metka;
+			if(isset($this->cache_shops[$value->shop_id]))
+			{
+				if(isset($responce['rows'][$key]['cell']['sh_Ttl']) && $responce['rows'][$key]['cell']['sh_Ttl'] != '')
+				{
+					$responce['rows'][$key]['cell']['sh_Ttl'] .= '; '.$this->cache_shops[$value->shop_id]['title'];
+				}
+				else
+				{
+					$responce['rows'][$key]['cell']['sh_Ttl'] = $this->cache_shops[$value->shop_id]['title'];
+				}
+			}
+			else
+			{
+				//	TODO errors
+			}
 
-print_r($data[$key]);
-exit();
-
-			//в базе информация дублируется для каждого магазина. поэтому. данные для товара берем один раз, дальше для текущего кода товара все пропускаем
+			// в базе информация дублируется для каждого магазина. поэтому. 
+			// данные для товара берем один раз, дальше для текущего кода товара все пропускаем, крома магазинов(выше по коду)
 			if(isset($kod_dis[$value->kod_dis]))
 			{
 				continue;
 			}
-			$kod_dis[$value->kod_dis]=1;
+			$kod_dis[$value->kod_dis] = 1;
 
-			$shops = DocumentActionFirstData::select('id', 'shop_id')
-				->where('process_id', $procId)
-				->where('kod_dis', $value->kod_dis)->get();
+			// $data[$value->kod_dis]['tovsTitles'] = $value->tovsTitles;
+			// $data[$value->kod_dis]['kT'] = $value->kod_dis;
+			// $data[$value->kod_dis]['sad'] = $value->start_action_date;
+			// $data[$value->kod_dis]['ead'] = $value->end_action_date;
+			// $data[$value->kod_dis]['distr_ttl'] = $value->distr_ttl;
+			// $data[$value->kod_dis]['distr'] = $value->distr;
+			// $data[$value->kod_dis]['brTtl'] = ($value->brend ? $value->brend->title : '' );
+			// $data[$value->kod_dis]['articule_sk'] = $value->articule_sk;
+			// $data[$value->kod_dis]['t'] = $value->action_types_ids;
+			// $data[$value->kod_dis]['on_inv'] = $value->on_invoice;
+			// $data[$value->kod_dis]['off_inv'] = $value->off_invoice;
+			// $data[$value->kod_dis]['itog'] = $value->skidka_itogo;
+			// $data[$value->kod_dis]['roz_old'] = $value->old_roznica_price;
+			// $data[$value->kod_dis]['roz_new'] = $value->new_roznica_price;
+			// $data[$value->kod_dis]['zak_old'] = $value->old_zakup_price;
+			// $data[$value->kod_dis]['zak_new'] = $value->new_zakup_price;
+			// $data[$value->kod_dis]['s_d_on_inv'] = $value->on_invoice_start;
+			// $data[$value->kod_dis]['e_d_on_inv'] = $value->on_invoice_end;
+			// $data[$value->kod_dis]['razmesh_price'] = $value->razmesh_price;
+			// $data[$value->kod_dis]['descr'] = $value->description;
+			// $data[$value->kod_dis]['marks'] = $value->metka;
 
-			$shop_ids = [];
-			foreach ($shops as $key => $value)
-			{
-				if(!in_array($value->shop_id, $shop_ids))
-				{
-					$shop_ids[] = $value->shop_id;
-				}
-			}
-		}
-
-exit();
-
-			$responce['rows'][$key]['id'] = $value->id;
+			$responce['rows'][$key]['id'] = $value->kod_dis;
 		    $responce['rows'][$key]['cell'] = 
 		    	[
-			   		'tovsTitles' => '',
-			   		'kodTov' => '',
-			   		'shopsTitles' => '',
-			   		'start_action_date' => '',
-			   		'end_action_date' => '',
-			   		'distrTitles' => '',
-			   		'brendTitles' => '',
-			   		'articule_sk' => '',
-			   		'type' => '',
-			   		'skidka_on_invoice' => '',
-			   		'kompensaciya_off_invoice' => '',
-			   		'skidka_itogo' => '',
-			   		'roznica_old' => '',
-			   		'roznica_new' => '',
-			   		'zakup_old' => '',
-			   		'zakup_new' => '',
-			   		'start_date_on_invoice' => '',
-			   		'end_date_on_invoice' => '',
-			   		'razmesh_price' => '',
-			   		'descr' => '',
-			   		'marks' => ''
+			   		'tovsTitles' => $value->tovsTitles,
+			   		'kT' => $value->kod_dis,
+			   		'sad' => $value->start_action_date,
+			   		'ead' => $value->end_action_date,
+			   		'distr_ttl' => $value->distr_ttl,
+			   		'brTtl' => ($value->brend ? $value->brend->title : '' ),
+			   		'articule_sk' => $value->articule_sk,
+			   		't' => $value->action_types_ids,
+			   		'on_inv' => $value->on_invoice,
+			   		'off_inv' => $value->off_invoice,
+			   		'itog' => $value->skidka_itogo,
+			   		'roz_old' => $value->old_roznica_price,
+			   		'roz_new' => $value->new_roznica_price,
+			   		'zak_old' => $value->old_zakup_price,
+			   		'zak_new' => $value->new_zakup_price,
+			   		's_d_on_inv' => $value->on_invoice_start,
+			   		'e_d_on_inv' => $value->on_invoice_end,
+			   		'razmesh_price' => $value->razmesh_price,
+			   		'descr' => $value->description,
+			   		'marks' => $value->metka
 				];
+		}
 
+			// articule_sk
+			// brTtl
+			// descr
+			// distr_ttl
+			// e_d_on_inv
+			// ead
+			// itog
+			// kT
+			// marks
+			// off_inv
+			// on_inv
+			// razmesh_price
+			// roz_new
+			// roz_old
+			// s_d_on_inv
+			// sad
+			// t
+			// tovsTitles
+			// zak_new
+			// zak_old
 
-		// echo json_encode($responce);
+		echo json_encode($responce);
 	}
 
 	public function list()
@@ -337,9 +374,9 @@ exit();
 			}
 		}
 
-		if(!$request::has('kodTov'))
+		if(!$request::has('kT'))
 		{
-			$this->validate_errors['form'][0]['kodTov'] = 'Не указан товар или указан не верно.';
+			$this->validate_errors['form'][0]['kT'] = 'Не указан товар или указан не верно.';
 		}
 
 		// Если в шапке есть ошибки покаызваем их пока.
@@ -352,13 +389,13 @@ exit();
 		$dataToInsert = [];
 
 		// Проверка полей формы
-		foreach($request::input('kodTov') as $key => $value)
+		foreach($request::input('kT') as $key => $value)
 		{
-			if(trim($value) == '' && count($request::input('kodTov')) == 1)
+			if(trim($value) == '' && count($request::input('kT')) == 1)
 			{
 				break;
 			}
-			$dataToInsert[$key]['kodTov'] = $value;
+			$dataToInsert[$key]['kT'] = $value;
 			$dataToInsert[$key]['tovsTitles'] = $request::input('tovsTitles')[$key] ?? null;
 
 			if(isset($request::input('shops')[$key]))
@@ -367,16 +404,16 @@ exit();
 			}
 
 			$dataToInsert[$key]['distr'] = $request::input('distr')[$key] ?? null;
-			$dataToInsert[$key]['type'] = $request::input('type')[$key] ?? null;
-			$dataToInsert[$key]['skidka_on_invoice'] = $request::input('skidka_on_invoice')[$key] ?? null;
-			$dataToInsert[$key]['kompensaciya_off_invoice'] = $request::input('kompensaciya_off_invoice')[$key] ?? null;
-			$dataToInsert[$key]['skidka_itogo'] = $request::input('skidka_itogo')[$key] ?? null;
-			$dataToInsert[$key]['zakup_old'] = $request::input('zakup_old')[$key] ?? null;
-			$dataToInsert[$key]['zakup_new'] = $request::input('zakup_new')[$key] ?? null;
-			$dataToInsert[$key]['start_date_on_invoice'] = $request::input('start_date_on_invoice')[$key] ?? null;
-			$dataToInsert[$key]['end_date_on_invoice'] = $request::input('end_date_on_invoice')[$key] ?? null;
-			$dataToInsert[$key]['roznica_old'] = $request::input('roznica_old')[$key] ?? null;
-			$dataToInsert[$key]['roznica_new'] = $request::input('roznica_new')[$key] ?? null;
+			$dataToInsert[$key]['t'] = $request::input('t')[$key] ?? null;
+			$dataToInsert[$key]['on_inv'] = $request::input('on_inv')[$key] ?? null;
+			$dataToInsert[$key]['off_inv'] = $request::input('off_inv')[$key] ?? null;
+			$dataToInsert[$key]['itog'] = $request::input('itog')[$key] ?? null;
+			$dataToInsert[$key]['zak_old'] = $request::input('zak_old')[$key] ?? null;
+			$dataToInsert[$key]['zak_new'] = $request::input('zak_new')[$key] ?? null;
+			$dataToInsert[$key]['s_d_on_inv'] = $request::input('s_d_on_inv')[$key] ?? null;
+			$dataToInsert[$key]['e_d_on_inv'] = $request::input('e_d_on_inv')[$key] ?? null;
+			$dataToInsert[$key]['roz_old'] = $request::input('roz_old')[$key] ?? null;
+			$dataToInsert[$key]['roz_new'] = $request::input('roz_new')[$key] ?? null;
 			$dataToInsert[$key]['descr'] = $request::input('descr')[$key] ?? null;
 			$dataToInsert[$key]['marks'] = $request::input('marks')[$key] ?? null;
 
@@ -479,18 +516,18 @@ exit();
 								'shop_id' => $value2,
 								'process_id' => $pr->id,
 								'process_type_id' => $doc->process_type_id,
-					            'kod_dis' => $value['kodTov'],
+					            'kod_dis' => $value['kT'],
 					            'articule_sk' => $value['articule_sk'] ?? 0,
-								'action_types_ids' => $value['type'],
-					            'on_invoice' => $this->parseProcenteFromExcelToInt($value['skidka_on_invoice']),
-					            'off_invoice' => $value['kompensaciya_off_invoice'],
-					            'skidka_itogo' => $value['skidka_itogo'],
-					            'old_zakup_price' => $value['zakup_old'],
-					            'new_zakup_price' => $value['zakup_new'],
-					            'on_invoice_start' => $value['start_date_on_invoice'],
-					            'on_invoice_end' => $value['end_date_on_invoice'],
-					            'old_roznica_price' => $value['roznica_old'],
-					            'new_roznica_price' => $value['roznica_new'],
+								'action_types_ids' => $value['t'],
+					            'on_invoice' => $this->parseProcenteFromExcelToInt($value['on_inv']),
+					            'off_invoice' => $value['off_inv'],
+					            'skidka_itogo' => $value['itog'],
+					            'old_zakup_price' => $value['zak_old'],
+					            'new_zakup_price' => $value['zak_new'],
+					            'on_invoice_start' => $value['s_d_on_inv'],
+					            'on_invoice_end' => $value['e_d_on_inv'],
+					            'old_roznica_price' => $value['roz_old'],
+					            'new_roznica_price' => $value['roz_new'],
 					            'description' => $value['descr'],
 					            'metka' => $value['marks'],
 					            'created_at' => date('Y-m-d H:i:s')
@@ -542,7 +579,7 @@ exit();
 
 		if(!$request::has('rows'))
 		{
-			$this->validate_errors['form'][0]['kodTov'] = 'Не указано ни одного товара или указаны не верно.';
+			$this->validate_errors['form'][0]['kT'] = 'Не указано ни одного товара или указаны не верно.';
 		}
 
 		// Если в шапке есть ошибки покаызваем их пока.
@@ -567,15 +604,18 @@ exit();
 		// Проверка полей формы
 		foreach($rows as $key => &$value)
 		{
-			if($value->kodTov == '' && $value->shopsTitles == '')
+			if($key == 0 || is_null($value))
 			{
-				$this->validate_errors['form'][$key]['kodTov'] = 'Не указан товар в строке ('.$key.'), либо строка пустая.';
+				continue;
+			}
+			if($value->kT == '' && $value->sh_Ttl == '')
+			{
+				$this->validate_errors['form'][$key]['kT'] = 'Не указан товар в строке ('.$key.'), либо строка пустая.';
 				// break;
 			}
-
 			$value->distr = ($rowsDopData['distr'][$key] ?? '');
-			$value->shops = ($rowsDopData['shops'][$key] ?? '');
-			$value->brend = ($rowsDopData['brend'][$key] ?? '');
+			$value->sh 	= ($rowsDopData['shops'][$key] ?? '');
+			// $value->brend = ($rowsDopData['brend'][$key] ?? ''); Не нужен он тут. берем сразу из товара
 
 			$value = (array)$value;
 			if($this->validateData($value, 'form', $start_date, $end_date, $key))
@@ -593,23 +633,32 @@ exit();
 
 		try
 		{
-			DB::transaction(function () use ($start_date, $end_date, $proc_type, $dataToInsert)
+			DB::transaction(function() use ($start_date, $end_date, $proc_type, $dataToInsert)
 			{
-				$pr = new Process();
-				if(trim(Request::input('process_title')) == '')
+				//prId - если пришел значит редактируем
+				if(Request::has('prId') && Request::input('prId') != '')
 				{
-					$pr->title = $proc_type->title.' '.Request::input('start_date');
+					DocumentActionFirstData::where('process_id', Request::has('prId'))->delete();
+					$pr = Process::find(Request::input('prId'));
 				}
 				else
 				{
-					$pr->title = Request::input('process_title');
-				}
+					$pr = new Process();
+					if(trim(Request::input('process_title')) == '')
+					{
+						$pr->title = $proc_type->title.' '.Request::input('start_date');
+					}
+					else
+					{
+						$pr->title = Request::input('process_title');
+					}
 
-				$pr->process_type_id = Request::input('process_type');
-				$pr->start_date = $start_date;
-				$pr->end_date = $end_date;
-				$pr->user_id = Auth::id();
-				$pr->save();
+					$pr->process_type_id = Request::input('process_type');
+					$pr->start_date = $start_date;
+					$pr->end_date = $end_date;
+					$pr->user_id = Auth::id();
+					$pr->save();
+				}
 
 				// $step_title = 'Данные';
 				// $step = new Step();
@@ -620,18 +669,33 @@ exit();
 				// $step->to_ids = 0;
 				// $step->save();
 
+				$pr_type_id = 0;
+				//если редактриуем
+				if(Request::has('prId') && Request::input('prId') != '')
+				{
+					$pr_type_id = $pr->process_type_id;
+				}
+				else
+				{
+
+					Request::input('process_type');
+					$pr_type_id = $pr->process_type_id;
+
+				}
+
 				$doc = Document::where('process_type_id', Request::input('process_type'))->get();
-				if(count($doc) == 0)
+				if(count($doc) > 0)
+				{
+					$doc = $doc[0];
+				}
+				else
 				{
 					$doc = new Document();
 					$doc->process_type_id = Request::input('process_type');
 					$doc->title = 'Документ '.$pr->title;
 					$doc->save();
 				}
-				else
-				{
-					$doc = $doc[0];
-				}
+
 
 				//TODO перенести в миграцию
 				if(!\Schema::hasTable('document_action_first_datas'))
@@ -646,6 +710,9 @@ exit();
 			            $table->integer('process_type_id')->unsigned();
 
 			            $table->integer('brend_id')->nullable();
+
+						$table->string('distr_ttl')->nullable();
+			            $table->string('distr')->nullable();
 
 			            $table->string('start_action_date')->nullable()->comment('Дата начала акции');
 			            $table->string('end_action_date')->nullable()->comment('Дата окончания акции');
@@ -685,17 +752,15 @@ exit();
 					// if(!is_array($value['shops']))
 					// {
 					// 	echo $key;
-
-// print_r($value);
-
+					//	print_r($value);
 					// 	continue;
 					// }
 					// else
 					// {
-					// 	// print_r($dataToInsert);
+					//	// print_r($dataToInsert);
 					// }
 
-					foreach ($value['shops'] as $value2)
+					foreach ($value['sh'] as $value2)
 					{
 						\DB::table('document_action_first_datas')->insert(
 		 					[
@@ -703,22 +768,28 @@ exit();
 								'shop_id' => $value2,
 								'process_id' => $pr->id,
 								'process_type_id' => $doc->process_type_id,
+								'brend_id' => $value['br'],
+
+
+								'distr_ttl' => $value['distr_ttl'], // берем из товара
+								'distr' => $value['distr'], // берем из товара
+
+
 								'tovsTitles' => $value['tovsTitles'],
-					            'kod_dis' => $value['kodTov'],
+					            'kod_dis' => $value['kT'],
 					            'articule_sk' => $value['articule_sk'] ?? 0,
-								'action_types_ids' => $value['type'],
-					            'on_invoice' => $value['skidka_on_invoice'],//$this->parseProcenteFromExcelToInt()
-					            'off_invoice' => $value['kompensaciya_off_invoice'],
-					            'skidka_itogo' => $value['skidka_itogo'],
-					            'old_zakup_price' => $value['zakup_old'],
-					            'new_zakup_price' => $value['zakup_new'],
-					            'on_invoice_start' => $value['start_date_on_invoice'],
-					            'on_invoice_end' => $value['end_date_on_invoice'],
-					            'old_roznica_price' => $value['roznica_old'],
-					            'new_roznica_price' => $value['roznica_new'],
-								'start_action_date' => $value['start_action_date'],
-								'end_action_date' => $value['end_action_date'],
-								'brend_id' => $value['brend'],
+								'action_types_ids' => $value['t'],
+					            'on_invoice' => $value['on_inv'],//$this->parseProcenteFromExcelToInt()
+					            'off_invoice' => $value['off_inv'],
+					            'skidka_itogo' => $value['itog'],
+					            'old_zakup_price' => $value['zak_old'],
+					            'new_zakup_price' => $value['zak_new'],
+					            'on_invoice_start' => $value['s_d_on_inv'],
+					            'on_invoice_end' => $value['e_d_on_inv'],
+					            'old_roznica_price' => $value['roz_old'],
+					            'new_roznica_price' => $value['roz_new'],
+								'start_action_date' => $value['sad'],
+								'end_action_date' => $value['ead'],
 								'razmesh_price' => $value['razmesh_price'],
 					            'description' => $value['descr'],
 					            'metka' => $value['marks'],
@@ -872,36 +943,31 @@ exit();
 
 		if($source == 'form' && isset($data['distr']) && trim($data['distr']) != '')
 		{
-			if(in_array($data['distr_ttl'], $this->cache_distr))
-			{
-				$tmp = array_keys($this->cache_distr, $data['distr_ttl']);
-				$data['distr'] = $tmp[0];
-			}
-			else
-			{
-				$postavshik = DB::connection('sqlsrv_imported_data')->select('
-					SELECT TOP 2 [Наименование], [Код], [ИНН]
-					FROM [Imported_Data].[dbo].[Действующие_Поставщики]
-					WHERE [Наименование] = \''.$data['distr'].'\'
-						OR
-							[Код] = \''.$data['distr'].'\'  ');
-				$tmp = count($postavshik);
-				if($tmp > 1 || $tmp == 0)
-				{
-					$data['distr_ttl'] = '';
-					// $this->validate_errors[$source][$row_num]['distr'] = 'Не удалось определить поставщика(Дистрибьютора) указан "'.$data['distr'].'"';
-				}
-				else
-				{
-					// Кешируем, чтобы за этим постащиком больше в базу не ходить
-					$this->cache_distr[$postavshik[0]->{'Код'}] = $postavshik[0]->{'Наименование'};
-				}
-			}
+			// из формы вообще не нужен нам дистрибьютер. При добавлении будем брать дистрибьютора из товара
+			// if(!isset($this->cache_distr[$data['distr']]))
+			// {
+			// 	$postavshik = DB::connection('sqlsrv_imported_data')->select('
+			// 		SELECT TOP 2 [Наименование], [Код], [ИНН]
+			// 		FROM [Imported_Data].[dbo].[Действующие_Поставщики]
+			// 		WHERE [Код] = \''.$data['distr'].'\' ');
+
+			// 	$tmp = count($postavshik);
+			// 	if($tmp > 1 || $tmp == 0)
+			// 	{
+			// 		$data['distr_ttl'] = '';
+			// 	}
+			// 	else
+			// 	{
+			// 		// Кешируем, чтобы за этим постащиком больше в базу не ходить
+			// 		$this->cache_distr[$postavshik[0]->{'Код'}] = $postavshik[0]->{'Наименование'};
+			// 		$data['distr_ttl'] = $postavshik[0]->{'Наименование'};
+			// 	}
+			// }
 		}
 
 		// если дистрибьютер оределелился, то берем его, если нет то игнорируем. т.е. в базу вносим только проверенные данные.
 		// дистрибьютер на текущий момент не обязательное поле
-		if(isset($data['distr_ttl']) && trim($data['distr_ttl']) != '')
+		if($source == 'file' && isset($data['distr_ttl']) && trim($data['distr_ttl']) != '')
 		{
 			if(in_array($data['distr_ttl'], $this->cache_distr))
 			{
@@ -933,8 +999,8 @@ exit();
 		{
 			$data['kT'] = trim($data['kT']);
 
-			//сначала ищем по полному соответсвуию кода.
-			$tmp = DB::connection('sqlsrv_imported_data')->select('select [ArtName], [BrandName], [ArtArticle]
+			//	сначала ищем по полному соответсвуию кода.
+			$tmp = DB::connection('sqlsrv_imported_data')->select('SELECT [ArtName], [BrandName], [ArtArticle]
 				FROM [Imported_Data].[dbo].[Assortment] 
 				WHERE ArtCode = ? ', [$data['kT']]);
 			if(!$tmp)
@@ -965,7 +1031,7 @@ exit();
 								$data['br'] = $br[0]->id;
 							}
 							else
-							{								
+							{
 								$data['brTtl'] = '';
 								$data['br'] = '';
 							}
@@ -974,16 +1040,19 @@ exit();
 					}
 					if(!$searched)
 					{
-						$this->validate_errors[$source][$row_num]['kodTov'] = 'Не найден товар с указанным кодом "'.$data['kodTov'].'"';
+						$this->validate_errors[$source][$row_num]['kT'] = 'Не найден товар с указанным кодом "'.$data['kT'].'"';
 					}
 				}
 				else
 				{
-					$this->validate_errors[$source][$row_num]['kodTov'] = 'Не найден товар с указанным кодом "'.$data['kodTov'].'"';
+					$data['brTtl'] = '';
+					$data['br'] = '';
+					$this->validate_errors[$source][$row_num]['kT'] = 'Не найден товар с указанным кодом "'.$data['kT'].'"';
 				}
 			}
 			else
 			{
+				$data['br'] = '';
 				$data['tTtl'] = $tmp[0]->ArtName;
 				$br = Brend::where('name', $tmp[0]->BrandName)->get();
 				if($br->count() > 0)
@@ -997,7 +1066,7 @@ exit();
 		{
 			$data['brTtl'] = '';
 			$data['br'] = '';
-			$this->validate_errors[$source][$row_num]['kodTov'] = 'Не указан код товара';
+			$this->validate_errors[$source][$row_num]['kT'] = 'Не указан код товара';
 		}
 
 		// Проверка типа маркетинговой акции
@@ -1008,7 +1077,7 @@ exit();
 				$action_type = ActionType::find($data['t']);
 				if(!$action_type)
 				{
-					$this->validate_errors[$source][$row_num]['type'] = 'Не найден указанный тип маркетинговой акции';
+					$this->validate_errors[$source][$row_num]['t'] = 'Не найден указанный тип маркетинговой акции';
 				}
 			}
 			else
@@ -1025,14 +1094,14 @@ exit();
 					}
 					else
 					{
-						$this->validate_errors[$source][$row_num]['type'] = 'Указанный тип маркетинговой акции не найден "'.$val_.'"';
+						$this->validate_errors[$source][$row_num]['t'] = 'Указанный тип маркетинговой акции не найден "'.$val_.'"';
 					}
 				}
 			}
 		}
 		else
 		{
-			$this->validate_errors[$source][$row_num]['type'] = 'Не указан тип акции для товара';
+			$this->validate_errors[$source][$row_num]['t'] = 'Не указан тип акции для товара';
 		}
 
 		// Размер скидки ON INVOICE
@@ -1040,7 +1109,7 @@ exit();
 		{
 			if(!$this->validateDataProcent($data['on_inv']))
 			{
-				$this->validate_errors[$source][$row_num]['skidka_on_invoice'] = 'Не верное значение процента в колонке скидка ON INVOICE('.$data['on_inv'].'). Значение должно быть от 0 - 100.';
+				$this->validate_errors[$source][$row_num]['on_inv'] = 'Не верное значение процента в колонке скидка ON INVOICE('.$data['on_inv'].'). Значение должно быть от 0 - 100.';
 			}
 			elseif($source == 'file')
 			{
@@ -1061,7 +1130,7 @@ exit();
 		{
 			if(!$this->validateDataProcent($data['off_inv']))
 			{
-				$this->validate_errors[$source][$row_num]['kompensaciya_off_invoice'] = 'Не верное значение процента в колонке компенсация OFF INVOICE('.$data['off_inv'].'). Значение должно быть от 0 - 100.';
+				$this->validate_errors[$source][$row_num]['off_inv'] = 'Не верное значение процента в колонке компенсация OFF INVOICE('.$data['off_inv'].'). Значение должно быть от 0 - 100.';
 			}
 			elseif($source == 'file')
 			{
@@ -1082,7 +1151,7 @@ exit();
 		{
 			if(!$this->validateDataProcent($data['itog']))
 			{
-				$this->validate_errors[$source][$row_num]['skidka_itogo'] = 'Не верное значение процента в колонке скидка итого('.$data['itog'].'). Значение должно быть от 0 - 100.';
+				$this->validate_errors[$source][$row_num]['itog'] = 'Не верное значение процента в колонке скидка итого('.$data['itog'].'). Значение должно быть от 0 - 100.';
 			}
 			elseif($source == 'file')
 			{
@@ -1099,14 +1168,14 @@ exit();
 		}
 		else
 		{
-			$this->validate_errors[$source][$row_num]['skidka_itogo'] = 'Не указана скидка итого.';
+			$this->validate_errors[$source][$row_num]['itog'] = 'Не указана скидка итого.';
 		}
 
 		//Закупочная цена
 		$data['zak_old'] = preg_replace('/[ ]+/', '', $data['zak_old']);
 		if($data['zak_old'] != '' && !preg_match('/^[0-9\.\,]+$/', $data['zak_old']))
 		{
-			$this->validate_errors[$source][$row_num]['zakup_old'] = 'Старая закупочная цена указана неверно.('.$data['zak_old'].')';
+			$this->validate_errors[$source][$row_num]['zak_old'] = 'Старая закупочная цена указана неверно.('.$data['zak_old'].')';
 		}
 		elseif($source == 'file')
 		{
@@ -1124,7 +1193,7 @@ exit();
 		$data['zak_new'] = preg_replace('/[ ]+/', '', $data['zak_new']);
 		if($data['zak_new'] != '' && !preg_match('/^[0-9\.\,]+$/', $data['zak_new']))
 		{
-			$this->validate_errors[$source][$row_num]['zakup_new'] = 'Новая закупочная цена указана неверно.('.$data['zak_new'].')';
+			$this->validate_errors[$source][$row_num]['zak_new'] = 'Новая закупочная цена указана неверно.('.$data['zak_new'].')';
 		}
 		elseif($source == 'file')
 		{
@@ -1141,7 +1210,7 @@ exit();
 
 		if(trim($data['zak_new']) != '' && trim($data['zak_old']) != '' && intval($data['zak_new']) > intval($data['zak_old']) && intval($data['zak_old']) > 0)
 		{
-			$this->validate_errors[$source][$row_num]['zakup_new'] = 'Новая закупочная цена должны быть меньше старой закупочной цены.
+			$this->validate_errors[$source][$row_num]['zak_new'] = 'Новая закупочная цена должны быть меньше старой закупочной цены.
 			(Новая:'.$data['zak_new'].' Старая:'.$data['zak_old'].')';
 		}
 		// если предоставляется скидка он-инвойс,
@@ -1153,16 +1222,16 @@ exit();
 			$is_date = (bool) preg_match("/^[0-9]{1,2}\-[0-9]{1,2}\-[0-9]{4}$/", $data['s_d_on_inv']);
 			if(trim($data['s_d_on_inv']) == '')
 			{
-				$this->validate_errors[$source][$row_num]['start_date_on_invoice'] = 'Не указана дата начала предоставления скидки ON INVOICE.';
+				$this->validate_errors[$source][$row_num]['s_d_on_inv'] = 'Не указана дата начала предоставления скидки ON INVOICE.';
 			}
 			elseif(!$is_date)
 			{
-				$this->validate_errors[$source][$row_num]['start_date_on_invoice'] = 'Неверный формат даты начала предоставления скидки ON INVOICE.('.$data['s_d_on_inv'].')';
+				$this->validate_errors[$source][$row_num]['s_d_on_inv'] = 'Неверный формат даты начала предоставления скидки ON INVOICE.('.$data['s_d_on_inv'].')';
 			}
 			// дата начала предоставления скидки он-инвойс <= дата начала акции
 			elseif(strtotime($data['s_d_on_inv']) > $start_date)
 			{
-				$this->validate_errors[$source][$row_num]['start_date_on_invoice'] = 'Дата начала предоставления скидки ON INVOICE не должна быть больше даты акции.';
+				$this->validate_errors[$source][$row_num]['s_d_on_inv'] = 'Дата начала предоставления скидки ON INVOICE не должна быть больше даты акции.';
 			}
 			else
 			{
@@ -1178,16 +1247,16 @@ exit();
 			// не пусто
 			if(trim($data['e_d_on_inv']) == '')
 			{
-				$this->validate_errors[$source][$row_num]['end_date_on_invoice'] = 'Не указана дата окончания предоставления скидки ON INVOICE.';
+				$this->validate_errors[$source][$row_num]['e_d_on_inv'] = 'Не указана дата окончания предоставления скидки ON INVOICE.';
 			}
 			elseif(!$is_date)
 			{
-				$this->validate_errors[$source][$row_num]['end_date_on_invoice'] = 'Неверный формат даты окончания предоставления скидки ON INVOICE.';
+				$this->validate_errors[$source][$row_num]['e_d_on_inv'] = 'Неверный формат даты окончания предоставления скидки ON INVOICE.';
 			}
 			// дата начала предоставления скидки он-инвойс <= дата начала акции
 			elseif($data['s_d_on_inv'] > strtotime($data['e_d_on_inv']))
 			{
-				$this->validate_errors[$source][$row_num]['end_date_on_invoice'] = 'Дата начала предоставления скидки ON INVOICE не должна быть больше даты окончания скидки.';
+				$this->validate_errors[$source][$row_num]['e_d_on_inv'] = 'Дата начала предоставления скидки ON INVOICE не должна быть больше даты окончания скидки.';
 			}
 			else
 			{
@@ -1203,7 +1272,7 @@ exit();
 		$data['roz_old'] = preg_replace('/[ ]+/', '', $data['roz_old']);
 		if($data['roz_old'] != '' && !preg_match('/^[0-9\.\,]+$/', $data['roz_old']))
 		{
-			$this->validate_errors[$source][$row_num]['roznica_old'] = 'Старая розничная цена указана неверно.('.$data['roz_old'].')';
+			$this->validate_errors[$source][$row_num]['roz_old'] = 'Старая розничная цена указана неверно.('.$data['roz_old'].')';
 		}
 		elseif($source == 'file')
 		{
@@ -1221,7 +1290,7 @@ exit();
 		$data['roz_new'] = preg_replace('/[ ]+/', '', $data['roz_new']);
 		if($data['roz_new'] != '' && !preg_match('/^[0-9\.\,]+$/', $data['roz_new']))
 		{
-			$this->validate_errors[$source][$row_num]['roznica_new'] = 'Новая розничная цена указана неверно.('.$data['roz_new'].')';
+			$this->validate_errors[$source][$row_num]['roz_new'] = 'Новая розничная цена указана неверно.('.$data['roz_new'].')';
 		}
 		elseif($source == 'file')
 		{
@@ -1300,7 +1369,7 @@ exit();
 							trim($sheet->getCell('G'.$row_num)->getValue()) == '')
 						{
 							$emptyRow[] = $row_num;
-							$this->validate_errors['file'][$row_num]['kodTov'] = 'Не указан товар в строке ('.$row_num.'), либо строка пустая.';
+							$this->validate_errors['file'][$row_num]['kT'] = 'Не указан товар в строке ('.$row_num.'), либо строка пустая.';
 							continue;
 						}
 						// если сюда прошли, значит пошли непустые строки. забываем предыдущие пустые, по ним мы выведем ошибку
@@ -1315,80 +1384,6 @@ exit();
 						{
 							switch($key)
 							{
-								// case 'A': //Дата начала акции
-								// 	$dataToInsert[$row_num]['start_action_date'] = $this->parseDateFromExcelToInt($cell);
-								// 	break;
-								// case 'B': //Дата окончания акции
-								// 	$dataToInsert[$row_num]['end_action_date'] = $this->parseDateFromExcelToInt($cell);
-								// 	break;
-								// case 'C': //Бренд
-								// 	$dataToInsert[$row_num]['brend'] = $cell->getCalculatedValue();
-								// 	$dataToInsert[$row_num]['brendTitles'] = $cell->getCalculatedValue();
-								// 	break;
-								// case 'D'://Магазины-исключения
-								// 	$v = $cell->getCalculatedValue();
-								// 	if(trim($v) != '')
-								// 	{
-								// 		$dataToInsert[$row_num]['shops_exception'] = explode(';', $v) ?? null;
-								// 	}
-								// 	else
-								// 	{
-								// 		$dataToInsert[$row_num]['shops_exception'] = [];
-								// 	}
-								// 	break;
-								// case 'E':  // Дистрибьютор(Плательщик)
-								// 	$dataToInsert[$row_num]['distrTitles'] = $cell->getCalculatedValue();
-								// 	break;
-								// case 'F':	//наименование
-								// 	$dataToInsert[$row_num]['tovsTitles'] = $cell->getCalculatedValue();
-								// 	break;
-								// case 'G':	//код ДиС
-								// 	$dataToInsert[$row_num]['kodTov'] = $cell->getCalculatedValue();
-								// 	break;
-								// case 'H': // Артикул (ШК)
-								// 	$dataToInsert[$row_num]['articule_sk'] = $cell->getCalculatedValue();
-								// 	break;
-								// case 'I': //Тип Акции (скидка, механика, подарок)
-								// 	$dataToInsert[$row_num]['type'] = $cell->getCalculatedValue();
-								// 	break;
-								// case 'J': // Размер скидки ON INVOICE 
-								// 	$dataToInsert[$row_num]['skidka_on_invoice'] = $cell->getCalculatedValue();
-								// 	break;
-								// case 'K': //
-								// 	$dataToInsert[$row_num]['kompensaciya_off_invoice'] = $cell->getCalculatedValue();
-								// 	break;
-								// case 'L': //Итого
-								// 	$dataToInsert[$row_num]['skidka_itogo'] = $cell->getCalculatedValue();
-								// 	break;
-								// case 'M': //Закупочная цена (руб)
-								// 	$dataToInsert[$row_num]['zakup_old'] = $cell->getCalculatedValue();
-								// 	break;
-								// case 'N':
-								// 	$dataToInsert[$row_num]['zakup_new'] = $cell->getCalculatedValue();
-								// 	break;
-								// case 'O':  //Период действия акционной цены ON INVOICE
-								// 	$dataToInsert[$row_num]['start_date_on_invoice'] = $this->parseDateFromExcelToInt($cell);
-								// 	break;
-								// case 'P':
-								// 	$dataToInsert[$row_num]['end_date_on_invoice'] = $this->parseDateFromExcelToInt($cell);
-								// 	break;
-								// case 'Q': //Розничная Цена
-								// 	$dataToInsert[$row_num]['roznica_old'] = $cell->getCalculatedValue();
-								// 	break;
-								// case 'R':
-								// 	//TODO дробная часть куда девается
-								// 	$dataToInsert[$row_num]['roznica_new'] = $cell->getCalculatedValue();
-								// 	break;
-								// case 'S':
-								// 	$dataToInsert[$row_num]['razmesh_price'] = $cell->getCalculatedValue();
-								// 	break;
-								// case 'T': 
-								// 	$dataToInsert[$row_num]['descr'] = $cell->getCalculatedValue();
-								// 	break;
-								// case 'U': 
-								// 	$dataToInsert[$row_num]['marks'] = $cell->getCalculatedValue();
-								// 	break;
-
 								case 'A': //Дата начала акции
 									// start_action_date
 									$dataToInsert[$row_num]['sad'] = $this->parseDateFromExcelToInt($cell);
