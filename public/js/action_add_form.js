@@ -54,7 +54,7 @@ $(function(){
 	$('#tabs').tabs();
 
 	/* head start */
-	$('.addProcessForm').keydown(function(e)
+	$('.form').keydown(function(e)
 	{
 		if(e.keyCode == 13)
 		{
@@ -199,11 +199,8 @@ $(function(){
 		datatype:datatype_,
 		rowNum:rowNum_,
 
-		height:300,
-		width:500,
-		// multiSort: true,
-		// sortname: 'tovsTitles',
-		// sortorder: "asc",
+		height:400,
+		width:800,
 		colModel:[
 			{label:'Действия',
 				name:'actions',
@@ -491,34 +488,19 @@ $(function(){
 		   		fixed:true},
 		],
 		multiselect:true,
-		rownumbers: true,
+		rownumbers:true,
 		ondblClickRow:function(rowid)
 		{
-			grid.editRow(rowid);
+			if($('#jEditButton_' + rowid).length)
+			{
+				$.fn.fmatter.rowactions.call($('#jEditButton_' + rowid),'edit');
+			}
 			eventsJqGridRow();
 		},
-		beforeSelectRow:function(rowId){
-
+		beforeSelectRow:function(rowId, event){
 			if($(event.target).closest('#jqg_'+grid.attr('id')+'_'+rowId).length == 0)
 			{
 				return false;
-			}
-		},
-		onCellSelect: function(rowId, colId, c, event){
-			if(colId == 2)
-			{
-				setTimeout(function(){
-					if($(event.target).closest('#jSaveButton_'+rowId).length || 
-						$(event.target).closest('#jCancelButton_'+rowId).length)
-					{
-						grid.jqGrid('resetSelection',rowId);
-					}
-					else if($(event.target).closest('#jEditButton_'+rowId).length)
-					{
-						grid.jqGrid('resetSelection',rowId);
-						grid.jqGrid('setSelection',rowId);
-					}
-				}, 200);
 			}
 		},
 		loadComplete:function()
@@ -542,7 +524,6 @@ $(function(){
 	}
 
 	let r = addJqGridRow();
-	grid.editRow(r);
 	eventsJqGridRow();
 
 	grid.on('jqGridDelRowBeforeSubmit', function(e,id){
@@ -559,7 +540,6 @@ $(function(){
 				return;
 			}
 			setFrozenColumns();
-			setFrozenHeightTd();
 			scrollLeftActionOnFrozen();
 		}
 		else
@@ -812,7 +792,6 @@ $(function(){
 								tr_str.push(ind);
 							}
 						}
-						delete(data['data'][ind]);
 					}
 
 					if(tr_str.length > 0)
@@ -827,8 +806,16 @@ $(function(){
 						});
 					}
 				}
+
 				var row = [];
 				row['data'] = [];
+
+				if(data['data'].length > 0)
+				{
+					grid.saveRow(1, false, 'clientArray');
+					delJqGridRowEmpty(1);
+				}
+
 				for(ind in data['data'])
 				{
 					row['data'][ind] = {};
@@ -877,9 +864,12 @@ $(function(){
 
 					if(kodTovArr[row['data'][ind].kT])
 					{
-						let el = $('#'+grid.attr('id')+' td').filter(function(){
+						let el = $('#'+grid.attr('id')+' td').filter(function()
+						{
 							if(row['data'][ind].kT == $(this).text())
+							{
 								return true;
+							}
 							return false;
 						});
 
@@ -1454,15 +1444,21 @@ function addJqGridRow(initData)
 	    initdata:initData,
 	    position:"last",
 	    useDefValues:true,
-	    useFormatter:false,
+	    useFormatter:true,
 	    addRowParams:{extraparam:{}}
 	}
 	grid.jqGrid('addRow',parameters);
-	grid.saveRow(r, false, 'clientArray');
 
-	setTimeout(function(){
-		grid.jqGrid('resetSelection',r);
-	}, 1);
+	// grid.saveRow(r, false, 'clientArray');
+
+	// if($('#jEditButton_' + rowid).length)
+	// {
+	// 	$.fn.fmatter.rowactions.call($('#jEditButton_' + rowid), 'edit');
+	// }
+
+	// setTimeout(function(){
+	// 	// grid.jqGrid('resetSelection',r);
+	// }, 1);
 
 	if(initData)
 	{
@@ -1499,9 +1495,19 @@ function addJqGridRow(initData)
 function addJqGridRowFromPanel()
 {
 	let r = addJqGridRow();
-	grid.editRow(r);
-	grid.setSelection(r);
 	eventsJqGridRow();
+}
+
+function delJqGridRowEmpty(rowId)
+{
+	let is_empty_first = grid.getRowData(rowId);
+	if(is_empty_first.distr_ttl == '' &&
+		is_empty_first.kT == '' &&
+		is_empty_first.itog == '' &&
+		(is_empty_first.t == '' || is_empty_first.t == '0'))
+	{
+		grid.jqGrid('delRowData', rowId);
+	}
 }
 
 function addJqGridSubmit()
@@ -1511,18 +1517,11 @@ function addJqGridSubmit()
 		grid.saveRow(this.id, false, 'clientArray');
 	});
 
-	let is_empty_first = grid.getRowData(1);
-	if(is_empty_first.distr_ttl == '' &&
-		is_empty_first.kT == '' &&
-		is_empty_first.itog == '' &&
-		(is_empty_first.t == '' || is_empty_first.t == '0'))
-	{
-		grid.jqGrid('delRowData', 1);
-	}
+	delJqGridRowEmpty(1);
 
-	let rowData = [];
+	let rowData = new Array();
 	$.each(grid.getDataIDs(), function(){
-		rowData[this] = grid.getRowData(this);
+		rowData.push(grid.getRowData(this));
 	});
 
 	let arrData = '';
@@ -1536,7 +1535,7 @@ function addJqGridSubmit()
 	arrData += '&start_date=' + $('#start_date').val();
 	arrData += '&end_date=' + $('#end_date').val();
 
-	if(processId)
+	if(typeof(processId) != 'undefined')
 	{
 		arrData += '&prId=' + processId;
 	}
@@ -1567,7 +1566,7 @@ function addJqGridSubmit()
 
 				if(tr_str.length > 0)
 				{
-					str = 'Не загружены строки из файла с номерами: '+tr_str.join(', ')+'<br><br>'+str;
+					str = 'Не загружены строки с номерами: '+tr_str.join(', ')+'<br><br>'+str;
 				}
 
 				if(str != '')
@@ -1588,15 +1587,22 @@ function addJqGridSubmit()
 	});
 }
 
+// $("#"+grid.attr('id') + " tr[role=row].jqgrow").each(function(){
+// 	console.log( $(this).outerHeight() );
+// });
+
+
+
+
+
 function setFrozenColumns()
 {
 	if($('table[id$=_frozen]').length == 0)
 	{
 		grid.jqGrid('setFrozenColumns');
 
-		//изменяем id-шники у замороженных столбцов
+		// изменяем id-шники у замороженных столбцов
 		setTimeout(function(){
-
 			// checkbox
 			let tmp = $('.frozen-div #cb_'+grid.attr('id')).attr('id');
 			tmp = tmp.split('_');
@@ -2324,9 +2330,9 @@ function show_input_hint(el, value)
 	d.css('left', $(el).offset().left);
 	d.show();
 	d.hover(function(){
-		$('body').find('> div.input_hint').show();
+		$('.input_hint').show();
 	}, function(){
-		$('body').find('> div.input_hint').remove();
+		$('.input_hint').remove();
 	});
 	$('body').append(d);
 

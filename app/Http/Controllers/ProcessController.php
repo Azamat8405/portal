@@ -1,28 +1,28 @@
 <?php
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Redirect;
-use App\Process;
-use App\ProcessType;
-use App\Step;
-use App\Shop;
-use App\ActionType;
-use App\ActionMark;
-use App\TovCategs;
-use App\ShopRegion;
-use App\Brend;
-use App\User;
-use App\Document;
-use App\DocumentActionFirstData;
+use Illuminate\Support\Facades\{Storage, 
+Auth,
+Request,
+Redirect};
+
+use App\{Process,
+ProcessType,
+Step,
+Shop,
+ActionType,
+ActionMark,
+TovCategs,
+ShopRegion,
+Brend,
+User,
+Document,
+DocumentActionFirstData};
 
 use Validator;
 use File;
 use Excel;
 use DB;
-
 use PHPExcel_IOFactory;
 use PHPExcel_Shared_Date;
 
@@ -34,7 +34,7 @@ class ProcessController extends Controller
 	private $validate_errors = [];
 
 	/**
-	* Подгрузка списка акции для таблицы jqGrid
+	* Подгрузка списка акции для таблицы jqGrid в списке процессов
 	**/
 	public function ajaxList(Request $request)
 	{
@@ -166,7 +166,7 @@ class ProcessController extends Controller
 		echo json_encode($responce);
 	}
 
-	public function ajaxGetTovList(Request $request, $procId)
+	public function ajaxGetTovListForEdit(Request $request, $procId)
 	{
 		//достаем все магазины и кешируем
 		$tmp = Shop::orderBy('title')->get();
@@ -178,8 +178,7 @@ class ProcessController extends Controller
 				$this->cache_shops[$value->id] = ['code' => $value->code, 'title' => $value->title];
 			}
 		}
-
-		//обязательно сортируем по магазинам, чтобы в цикле ниже быть уверенным, что записи по магазину идут подряд
+		//обязательно сортируем по коду дис, чтобы в цикле ниже быть уверенным, что записи по магазину идут подряд
 		$tovs = DocumentActionFirstData::where('process_id', $procId)
 			->leftJoin('shops', function($join){
 
@@ -213,10 +212,6 @@ class ProcessController extends Controller
 				{
 					$responce['rows'][$key]['cell']['sh_Ttl'] .= '; '.$this->cache_shops[$value->shop_id]['title'];
 				}
-				else
-				{
-					$responce['rows'][$key]['cell']['sh_Ttl'] = $this->cache_shops[$value->shop_id]['title'];
-				}
 			}
 			else
 			{
@@ -231,32 +226,11 @@ class ProcessController extends Controller
 			}
 			$kod_dis[$value->kod_dis] = 1;
 
-			// $data[$value->kod_dis]['tovsTitles'] = $value->tovsTitles;
-			// $data[$value->kod_dis]['kT'] = $value->kod_dis;
-			// $data[$value->kod_dis]['sad'] = $value->start_action_date;
-			// $data[$value->kod_dis]['ead'] = $value->end_action_date;
-			// $data[$value->kod_dis]['distr_ttl'] = $value->distr_ttl;
-			// $data[$value->kod_dis]['distr'] = $value->distr;
-			// $data[$value->kod_dis]['brTtl'] = ($value->brend ? $value->brend->title : '' );
-			// $data[$value->kod_dis]['articule_sk'] = $value->articule_sk;
-			// $data[$value->kod_dis]['t'] = $value->action_types_ids;
-			// $data[$value->kod_dis]['on_inv'] = $value->on_invoice;
-			// $data[$value->kod_dis]['off_inv'] = $value->off_invoice;
-			// $data[$value->kod_dis]['itog'] = $value->skidka_itogo;
-			// $data[$value->kod_dis]['roz_old'] = $value->old_roznica_price;
-			// $data[$value->kod_dis]['roz_new'] = $value->new_roznica_price;
-			// $data[$value->kod_dis]['zak_old'] = $value->old_zakup_price;
-			// $data[$value->kod_dis]['zak_new'] = $value->new_zakup_price;
-			// $data[$value->kod_dis]['s_d_on_inv'] = $value->on_invoice_start;
-			// $data[$value->kod_dis]['e_d_on_inv'] = $value->on_invoice_end;
-			// $data[$value->kod_dis]['razmesh_price'] = $value->razmesh_price;
-			// $data[$value->kod_dis]['descr'] = $value->description;
-			// $data[$value->kod_dis]['marks'] = $value->metka;
-
 			$responce['rows'][$key]['id'] = $value->kod_dis;
 		    $responce['rows'][$key]['cell'] = 
 		    	[
 			   		'tovsTitles' => $value->tovsTitles,
+					'sh_Ttl' => $this->cache_shops[$value->shop_id]['title'] ?? '',
 			   		'kT' => $value->kod_dis,
 			   		'sad' => $value->start_action_date,
 			   		'ead' => $value->end_action_date,
@@ -271,35 +245,13 @@ class ProcessController extends Controller
 			   		'roz_new' => $value->new_roznica_price,
 			   		'zak_old' => $value->old_zakup_price,
 			   		'zak_new' => $value->new_zakup_price,
-			   		's_d_on_inv' => $value->on_invoice_start,
-			   		'e_d_on_inv' => $value->on_invoice_end,
+			   		's_d_on_inv' => $value->on_invoice_start != '' ? date('d-m-Y', (integer)$value->on_invoice_start) : '',
+			   		'e_d_on_inv' => $value->on_invoice_end != '' ? date('d-m-Y', (integer)$value->on_invoice_end) : '',
 			   		'razmesh_price' => $value->razmesh_price,
 			   		'descr' => $value->description,
 			   		'marks' => $value->metka
 				];
 		}
-
-			// articule_sk
-			// brTtl
-			// descr
-			// distr_ttl
-			// e_d_on_inv
-			// ead
-			// itog
-			// kT
-			// marks
-			// off_inv
-			// on_inv
-			// razmesh_price
-			// roz_new
-			// roz_old
-			// s_d_on_inv
-			// sad
-			// t
-			// tovsTitles
-			// zak_new
-			// zak_old
-
 		echo json_encode($responce);
 	}
 
@@ -376,7 +328,7 @@ class ProcessController extends Controller
 
 		if(!$request::has('kT'))
 		{
-			$this->validate_errors['form'][0]['kT'] = 'Не указан товар или указан не верно.';
+			$this->validate_errors['form'][0]['kT'] = 'Не указан товар или указан неверно.';
 		}
 
 		// Если в шапке есть ошибки покаызваем их пока.
@@ -579,7 +531,7 @@ class ProcessController extends Controller
 
 		if(!$request::has('rows'))
 		{
-			$this->validate_errors['form'][0]['kT'] = 'Не указано ни одного товара или указаны не верно.';
+			$this->validate_errors['form'][0]['kT'] = 'Не указано ни одного товара или указаны неверно.';
 		}
 
 		// Если в шапке есть ошибки покаызваем их пока.
@@ -604,7 +556,7 @@ class ProcessController extends Controller
 		// Проверка полей формы
 		foreach($rows as $key => &$value)
 		{
-			if($key == 0 || is_null($value))
+			if(is_null($value))
 			{
 				continue;
 			}
@@ -624,9 +576,9 @@ class ProcessController extends Controller
 			}
 		}
 
-		if(isset($returnData['errors']) && count($returnData['errors']) > 0)
+		if(isset($this->validate_errors['form']) && count($this->validate_errors['form']) > 0)
 		{
-			$returnData['errors'] = $this->validate_errors['form'] ?? [];
+			$returnData['errors'] = $this->validate_errors['form'];
 			echo json_encode($returnData);
 			return;
 		}
@@ -638,8 +590,29 @@ class ProcessController extends Controller
 				//prId - если пришел значит редактируем
 				if(Request::has('prId') && Request::input('prId') != '')
 				{
-					DocumentActionFirstData::where('process_id', Request::has('prId'))->delete();
+					DocumentActionFirstData::where('process_id', Request::input('prId'))->delete();
 					$pr = Process::find(Request::input('prId'));
+
+					$pr_update = false;
+					if($pr->process_type_id != Request::input('process_type'))
+					{
+						$pr->process_type_id = Request::input('process_type');
+						$pr_update = true;
+					}
+					if(strtotime($pr->start_date) != $start_date)
+					{
+						$pr->start_date = $start_date;
+						$pr_update = true;
+					}
+					if(strtotime($pr->end_date) != $end_date)
+					{
+						$pr->end_date = $end_date;
+						$pr_update = true;
+					}
+					if($pr_update)
+					{
+						$pr->save();
+					}
 				}
 				else
 				{
@@ -669,33 +642,24 @@ class ProcessController extends Controller
 				// $step->to_ids = 0;
 				// $step->save();
 
-				$pr_type_id = 0;
-				//если редактриуем
-				if(Request::has('prId') && Request::input('prId') != '')
-				{
-					$pr_type_id = $pr->process_type_id;
-				}
-				else
-				{
-
-					Request::input('process_type');
-					$pr_type_id = $pr->process_type_id;
-
-				}
-
+				// TODO возможно в дальнейшем будет несколько документов привязано к типу процееса, но пока ждем один
 				$doc = Document::where('process_type_id', Request::input('process_type'))->get();
 				if(count($doc) > 0)
 				{
 					$doc = $doc[0];
+					if($doc->process_type_id != Request::input('process_type'))
+					{
+						$doc->process_type_id = Request::input('process_type');
+						$doc->save();
+					}
 				}
 				else
 				{
 					$doc = new Document();
-					$doc->process_type_id = Request::input('process_type');
 					$doc->title = 'Документ '.$pr->title;
+					$doc->process_type_id = Request::input('process_type');
 					$doc->save();
 				}
-
 
 				//TODO перенести в миграцию
 				if(!\Schema::hasTable('document_action_first_datas'))
@@ -747,21 +711,14 @@ class ProcessController extends Controller
 					});
 				}
 
+				// проход по каждому товару
 				foreach ($dataToInsert as $key => $value)
 				{
-					// if(!is_array($value['shops']))
-					// {
-					// 	echo $key;
-					//	print_r($value);
-					// 	continue;
-					// }
-					// else
-					// {
-					//	// print_r($dataToInsert);
-					// }
-
+					// проходим по всем указнным для данного товара магазинам.
+					// вносим запись для каждого магазина. Да, да ((
 					foreach ($value['sh'] as $value2)
 					{
+						//TODO через Eloquent
 						\DB::table('document_action_first_datas')->insert(
 		 					[
 		 						'doc_id' => $doc->id,
@@ -769,17 +726,13 @@ class ProcessController extends Controller
 								'process_id' => $pr->id,
 								'process_type_id' => $doc->process_type_id,
 								'brend_id' => $value['br'],
-
-
-								'distr_ttl' => $value['distr_ttl'], // берем из товара
-								'distr' => $value['distr'], // берем из товара
-
-
+								'distr_ttl' => $value['distr_ttl'],		// берем из товара
+								'distr' => $value['distr'],				// берем из товара
 								'tovsTitles' => $value['tovsTitles'],
 					            'kod_dis' => $value['kT'],
 					            'articule_sk' => $value['articule_sk'] ?? 0,
 								'action_types_ids' => $value['t'],
-					            'on_invoice' => $value['on_inv'],//$this->parseProcenteFromExcelToInt()
+					            'on_invoice' => $value['on_inv'],
 					            'off_invoice' => $value['off_inv'],
 					            'skidka_itogo' => $value['itog'],
 					            'old_zakup_price' => $value['zak_old'],
@@ -818,7 +771,6 @@ class ProcessController extends Controller
 		}
 	}
 
-
 	public function edit(Request $request, $id)
 	{
 		$action_types = [];
@@ -844,7 +796,7 @@ class ProcessController extends Controller
 	}
 
     /**
-     * Валидация данных 
+     * Валидация данных. Так же добавляет к массиву $data дополнительные(нужные значения)
      *
      * @param  Array $data - массив полей формы или массив полей из файла
      * @param  $start_date - дата когда должна начаться акция
@@ -1109,7 +1061,7 @@ class ProcessController extends Controller
 		{
 			if(!$this->validateDataProcent($data['on_inv']))
 			{
-				$this->validate_errors[$source][$row_num]['on_inv'] = 'Не верное значение процента в колонке скидка ON INVOICE('.$data['on_inv'].'). Значение должно быть от 0 - 100.';
+				$this->validate_errors[$source][$row_num]['on_inv'] = 'Неверное значение процента в колонке скидка ON INVOICE('.$data['on_inv'].'). Значение должно быть от 0 - 100.';
 			}
 			elseif($source == 'file')
 			{
@@ -1130,7 +1082,7 @@ class ProcessController extends Controller
 		{
 			if(!$this->validateDataProcent($data['off_inv']))
 			{
-				$this->validate_errors[$source][$row_num]['off_inv'] = 'Не верное значение процента в колонке компенсация OFF INVOICE('.$data['off_inv'].'). Значение должно быть от 0 - 100.';
+				$this->validate_errors[$source][$row_num]['off_inv'] = 'Неверное значение процента в колонке компенсация OFF INVOICE('.$data['off_inv'].'). Значение должно быть от 0 - 100.';
 			}
 			elseif($source == 'file')
 			{
@@ -1151,7 +1103,7 @@ class ProcessController extends Controller
 		{
 			if(!$this->validateDataProcent($data['itog']))
 			{
-				$this->validate_errors[$source][$row_num]['itog'] = 'Не верное значение процента в колонке скидка итого('.$data['itog'].'). Значение должно быть от 0 - 100.';
+				$this->validate_errors[$source][$row_num]['itog'] = 'Неверное значение процента в колонке скидка итого('.$data['itog'].'). Значение должно быть от 0 - 100.';
 			}
 			elseif($source == 'file')
 			{
@@ -1310,7 +1262,10 @@ class ProcessController extends Controller
 			$this->validate_errors[$source][$row_num]['roz_new'] = 'Новая розничная цена должны быть меньше старой розничной цены.';
 		}
 
-		if (!empty($this->validate_errors[$source][$row_num]))
+// echo $row_num;
+// print_r($this->validate_errors[$source][$row_num]);
+
+		if (isset($this->validate_errors[$source][$row_num]))
 		{
 			return false;
 		}
@@ -1468,7 +1423,11 @@ class ProcessController extends Controller
 									break;
 							}
 						}
-						$this->validateData($dataToInsert[$row_num], 'file', $start_date, $end_date, $row_num);
+
+						if(!$this->validateData($dataToInsert[$row_num], 'file', $start_date, $end_date, $row_num))
+						{
+							unset($dataToInsert[$row_num]);
+						}
 					}
 
 					//если в массиве есть что-то, значит это последние строки в файле. по ним не выводим сообщения

@@ -22,7 +22,7 @@ Route::group(['middleware' => 'auth'], function () {
 		Route::get('/processes/add', 					'ProcessController@showAddFrom')->name('processes.add');
 		Route::get('/processes/edit/{id}',				'ProcessController@edit');
 		Route::get('/processes/ajaxList',				'ProcessController@ajaxList');
-		Route::get('/processes/ajaxGetTovList/{procId}','ProcessController@ajaxGetTovList');
+		Route::get('/processes/ajaxGetTovList/{procId}','ProcessController@ajaxGetTovListForEdit');
 		Route::post('/processes/add',					'ProcessController@add');
 		Route::post('/processes/ajaxAdd',				'ProcessController@ajaxAdd');
 		

@@ -70,15 +70,10 @@ $(function () {
 						return;
 					window.location.href="/ucenka/edit/"+rowid;
 				},
-				// onPaging: function()
-				// {
-				// 	setFrozenHeightTd();
-				// }
 			});
 
 			grid.jqGrid('navGrid','#jqGridpager', {edit:false,add:false,del:false,search:false,refresh:false});
 			// grid.jqGrid('setFrozenColumns');
-			// setFrozenHeightTd();
 		}
 		else if($("#jqGridEdit").length > 0)
 		{

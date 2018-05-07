@@ -77,7 +77,7 @@
 								<label>Автор</label>
 						    </div>
 					    	<div>
-								{{$user->name}}
+								{{$process->user->name}}
 						    </div>
 						</div>
 					</div>

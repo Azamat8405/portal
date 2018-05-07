@@ -2,7 +2,7 @@
 
 @section('content')
 
-	<form class="addProcessForm" action="{{ route('processes.add') }}" method="post" enctype="multipart/form-data">
+	<form class="form" action="{{ route('processes.add') }}" method="post" enctype="multipart/form-data">
 		@csrf
 		<div class="content-panel-fon"></div>
 		<div class="content-panel">

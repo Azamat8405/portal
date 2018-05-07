@@ -19,7 +19,7 @@
     <body>
         <div class="wrapper">
             <section class="header">
-                <a href="/"><h1>ИНФОПОРТАЛ</h1></a>
+                <a href="/"><h1>{{ config('app.name') }}</h1></a>
                 <ul class="auth">
                     @guest
                         <li><a href="{{ route('login') }}">Войти</a></li>
