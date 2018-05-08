@@ -37,7 +37,7 @@ class HomeController extends Controller
         {
             return redirect('/ucenka/list');
         }
-        elseif($user->user_group_id == 1)
+        elseif($user->user_group_id == 1 || $user->user_group_id == 6)
         {
             return redirect('/processes');
         }

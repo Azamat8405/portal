@@ -52,7 +52,12 @@
                     <div class="handrail"><div></div></div>
                     <ul>
                         @php
-                        if(Gate::allows('processes-read') || Gate::allows('processes-create') || Gate::allows('admin'))
+
+                        if(Gate::allows('process_read') ||
+                            Gate::allows('process_edit') ||
+                            Gate::allows('process_add') ||
+                            Gate::allows('process_delete') ||
+                            Gate::allows('admin'))
                         {
                         @endphp
                             <li><a href="{{ route('processes') }}">Акции</a></li>

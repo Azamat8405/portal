@@ -186,7 +186,6 @@ $.jgrid.extend({
 			}
 		});
 	},
-
 	addRowData : function(rowid,rdata,pos,src) {
 
 		if($.inArray( pos, ["first", "last", "before", "after"] ) === -1) {pos = "last";}
@@ -293,6 +292,7 @@ $.jgrid.extend({
 					if(t.p.subGrid===true) {
 						$(t).jqGrid("addSubGrid",gi+ni, sind);
 					}
+
 					t.p.records++;
 					t.p.reccount++;
 					$(t).triggerHandler("jqGridAfterInsertRow", [rowid,data,data]);
@@ -305,20 +305,12 @@ $.jgrid.extend({
 						lcdata = {};
 					}
 				}
-
-console.log('777');
-
 				t.updatepager(true,true);
 				success = true;
 			});
 		}
 		return success;
 	},
-
-
-
-
-
 })
 
 $(function () {

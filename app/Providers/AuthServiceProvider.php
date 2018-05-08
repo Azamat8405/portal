@@ -51,20 +51,34 @@ class AuthServiceProvider extends ServiceProvider
             return $this->checkRole($user, 'admin');
         });
 
+
         $gate->define('ucenkaapp-read', function ($user) {
             return $this->checkRole($user, 'ucenkaapp-read');
         });
-
         $gate->define('ucenkaapp-edit', function ($user) {
             return $this->checkRole($user, 'ucenkaapp-edit');
         });
-
         $gate->define('ucenkaapp-create', function ($user) {
             return $this->checkRole($user, 'ucenkaapp-create');
         });
 
         $gate->define('avtodefectura-read', function ($user) {
             return $this->checkRole($user, 'avtodefectura-read');
+        });
+
+
+
+        $gate->define('process_read', function ($user) {
+            return $this->checkRole($user, 'process_read');
+        });
+        $gate->define('process_edit', function ($user) {
+            return $this->checkRole($user, 'process_edit');
+        });
+        $gate->define('process_add', function ($user) {
+            return $this->checkRole($user, 'process_add');
+        });
+        $gate->define('process_delete', function ($user) {
+            return $this->checkRole($user, 'process_delete');
         });
 
     }

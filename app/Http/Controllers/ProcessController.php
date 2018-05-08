@@ -30,6 +30,7 @@ class ProcessController extends Controller
 {
 	// хешируем сюда список магазинов
 	private $cache_shops = [];
+	private $cache_action_types = [];
 	private $cache_distr = [];
 	private $validate_errors = [];
 
@@ -893,30 +894,6 @@ class ProcessController extends Controller
 			$data['sh'] = $tmp;
 		}
 
-		if($source == 'form' && isset($data['distr']) && trim($data['distr']) != '')
-		{
-			// из формы вообще не нужен нам дистрибьютер. При добавлении будем брать дистрибьютора из товара
-			// if(!isset($this->cache_distr[$data['distr']]))
-			// {
-			// 	$postavshik = DB::connection('sqlsrv_imported_data')->select('
-			// 		SELECT TOP 2 [Наименование], [Код], [ИНН]
-			// 		FROM [Imported_Data].[dbo].[Действующие_Поставщики]
-			// 		WHERE [Код] = \''.$data['distr'].'\' ');
-
-			// 	$tmp = count($postavshik);
-			// 	if($tmp > 1 || $tmp == 0)
-			// 	{
-			// 		$data['distr_ttl'] = '';
-			// 	}
-			// 	else
-			// 	{
-			// 		// Кешируем, чтобы за этим постащиком больше в базу не ходить
-			// 		$this->cache_distr[$postavshik[0]->{'Код'}] = $postavshik[0]->{'Наименование'};
-			// 		$data['distr_ttl'] = $postavshik[0]->{'Наименование'};
-			// 	}
-			// }
-		}
-
 		// если дистрибьютер оределелился, то берем его, если нет то игнорируем. т.е. в базу вносим только проверенные данные.
 		// дистрибьютер на текущий момент не обязательное поле
 		if($source == 'file' && isset($data['distr_ttl']) && trim($data['distr_ttl']) != '')
@@ -943,7 +920,6 @@ class ProcessController extends Controller
 					$data['distr'] = $postavshik[0]->{'Код'};
 					$this->cache_distr[$postavshik[0]->{'Код'}] = $postavshik[0]->{'Наименование'};
 				}
-
 			}
 		}
 
@@ -951,7 +927,7 @@ class ProcessController extends Controller
 		{
 			$data['kT'] = trim($data['kT']);
 
-			//	сначала ищем по полному соответсвуию кода.
+				// сначала ищем по полному соответсвуию кода.
 			$tmp = DB::connection('sqlsrv_imported_data')->select('SELECT [ArtName], [BrandName], [ArtArticle]
 				FROM [Imported_Data].[dbo].[Assortment] 
 				WHERE ArtCode = ? ', [$data['kT']]);
@@ -975,18 +951,8 @@ class ProcessController extends Controller
 							// заменяем код на корректный(с ведущими нулями. если мы дошли до сюда, значит искали код без ведущих нулей)
 							$data['kT'] = $value->ArtCode;
 
-							// берем бренд из товара
-							$br = Brend::where('name', $tmp[0]->BrandName)->get();
-							if($br->count() > 0)
-							{
-								$data['brTtl'] = $value->BrandName;
-								$data['br'] = $br[0]->id;
-							}
-							else
-							{
-								$data['brTtl'] = '';
-								$data['br'] = '';
-							}
+							$data['brTtl'] = $value->BrandName;
+							$data['br'] = '';//$br[0]->id;
 							break;
 						}
 					}
@@ -1004,14 +970,8 @@ class ProcessController extends Controller
 			}
 			else
 			{
-				$data['br'] = '';
-				$data['tTtl'] = $tmp[0]->ArtName;
-				$br = Brend::where('name', $tmp[0]->BrandName)->get();
-				if($br->count() > 0)
-				{
-					$data['brTtl'] = $tmp[0]->BrandName;
-					$data['br'] = $br[0]->id;
-				}
+				$data['brTtl'] = $tmp[0]->BrandName;
+				$data['br'] = '';//$br[0]->id;
 			}
 		}
 		else
@@ -1034,19 +994,26 @@ class ProcessController extends Controller
 			}
 			else
 			{
-				$tmp = explode(';', $data['t']);
+				$tmp = $data['t'];
 				$data['t'] = [];
 
-				foreach($tmp as $val_)
+				// кешируем назынаие акции, чтоб не ходить в базу за ним каждый раз.
+				if(in_array( $tmp, $this->cache_action_types))
 				{
-					$action_type = ActionType::where('title', $val_)->get();
+					$tmp = array_keys($this->cache_action_types, $tmp);
+					$data['t'][] = $tmp[0];
+				}
+				else
+				{
+					$action_type = ActionType::where('title', $tmp)->get();
 					if(count($action_type) > 0)
 					{
 						$data['t'][] = $action_type[0]->id;
+						$this->cache_action_types[$action_type[0]->id] = $tmp;
 					}
 					else
 					{
-						$this->validate_errors[$source][$row_num]['t'] = 'Указанный тип маркетинговой акции не найден "'.$val_.'"';
+						$this->validate_errors[$source][$row_num]['t'] = 'Указанный тип маркетинговой акции не найден "'.$tmp.'"';
 					}
 				}
 			}
@@ -1262,9 +1229,6 @@ class ProcessController extends Controller
 			$this->validate_errors[$source][$row_num]['roz_new'] = 'Новая розничная цена должны быть меньше старой розничной цены.';
 		}
 
-// echo $row_num;
-// print_r($this->validate_errors[$source][$row_num]);
-
 		if (isset($this->validate_errors[$source][$row_num]))
 		{
 			return false;
@@ -1327,6 +1291,7 @@ class ProcessController extends Controller
 							$this->validate_errors['file'][$row_num]['kT'] = 'Не указан товар в строке ('.$row_num.'), либо строка пустая.';
 							continue;
 						}
+
 						// если сюда прошли, значит пошли непустые строки. забываем предыдущие пустые, по ним мы выведем ошибку
 						$emptyRow = [];
 
@@ -1428,6 +1393,10 @@ class ProcessController extends Controller
 						{
 							unset($dataToInsert[$row_num]);
 						}
+						else
+						{
+							$dataToInsert[$row_num]['descr'] = $row_num;
+						}
 					}
 
 					//если в массиве есть что-то, значит это последние строки в файле. по ним не выводим сообщения
@@ -1451,10 +1420,9 @@ class ProcessController extends Controller
 			$returnData['errors'][0] = 'Не удалось загрузить файл';
 		}
 
-		array_splice($dataToInsert, 10);
+//		array_splice($dataToInsert, 100);
 
 		$returnData['data'] = $dataToInsert;
-
 		$returnData['errors'] = (($returnData['errors'] ?? []) + ($this->validate_errors['file'] ?? []));
 
 		echo json_encode($returnData);

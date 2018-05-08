@@ -16,7 +16,7 @@ Route::group(['middleware' => 'auth'], function () {
 	Route::get('/', 'HomeController@index');
 
 	/*Для админов*/
-	Route::group(['middleware' => 'admin'], function () {
+	// Route::group(['middleware' => 'admin'], function () {
 
 		Route::get('/processes', 						'ProcessController@list')->name('processes');
 		Route::get('/processes/add', 					'ProcessController@showAddFrom')->name('processes.add');
@@ -46,7 +46,7 @@ Route::group(['middleware' => 'auth'], function () {
 		Route::get('/sys/fillRegionsTable', 	'SystemController@fillRegionsTable');
 
 		Route::get('/test', 'TestController@index');
-	});
+	// });
 
 	Route::get('/ucenka/list',						'UcenkaController@list')->name('ucenka.list');
 	Route::get('/ucenka/add',						'UcenkaController@add')->name('ucenka.add');
